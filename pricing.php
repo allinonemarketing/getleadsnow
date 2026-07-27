@@ -207,7 +207,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <h3>Business</h3>
                         <div class="price">$<?php echo PLAN_STARTER_PRICE; ?><span>/mo</span></div>
                         <ul class="features-list">
-                            <li><i class="fas fa-check"></i> 5,000 Credits / Month</li>
+                            <li><i class="fas fa-check"></i> 1,000 Credits / Month</li>
                             <li><i class="fas fa-check"></i> AI Email Enrichment</li>
                             <li><i class="fas fa-check"></i> CSV Export</li>
                             <li><i class="fas fa-check"></i> Lead List CRM</li>
@@ -225,7 +225,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <h3>Agency</h3>
                         <div class="price">$<?php echo PLAN_GROWTH_PRICE; ?><span>/mo</span></div>
                         <ul class="features-list">
-                            <li><i class="fas fa-check"></i> <strong>15,000 Credits / Month</strong></li>
+                            <li><i class="fas fa-check"></i> <strong>10,000 Credits / Month</strong></li>
                             <li><i class="fas fa-check"></i> Priority Support</li>
                             <li><i class="fas fa-check"></i> Public Share Links</li>
                             <li><i class="fas fa-check"></i> GHL Integration</li>

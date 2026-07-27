@@ -65,6 +65,9 @@ if (!isLoggedIn()) {
     exit();
 }
 
+// Hard gate: no app access without an active paid plan (admins/comped plans exempt).
+requireActiveSubscription('pricing.php');
+
 $userName = $_SESSION['user_name'] ?? 'User';
 
 try {

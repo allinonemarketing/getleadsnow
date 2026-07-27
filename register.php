@@ -29,8 +29,9 @@ try {
     }
 
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-    $stmt = $pdo->prepare("INSERT INTO users (name, email, password, credits) VALUES (?, ?, ?, ?)");
-    $stmt->execute([$name, $email, $hashedPassword, FREE_SIGNUP_CREDITS]);
+    // No free credits on signup — access and credits come only from a paid subscription.
+    $stmt = $pdo->prepare("INSERT INTO users (name, email, password, credits) VALUES (?, ?, ?, 0)");
+    $stmt->execute([$name, $email, $hashedPassword]);
     $userId = $pdo->lastInsertId();
 
     if (session_status() === PHP_SESSION_NONE) {

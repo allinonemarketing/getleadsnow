@@ -241,7 +241,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                 <?php if (isLoggedIn()): ?>
                     <a href="dashboard.php" class="hero-btn hero-btn-primary"><i class="fas fa-rocket"></i> Go to Dashboard</a>
                 <?php else: ?>
-                    <a href="#" onclick="openAuthModal(); return false;" class="hero-btn hero-btn-primary"><i class="fas fa-rocket"></i> Start Searching Free</a>
+                    <a href="#pricing" class="hero-btn hero-btn-primary"><i class="fas fa-rocket"></i> Get Started</a>
                 <?php endif; ?>
             </div>
             <div class="hero-stats">
@@ -326,7 +326,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                 <?php if (isLoggedIn()): ?>
                     <a href="dashboard.php" class="hero-btn hero-btn-primary">Open Dashboard</a>
                 <?php else: ?>
-                    <a href="#" onclick="openAuthModal(); return false;" class="hero-btn hero-btn-primary">Try It Free</a>
+                    <a href="#pricing" class="hero-btn hero-btn-primary">Get Started</a>
                 <?php endif; ?>
             </div>
         </div>
@@ -339,19 +339,6 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                 <p class="sub" style="margin:12px auto 0;">Pick a plan that matches your outreach goals. Upgrade or cancel anytime.</p>
             </div>
             <div class="pricing-grid">
-                <div class="pricing-card">
-                    <h3>Free</h3>
-                    <div class="price">$0</div>
-                    <ul class="features-list">
-                        <li><i class="fas fa-check"></i> <strong>3 City Searches</strong></li>
-                        <li><i class="fas fa-check"></i> AI Email Enrichment</li>
-                        <li><i class="fas fa-check"></i> CSV Export</li>
-                        <li><i class="fas fa-check"></i> Lead List CRM</li>
-                    </ul>
-                    <button onclick="openAuthModal()" class="pricing-btn pricing-btn-secondary">
-                        <?php echo isLoggedIn() ? 'Go to Dashboard' : 'Start Free'; ?>
-                    </button>
-                </div>
                 <div class="pricing-card">
                     <h3>Starter</h3>
                     <div class="price">$<?php echo PLAN_STARTER_PRICE; ?><span>/mo</span></div>
@@ -426,7 +413,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
         <div class="modal-content">
             <button class="close" onclick="closeModal()">&times;</button>
             <div id="authFormWrap">
-                <h2 id="authTitle">Get 3 Free City Searches</h2>
+                <h2 id="authTitle">Create Your Account</h2>
                 <p id="authSubtitle" style="text-align:center;font-size:13px;color:var(--text-secondary);margin-bottom:20px;">Create an account or sign in to start finding leads instantly.</p>
                 <div id="authError" style="display:none;background:#FEE2E2;color:#DC2626;padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:16px;text-align:center;"></div>
                 <form onsubmit="handleAuth(event)">
@@ -443,11 +430,11 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <input type="password" id="authPassword" required placeholder="Create a password" minlength="6">
                     </div>
                     <button type="submit" class="nav-btn nav-btn-primary" id="authSubmitBtn" style="width:100%;justify-content:center;padding:13px;font-size:15px;border-radius:12px;">
-                        Get Started Free
+                        Create Account
                     </button>
                 </form>
                 <div style="text-align:center;margin-top:16px;">
-                    <a href="#" id="authToggle" onclick="toggleAuthMode(); return false;" style="font-size:13px;color:var(--accent);text-decoration:none;font-weight:500;">Already have an account? Sign in</a>
+                    <a href="#" id="authToggle" onclick="handleAuthToggle(); return false;" style="font-size:13px;color:var(--accent);text-decoration:none;font-weight:500;">Already have an account? Sign in</a>
                 </div>
             </div>
         </div>
@@ -476,6 +463,18 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
             document.getElementById('authModal').style.display = 'none';
             selectedPlanId = null;
         }
+        function handleAuthToggle() {
+            // In login mode the link is "Don't have an account? Sign up" — send them
+            // to pricing to pick a plan (no free accounts). In signup mode it toggles
+            // to the sign-in form as before.
+            if (authMode === 'login') {
+                closeModal();
+                const target = document.getElementById('pricing');
+                if (target) target.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                toggleAuthMode();
+            }
+        }
         function toggleAuthMode() {
             authMode = authMode === 'signup' ? 'login' : 'signup';
             const nameGroup = document.getElementById('nameGroup');
@@ -488,12 +487,12 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                 title.textContent = 'Welcome Back';
                 subtitle.textContent = 'Sign in to access your leads and lists.';
                 btn.textContent = 'Sign In';
-                toggle.textContent = "Don't have an account? Sign up free";
+                toggle.textContent = "Don't have an account? Sign up";
             } else {
                 nameGroup.style.display = 'block';
-                title.textContent = 'Get 3 Free City Searches';
+                title.textContent = 'Create Your Account';
                 subtitle.textContent = 'Create an account or sign in to start finding leads instantly.';
-                btn.textContent = 'Get Started Free';
+                btn.textContent = 'Create Account';
                 toggle.textContent = 'Already have an account? Sign in';
             }
             document.getElementById('authError').style.display = 'none';
@@ -529,7 +528,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                 }).catch(() => { btn.textContent = 'Sign In'; btn.disabled = false; });
             } else {
                 const name = document.getElementById('authName').value.trim();
-                if (!name) { errEl.textContent = 'Please enter your name'; errEl.style.display = 'block'; btn.textContent = 'Get Started Free'; btn.disabled = false; return; }
+                if (!name) { errEl.textContent = 'Please enter your name'; errEl.style.display = 'block'; btn.textContent = 'Create Account'; btn.disabled = false; return; }
                 const fd = new FormData();
                 fd.append('name', name);
                 fd.append('email', email);
@@ -548,10 +547,10 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                     } else {
                         errEl.textContent = data.message || 'Registration failed';
                         errEl.style.display = 'block';
-                        btn.textContent = 'Get Started Free';
+                        btn.textContent = 'Create Account';
                         btn.disabled = false;
                     }
-                }).catch(() => { btn.textContent = 'Get Started Free'; btn.disabled = false; });
+                }).catch(() => { btn.textContent = 'Create Account'; btn.disabled = false; });
             }
         }
 

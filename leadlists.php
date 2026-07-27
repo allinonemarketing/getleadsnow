@@ -8,6 +8,9 @@ if (!isLoggedIn()) {
     exit();
 }
 
+// Hard gate: no app access without an active paid plan (admins/comped plans exempt).
+requireActiveSubscription('pricing.php');
+
 $userId = $_SESSION['user_id'];
 $isAdminViewing = isset($_SESSION['admin_original_id']);
 $stmt = $pdo->prepare("SELECT credits, shared_for_credits FROM users WHERE id = ?");

@@ -88,29 +88,39 @@ if ($event->type == 'customer.subscription.created' ||
     $userId = $subscription->metadata->user_id;
     
     $monthlyCredits = 0;
+    $planName = 'none';
     switch ($subscription->items->data[0]->price->id) {
         case STRIPE_PRICE_STARTER:
             $monthlyCredits = PLAN_STARTER_CREDITS;
+            $planName = 'business';
             break;
         case STRIPE_PRICE_GROWTH:
             $monthlyCredits = PLAN_GROWTH_CREDITS;
+            $planName = 'agency';
             break;
         case STRIPE_PRICE_ENTERPRISE:
             $monthlyCredits = PLAN_ENTERPRISE_CREDITS;
+            $planName = 'enterprise';
             break;
     }
-    
+
+    // Only record the plan (which grants app access) while the subscription is
+    // actually active — an incomplete/past_due sub must not unlock the app.
+    $planToStore = ($subscription->status === 'active') ? $planName : 'none';
+
     try {
         $stmt = $pdo->prepare("
-            UPDATE users 
-            SET subscription_id = ?, 
-                subscription_status = ?, 
-                monthly_credits = ? 
+            UPDATE users
+            SET subscription_id = ?,
+                subscription_status = ?,
+                subscription_plan = ?,
+                monthly_credits = ?
             WHERE id = ?
         ");
         $stmt->execute([
             $subscription->id,
             $subscription->status,
+            $planToStore,
             $monthlyCredits,
             $userId
         ]);
@@ -145,10 +155,11 @@ if ($event->type == 'customer.subscription.deleted') {
     
     try {
         $stmt = $pdo->prepare("
-            UPDATE users 
-            SET subscription_id = NULL, 
-                subscription_status = 'canceled', 
-                monthly_credits = 0 
+            UPDATE users
+            SET subscription_id = NULL,
+                subscription_status = 'canceled',
+                subscription_plan = 'none',
+                monthly_credits = 0
             WHERE id = ?
         ");
         $stmt->execute([$userId]);
