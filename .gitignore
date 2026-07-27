@@ -1,0 +1,41 @@
+# ============================================================
+#  GetLeadSnow — .gitignore
+#  Place this at the project root (same folder as leadlists.php).
+# ============================================================
+
+# ---- SECRETS: never commit these ----------------------------
+.env
+.env.*
+!.env.example
+config/.env
+
+# ---- Large city seed data (loaded once into the DB, not app code) ----
+# These SQL dumps are tens of MB and belong in the database, not git.
+# If you ever add a real schema/migration .sql you DO want tracked,
+# un-ignore it with a line like:  !schema.sql
+*.sql
+
+# ---- Logs & debug output ------------------------------------
+*.log
+enrichment_debug.log
+replicate_payload_debug.log
+
+# ---- Runtime / uploads / cache (adjust to your app's folders) ----
+/uploads/
+/cache/
+/tmp/
+
+# ---- Dependencies -------------------------------------------
+node_modules/
+# NOTE: /vendor/ is intentionally NOT ignored below, so Composer packages
+# (Stripe, PHPMailer) ship with the repo and deploys "just work" without
+# running composer on the server. If you'd rather do it the standard way
+# (ignore vendor + run `composer install` on deploy), uncomment this line:
+# /vendor/
+
+# ---- OS / editor junk ---------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

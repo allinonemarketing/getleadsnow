@@ -1,0 +1,34 @@
+RewriteEngine On
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.+)$ $1.php [L,QSA]
+
+RewriteRule ^login/?$ login.php [L]
+RewriteRule ^register/?$ register.php [L]
+RewriteRule ^pricing/?$ pricing.php [L]
+RewriteRule ^logout/?$ logout.php [L]
+RewriteRule ^dashboard/?$ dashboard.php [L]
+RewriteRule ^admin/?$ admin.php [L]
+
+RewriteRule ^api/(.*)$ api_wrapper.php [QSA,L]
+
+Header set X-XSS-Protection "1; mode=block"
+Header set X-Frame-Options "SAMEORIGIN"
+Header set X-Content-Type-Options "nosniff"
+Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+Options -Indexes
+
+AddDefaultCharset UTF-8
+
+<FilesMatch "\.php$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+<FilesMatch "^\.env$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
