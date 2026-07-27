@@ -452,7 +452,6 @@ $avgDataPoints = $leadCount > 0 ? round(($stats['with_phone'] + $stats['with_ema
     <div class="hero-trust">
         <span><i class="fas fa-check-circle"></i> 100% Free</span>
         <span><i class="fas fa-check-circle"></i> Instant Access</span>
-        <span><i class="fas fa-check-circle"></i> No Credit Card</span>
     </div>
 </div>
 
@@ -587,7 +586,6 @@ $avgDataPoints = $leadCount > 0 ? round(($stats['with_phone'] + $stats['with_ema
     <div class="hero-trust" style="margin-top:16px;">
         <span><i class="fas fa-check-circle"></i> 100% Free</span>
         <span><i class="fas fa-check-circle"></i> Instant Access</span>
-        <span><i class="fas fa-check-circle"></i> No Credit Card</span>
     </div>
 </div>
 
@@ -625,7 +623,7 @@ $avgDataPoints = $leadCount > 0 ? round(($stats['with_phone'] + $stats['with_ema
                 <div class="form-error" id="signupError"></div>
                 <button type="submit" class="submit-btn" id="signupBtn"><i class="fas fa-arrow-right"></i> Get My Free Leads</button>
             </form>
-            <div class="form-guarantee"><i class="fas fa-shield-alt"></i> No credit card required. Instant access.</div>
+            <div class="form-guarantee"><i class="fas fa-shield-alt"></i> Instant access.</div>
             <div class="toggle-link">Already have an account? <a onclick="showLogin()">Sign in</a></div>
         </div>
 

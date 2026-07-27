@@ -326,7 +326,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                 <?php if (isLoggedIn()): ?>
                     <a href="dashboard.php" class="hero-btn hero-btn-primary">Open Dashboard</a>
                 <?php else: ?>
-                    <a href="#" onclick="openAuthModal(); return false;" class="hero-btn hero-btn-primary">Try It Free — No Credit Card</a>
+                    <a href="#" onclick="openAuthModal(); return false;" class="hero-btn hero-btn-primary">Try It Free</a>
                 <?php endif; ?>
             </div>
         </div>
@@ -401,9 +401,8 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
         <div class="container">
             <div class="cta-card">
                 <h2>Ready to Fill Your Pipeline?</h2>
-                <p class="sub" style="margin:12px auto 0;">Sign up free and search your first 3 cities — no credit card required. Upgrade when you need more.</p>
-                <form class="cta-form" onsubmit="event.preventDefault(); openAuthModal(this.querySelector('input').value);">
-                    <input type="email" placeholder="Enter your email" required>
+                <p class="sub" style="margin:12px auto 0;">Sign up free and find your first leads.</p>
+                <form class="cta-form" onsubmit="event.preventDefault(); openAuthModal();">
                     <button type="submit">Get Started</button>
                 </form>
             </div>
