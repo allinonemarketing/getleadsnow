@@ -16,7 +16,7 @@ if (!isset($GLOBALS['_ENV_LOADED']) && file_exists($envFile)) {
         }
 
         $_ENV[$key] = $value;
-        @putenv("$key=$value");
+        if (function_exists('putenv')) { @putenv("$key=$value"); }
     }
     $GLOBALS['_ENV_LOADED'] = true;
 }
