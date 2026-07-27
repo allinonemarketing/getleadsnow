@@ -426,8 +426,7 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
 
     <div class="sidebar">
         <div class="logo">
-            <img src="<?php echo APP_LOGO; ?>" alt="Logo">
-            <?php echo APP_NAME; ?>
+            <img src="<?php echo APP_LOGO; ?>" alt="<?php echo APP_NAME; ?>">
         </div>
         <ul class="nav-links">
             <li class="nav-item">

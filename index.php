@@ -178,7 +178,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
         /* CTA */
         .cta-section { background:var(--bg-secondary); text-align:center; }
         .cta-card { background:var(--bg); border:1px solid var(--card-border); border-radius:24px; padding:64px 48px; max-width:700px; margin:0 auto; box-shadow:0 8px 30px rgba(0,0,0,0.04); }
-        .cta-form { display:flex; gap:8px; max-width:420px; margin:28px auto 0; }
+        .cta-form { display:flex; justify-content:center; gap:8px; max-width:420px; margin:28px auto 0; }
         .cta-form input { flex:1; padding:14px 16px; border:1px solid var(--card-border); border-radius:12px; font-size:15px; font-family:inherit; outline:none; background:var(--bg-secondary); }
         .cta-form input:focus { border-color:var(--accent); }
         .cta-form button { padding:14px 24px; border-radius:12px; background:var(--accent); color:#fff; font-weight:600; font-size:15px; border:none; cursor:pointer; font-family:inherit; white-space:nowrap; }
@@ -218,14 +218,15 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
     <header>
         <div class="container">
             <nav>
-                <a href="/" class="logo"><img src="<?php echo htmlspecialchars(APP_LOGO); ?>" alt="Logo"> <?php echo htmlspecialchars(APP_NAME); ?></a>
+                <a href="/" class="logo"><img src="<?php echo htmlspecialchars(APP_LOGO); ?>" alt="<?php echo htmlspecialchars(APP_NAME); ?>"></a>
                 <div style="display:flex;align-items:center;gap:8px;">
                     <?php if (isLoggedIn()): ?>
                         <span class="nav-btn nav-btn-ghost">Hi, <?php echo htmlspecialchars($userName); ?></span>
                         <a href="dashboard.php" class="nav-btn nav-btn-primary">Dashboard</a>
                     <?php else: ?>
                         <a href="#pricing" class="nav-btn nav-btn-ghost">Pricing</a>
-                        <a href="#" onclick="openAuthModal(); return false;" class="nav-btn nav-btn-primary">Get Started Free</a>
+                        <a href="#" onclick="openAuthModal(); if (authMode === 'signup') toggleAuthMode(); return false;" class="nav-btn nav-btn-ghost">Sign In</a>
+                        <a href="#pricing" class="nav-btn nav-btn-primary">Get Started</a>
                     <?php endif; ?>
                 </div>
             </nav>
@@ -235,14 +236,13 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
     <section class="hero">
         <div class="container">
             <h1>Need Targeted Business Leads?<br><span>Search Google Maps in Seconds.</span></h1>
-            <p class="sub">Enter any keyword and city — get business names, phone numbers, emails, and social profiles instantly. Build lead lists, track outreach, and close deals faster. <strong>Start with 3 free city searches.</strong></p>
+            <p class="sub">Enter any keyword and city — get business names, phone numbers, emails, and social profiles instantly. Build lead lists, track outreach, and close deals faster.</p>
             <div class="hero-actions">
                 <?php if (isLoggedIn()): ?>
                     <a href="dashboard.php" class="hero-btn hero-btn-primary"><i class="fas fa-rocket"></i> Go to Dashboard</a>
                 <?php else: ?>
                     <a href="#" onclick="openAuthModal(); return false;" class="hero-btn hero-btn-primary"><i class="fas fa-rocket"></i> Start Searching Free</a>
                 <?php endif; ?>
-                <a href="#demo" class="hero-btn hero-btn-secondary"><i class="fas fa-play"></i> See It in Action</a>
             </div>
             <div class="hero-stats">
                 <div class="hero-stat"><div class="num">12M+</div><div class="label">Leads Generated</div></div>
@@ -401,7 +401,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
         <div class="container">
             <div class="cta-card">
                 <h2>Ready to Fill Your Pipeline?</h2>
-                <p class="sub" style="margin:12px auto 0;">Sign up free and find your first leads.</p>
+                <p class="sub" style="margin:12px auto 0;">Sign up and find your first leads.</p>
                 <form class="cta-form" onsubmit="event.preventDefault(); openAuthModal();">
                     <button type="submit">Get Started</button>
                 </form>
@@ -519,7 +519,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                 .then(data => {
                     if (data.success) {
                         if (selectedPlanId) proceedToCheckout(selectedPlanId);
-                        else window.location.href = '/dashboard';
+                        else window.location.href = 'dashboard.php';
                     } else {
                         errEl.textContent = data.message || 'Invalid email or password';
                         errEl.style.display = 'block';
@@ -544,7 +544,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                 .then(data => {
                     if (data.success) {
                         if (selectedPlanId) proceedToCheckout(selectedPlanId);
-                        else window.location.href = '/dashboard';
+                        else window.location.href = 'dashboard.php';
                     } else {
                         errEl.textContent = data.message || 'Registration failed';
                         errEl.style.display = 'block';

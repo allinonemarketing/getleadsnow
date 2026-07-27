@@ -179,7 +179,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
         <header>
             <div class="container">
                 <nav>
-                    <a href="index.php" class="logo"><img src="<?php echo APP_LOGO; ?>" alt="Logo"> <?php echo APP_NAME; ?></a>
+                    <a href="index.php" class="logo"><img src="<?php echo APP_LOGO; ?>" alt="<?php echo APP_NAME; ?>"></a>
                     <div style="display:flex;align-items:center;gap:8px;">
                         <span style="font-size:13px;color:var(--text-secondary);">Credits: <strong style="color:var(--text-primary);"><?php echo number_format($userCredits); ?></strong></span>
                         <a href="dashboard.php" class="nav-btn nav-btn-ghost">Dashboard</a>
@@ -266,7 +266,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                 <div class="faq-grid">
                     <div class="faq-item">
                         <div class="faq-question">How do credits work?</div>
-                        <div class="faq-answer">1 Credit = 1 City Search (up to 500 leads) OR 1 Website Search to find emails. You get fresh credits every month.</div>
+                        <div class="faq-answer">1 Credit = 1 Search. Enriching a result to find its email uses 1 additional credit. You get fresh credits every month.</div>
                     </div>
                     <div class="faq-item">
                         <div class="faq-question">Can I cancel anytime?</div>
@@ -277,9 +277,6 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <div class="faq-answer">Credits reset at the beginning of each billing cycle to ensure fast infrastructure for active users.</div>
                     </div>
                 </div>
-                <div style="text-align:center;margin-top:36px;color:var(--text-tertiary);font-size:14px;">
-                    Need a custom plan? <a href="mailto:<?php echo SUPPORT_EMAIL; ?>" style="color:var(--accent);text-decoration:none;font-weight:500;">Contact Support</a>
-                </div>
             </div>
         </section>
 
@@ -287,7 +284,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
             <div class="container">
                 <div class="footer-grid">
                     <div>
-                        <a href="/" class="logo" style="margin-bottom:12px;"><img src="<?php echo APP_LOGO; ?>" alt="Logo"> <?php echo APP_NAME; ?></a>
+                        <a href="/" class="logo" style="margin-bottom:12px;"><img src="<?php echo APP_LOGO; ?>" alt="<?php echo APP_NAME; ?>"></a>
                         <p style="font-size:13px;margin-bottom:0;color:var(--text-tertiary);">Automating the boring parts of sales.</p>
                     </div>
                     <div class="footer-links">
@@ -298,8 +295,8 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         </div>
                         <div>
                             <h4 style="margin-bottom:16px;font-size:14px;">Legal</h4>
-                            <a href="#">Terms</a>
-                            <a href="#">Privacy</a>
+                            <a href="https://allinonemarketing.com/terms-conditions/" target="_blank" rel="noopener">Terms</a>
+                            <a href="https://allinonemarketing.com/privacy-policy" target="_blank" rel="noopener">Privacy</a>
                         </div>
                     </div>
                 </div>

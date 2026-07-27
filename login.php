@@ -95,10 +95,11 @@ $appLogo = htmlspecialchars(APP_LOGO);
             margin-bottom: 32px;
         }
         .logo-header img {
-            width: 56px;
-            height: 56px;
-            border-radius: 14px;
-            object-fit: cover;
+            width: auto;
+            height: auto;
+            max-width: 220px;
+            max-height: 56px;
+            object-fit: contain;
             margin-bottom: 12px;
         }
         .logo-header h1 {

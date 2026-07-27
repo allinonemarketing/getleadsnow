@@ -60,7 +60,7 @@ function sendWelcomeEmail($userData) {
             <h2>Welcome {$userData['name']}!</h2>
             <p>Thank you for joining {$appName}. We're excited to have you on board!</p>
             <p>You've been given " . FREE_SIGNUP_CREDITS . " free credits to get started.</p>
-            <p><a href='{$appUrl}/dashboard' style='background-color:#c85719;color:#fff;padding:10px 20px;text-decoration:none;border-radius:8px;font-weight:600;'>Go to Dashboard</a></p>
+            <p><a href='{$appUrl}/dashboard.php' style='background-color:#c85719;color:#fff;padding:10px 20px;text-decoration:none;border-radius:8px;font-weight:600;'>Go to Dashboard</a></p>
             <br><p>Best regards,<br>{$appName} Team</p>
         </body></html>";
         return $mail->send();
@@ -85,7 +85,7 @@ function sendCreditAddedEmail($userData, $credits, $reason = '') {
             <p>" . number_format($credits) . " credits have been added to your account!</p>
             " . ($reason ? "<p>Reason: {$reason}</p>" : "") . "
             <p>Your updated balance is now: " . number_format($userData['new_balance']) . " credits</p>
-            <p><a href='{$appUrl}/dashboard?section=section5' style='background-color:#c85719;color:#fff;padding:10px 20px;text-decoration:none;border-radius:8px;font-weight:600;'>View Your Credits</a></p>
+            <p><a href='{$appUrl}/dashboard.php?section=section5' style='background-color:#c85719;color:#fff;padding:10px 20px;text-decoration:none;border-radius:8px;font-weight:600;'>View Your Credits</a></p>
             <br><p>Best regards,<br>{$appName} Team</p>
         </body></html>";
         return $mail->send();
@@ -143,7 +143,7 @@ function sendSubscriptionEmail($userEmail, $planName, $credits, $amount) {
                     </ul>
                     <p>Your subscription has been successfully activated!</p>
                     <div style='text-align:center;margin-top:20px;'>
-                        <a href='{$appUrl}/dashboard' style='background-color:#c85719;color:#fff;padding:10px 20px;text-decoration:none;border-radius:8px;font-weight:600;'>Go to Dashboard</a>
+                        <a href='{$appUrl}/dashboard.php' style='background-color:#c85719;color:#fff;padding:10px 20px;text-decoration:none;border-radius:8px;font-weight:600;'>Go to Dashboard</a>
                     </div>
                 </div>
             </div>

@@ -38,7 +38,13 @@ function currentCredits($pdo, $userId) {
 
 try { $pdo->prepare("UPDATE users SET last_active_at = NOW() WHERE id = ?")->execute([$userId]); } catch (Exception $e) {}
 
-// Auto-create tables
+// Auto-create tables / run migrations.
+// Gated behind a schema-version flag so these ~18 preflight queries run only once
+// per deploy instead of on every request (they were adding remote-DB latency to
+// every list load). Bump $schemaVersion whenever a migration is added below.
+$schemaVersion = 'v1-2026-07';
+$schemaFlagFile = sys_get_temp_dir() . '/getleadsnow_leadlists_schema_' . md5($schemaVersion) . '.ok';
+if (!@is_file($schemaFlagFile)) {
 try {
     $pdo->query("SELECT 1 FROM lead_lists LIMIT 1");
 } catch (Exception $e) {
@@ -273,6 +279,12 @@ try {
         INDEX idx_lead (lead_id),
         INDEX idx_status (import_log_id, status)
     )");
+}
+
+    // All migrations above completed without throwing — record the flag so
+    // subsequent requests skip the entire preflight block. If any migration
+    // above had thrown a fatal, we'd never reach here and the block retries.
+    @file_put_contents($schemaFlagFile, $schemaVersion);
 }
 
 $ghlConnsStmt = $pdo->prepare("SELECT * FROM ghl_connections WHERE user_id = ? ORDER BY created_at ASC");
