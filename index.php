@@ -378,7 +378,6 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                     <button onclick="handlePlanSelection('<?php echo STRIPE_PRICE_ENTERPRISE; ?>')" class="pricing-btn pricing-btn-secondary">
                         <?php echo $userPlan === 'enterprise' ? 'Current Plan' : 'Get Started'; ?>
                     </button>
-                    <p style="margin-top:12px;font-size:12px;color:var(--text-tertiary);">Need more? <a href="mailto:<?php echo htmlspecialchars(SUPPORT_EMAIL); ?>" style="color:var(--accent);text-decoration:none;font-weight:500;">Email us</a></p>
                 </div>
             </div>
         </div>
@@ -389,7 +388,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
             <div class="cta-card">
                 <h2>Ready to Fill Your Pipeline?</h2>
                 <p class="sub" style="margin:12px auto 0;">Sign up and find your first leads.</p>
-                <form class="cta-form" onsubmit="event.preventDefault(); openAuthModal();">
+                <form class="cta-form" onsubmit="event.preventDefault(); document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });">
                     <button type="submit">Get Started</button>
                 </form>
             </div>
@@ -555,9 +554,10 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
         }
 
         async function handlePlanSelection(priceId) {
+            // Checkout-first: go straight to Stripe. Guests pay first; their account
+            // is created by the webhook after payment. Logged-in users upgrade in place.
             selectedPlanId = priceId;
-            if (!isLoggedIn) openAuthModal();
-            else proceedToCheckout(priceId);
+            proceedToCheckout(priceId);
         }
         async function proceedToCheckout(priceId) {
             try {

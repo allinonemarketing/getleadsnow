@@ -121,6 +121,33 @@ function sendPasswordResetEmail($email, $name, $token) {
     }
 }
 
+function sendSetPasswordEmail($email, $name, $token, $planLabel = '') {
+    $mail = createMailer();
+    if (!$mail) return false;
+    try {
+        $mail->addAddress($email, $name);
+        $mail->isHTML(true);
+        $mail->Subject = "Set your password - " . APP_NAME;
+        $appName = APP_NAME;
+        $setUrl = APP_URL . "/reset_password.php?token=" . urlencode($token);
+        $planLine = $planLabel ? "<p>Your <strong>{$planLabel}</strong> plan is active and your credits have been added.</p>" : "";
+        $mail->Body = "
+        <html><body>
+            <h2>Welcome to {$appName}!</h2>
+            <p>Hi {$name},</p>
+            <p>Thanks for your purchase. We've created your account — set a password to log in and start finding leads.</p>
+            {$planLine}
+            <p><a href='{$setUrl}' style='background-color:#c85719;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block;'>Set Your Password</a></p>
+            <p>This link will expire in 24 hours. If it expires, use \"Forgot password\" on the login page to get a new one.</p>
+            <br><p>Best regards,<br>{$appName} Team</p>
+        </body></html>";
+        return $mail->send();
+    } catch (Exception $e) {
+        error_log("Mailer Error: " . $e->getMessage());
+        return false;
+    }
+}
+
 function sendSubscriptionEmail($userEmail, $planName, $credits, $amount) {
     $mail = createMailer();
     if (!$mail) return false;
