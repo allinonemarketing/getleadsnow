@@ -185,6 +185,47 @@ if ($event->type == 'customer.subscription.created' ||
     }
 }
 
+if ($event->type == 'invoice.payment_succeeded') {
+    $invoice = $event->data->object;
+    $reason  = $invoice->billing_reason ?? '';
+
+    // Only monthly RENEWALS reset credits here. The very first invoice
+    // ('subscription_create') is already handled by checkout.session.completed,
+    // so we skip it to avoid granting the initial credits twice.
+    if ($reason === 'subscription_cycle') {
+        $subId = $invoice->subscription ?? null;
+        if ($subId) {
+            try {
+                $stmt = $pdo->prepare("SELECT id, monthly_credits FROM users WHERE subscription_id = ?");
+                $stmt->execute([$subId]);
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                $userId  = $row ? $row['id'] : null;
+                $credits = $row ? (int)$row['monthly_credits'] : 0;
+
+                if ($userId && $credits > 0) {
+                    // Idempotent per invoice so a retried webhook can't reset twice.
+                    $txnId = 'INV_' . $invoice->id;
+                    $chk = $pdo->prepare("SELECT 1 FROM credit_transactions WHERE transaction_id = ? LIMIT 1");
+                    $chk->execute([$txnId]);
+                    if (!$chk->fetch()) {
+                        // Add the plan's monthly credits on top of the existing
+                        // balance — unused credits roll over.
+                        $pdo->prepare("UPDATE users SET credits = credits + ? WHERE id = ?")
+                            ->execute([$credits, $userId]);
+                        $amount = isset($invoice->amount_paid) ? $invoice->amount_paid / 100 : 0;
+                        $pdo->prepare("
+                            INSERT INTO credit_transactions (user_id, credits, amount, transaction_id, notes)
+                            VALUES (?, ?, ?, ?, 'Monthly credit top-up')
+                        ")->execute([$userId, $credits, $amount, $txnId]);
+                    }
+                }
+            } catch (PDOException $e) {
+                error_log("invoice.payment_succeeded handling failed: " . $e->getMessage());
+            }
+        }
+    }
+}
+
 if ($event->type == 'customer.subscription.deleted') {
     $subscription = $event->data->object;
     $userId = resolveUserForSubscription($pdo, $subscription);

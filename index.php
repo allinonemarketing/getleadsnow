@@ -343,8 +343,8 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                     <h3>Starter</h3>
                     <div class="price">$<?php echo PLAN_STARTER_PRICE; ?><span>/mo</span></div>
                     <ul class="features-list">
-                        <li><i class="fas fa-check"></i> 1,000 Leads per month</li>
-                        <li><i class="fas fa-check"></i> AI Email Enrichment</li>
+                        <li><i class="fas fa-check"></i> <strong>Unlimited Lead Search</strong></li>
+                        <li><i class="fas fa-check"></i> 1,000 Email Enrichments / mo</li>
                         <li><i class="fas fa-check"></i> CSV Export</li>
                         <li><i class="fas fa-check"></i> Lead List CRM</li>
                     </ul>
@@ -356,7 +356,8 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                     <h3>Growth</h3>
                     <div class="price">$<?php echo PLAN_GROWTH_PRICE; ?><span>/mo</span></div>
                     <ul class="features-list">
-                        <li><i class="fas fa-check"></i> <strong>10,000 Leads per month</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>Unlimited Lead Search</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>10,000 Email Enrichments / mo</strong></li>
                         <li><i class="fas fa-check"></i> Social Media Profiles</li>
                         <li><i class="fas fa-check"></i> Public Share Links</li>
                         <li><i class="fas fa-check"></i> GHL Integration</li>
@@ -370,7 +371,8 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                     <h3>Enterprise</h3>
                     <div class="price">$<?php echo PLAN_ENTERPRISE_PRICE; ?><span>/mo</span></div>
                     <ul class="features-list">
-                        <li><i class="fas fa-check"></i> <strong>100,000 Leads per month</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>Unlimited Lead Search</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>100,000 Email Enrichments / mo</strong></li>
                         <li><i class="fas fa-check"></i> Dedicated Support</li>
                         <li><i class="fas fa-check"></i> Custom Search Rules</li>
                         <li><i class="fas fa-check"></i> API Access</li>
@@ -560,6 +562,8 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
             proceedToCheckout(priceId);
         }
         async function proceedToCheckout(priceId) {
+            if (!priceId) { alert("This plan isn't available for checkout yet. Please contact support."); return; }
+            if (!stripe) { alert('Payments are not configured yet. Please contact support.'); return; }
             try {
                 const response = await fetch('create_subscription_session.php', {
                     method: 'POST',

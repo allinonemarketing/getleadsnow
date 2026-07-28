@@ -20,10 +20,11 @@ $userCredits = $uRow['credits'] ?? 0;
 $userHasShared = $uRow['shared_for_credits'] ?? 0;
 
 // --- Billing helpers ---------------------------------------------------------
-// Model: 1 credit per NEW lead saved (addLeads); 1 credit per enrichment ATTEMPT
-// (fireAllScrapes / retryFailedEnrichments), charged only when a prediction is
-// actually created on Replicate. reserveCredit() atomically decrements only if the
-// balance covers it, so it doubles as the "can they afford this?" gate.
+// Model: finding and saving leads is FREE. Credits are spent only on enrichment —
+// 1 credit per enrichment ATTEMPT (fireAllScrapes / retryFailedEnrichments),
+// charged only when a prediction is actually created on Replicate. reserveCredit()
+// atomically decrements only if the balance covers it, so it doubles as the
+// "can they afford this?" gate.
 function reserveCredit($pdo, $userId, $n = 1) {
     $s = $pdo->prepare("UPDATE users SET credits = credits - ? WHERE id = ? AND credits >= ?");
     $s->execute([$n, $userId, $n]);
@@ -700,9 +701,8 @@ if (isset($_GET['action'])) {
                 if ($bid && isset($existingIds[$bid])) { $skipped++; continue; }
                 if ($bid) $existingIds[$bid] = true;
 
-                // Charge 1 credit for this new lead. If the balance can't cover it,
-                // stop saving and report how many were held back so the UI can prompt to top up.
-                if (!reserveCredit($pdo, $userId)) { $skippedNoCredit++; continue; }
+                // Finding and saving leads is FREE. Credits are only spent on
+                // enrichment (finding a lead's email & socials).
 
                 try {
                     $leadEmails = $lead['emails'] ?? [];
@@ -734,7 +734,6 @@ if (isset($_GET['action'])) {
                     ]);
                     $inserted++;
                 } catch (Exception $e) {
-                    refundCredit($pdo, $userId);   // insert failed — give the credit back
                     error_log("Error inserting lead: " . $e->getMessage());
                 }
             }
@@ -4174,25 +4173,25 @@ if (isset($_GET['action'])) {
         <div class="welcome-empty">
             <div class="welcome-icon"><i class="fas fa-rocket"></i></div>
             <h2>Welcome to Lead Lists</h2>
-            <p class="welcome-sub">You have <strong>3 free credits</strong> to get started. Each new lead you save costs <strong>1 credit</strong>, and enriching a lead for email &amp; socials costs <strong>1 more</strong>. Create your first list and start building your pipeline.</p>
+            <p class="welcome-sub">Finding and saving leads is <strong>free</strong> — you only spend <strong>1 credit</strong> to enrich a lead for its email &amp; socials. Create your first list and start building your pipeline.</p>
 
             <div class="free-credits-card">
                 <div class="fcc-header">
-                    <i class="fas fa-gift"></i>
-                    <span>Your Free Starter Pack</span>
+                    <i class="fas fa-coins"></i>
+                    <span>Your Plan</span>
                 </div>
                 <div class="fcc-details">
                     <div class="fcc-detail">
-                        <div class="fcc-num" id="freeCreditsNum"><?php echo $userCredits; ?></div>
-                        <div class="fcc-label">City Searches</div>
-                    </div>
-                    <div class="fcc-detail">
-                        <div class="fcc-num">500</div>
-                        <div class="fcc-label">Leads Per City</div>
+                        <div class="fcc-num" id="freeCreditsNum"><?php echo number_format($userCredits); ?></div>
+                        <div class="fcc-label">Credits Available</div>
                     </div>
                     <div class="fcc-detail">
                         <div class="fcc-num">Free</div>
-                        <div class="fcc-label">No Card Needed</div>
+                        <div class="fcc-label">Lead Discovery</div>
+                    </div>
+                    <div class="fcc-detail">
+                        <div class="fcc-num">1</div>
+                        <div class="fcc-label">Credit Per Enrichment</div>
                     </div>
                 </div>
             </div>
@@ -4539,7 +4538,7 @@ if (isset($_GET['action'])) {
                 <div style="font-size:13px;color:var(--text-secondary);">
                     <span id="selectedCitiesCount">0</span> cities selected &middot;
                     up to <strong style="color:var(--accent);"><span id="estimatedCredits">0</span> leads</strong>
-                    &middot; billed 1 credit per new lead saved <span style="opacity:.75;">(+1 if enriched)</span>
+                    &middot; <span style="opacity:.75;">free to find &amp; save — 1 credit each to enrich for email</span>
                 </div>
             </div>
 
@@ -6503,8 +6502,8 @@ class LeadListsApp {
     updateCityCounts() {
         const perCity = parseInt(document.getElementById('scrapeLimit')?.value) || 0;
         document.getElementById('selectedCitiesCount').textContent = this.selectedCities.size;
-        // Show an upper bound of LEADS (cities x results-per-city). Actual charge is 1 credit
-        // per NEW lead saved (+1 if enriched), so real cost is usually lower after de-duplication.
+        // Show an upper bound of LEADS (cities x results-per-city). Finding and saving
+        // these is free; credits are only spent later when enriching for email & socials.
         document.getElementById('estimatedCredits').textContent = (this.selectedCities.size * perCity).toLocaleString();
     }
 
@@ -6512,10 +6511,8 @@ class LeadListsApp {
         const query = document.getElementById('scrapeQuery').value.trim();
         if (!query) { this.toast('Enter a search query'); return; }
         if (this.selectedCities.size === 0) { this.toast('Select at least one city'); return; }
-        if (this.credits < 1) {
-            this.showUpgradePrompt(1);
-            return;
-        }
+        // Finding and saving leads is free — no credit gate here. Credits are only
+        // needed to enrich leads for their email & socials.
 
         this.scraping = true;
         const limit = parseInt(document.getElementById('scrapeLimit').value);
@@ -6569,8 +6566,8 @@ class LeadListsApp {
                 const fullQuery = `${query} in ${city.city}, ${city.state_name}`;
                 _logActivity(`Searching "${query}" in ${city.city}, ${city.state_name}...`);
                 try {
-                    // Log the search for history/analytics only. It no longer deducts credits —
-                    // billing is now per NEW lead saved, handled server-side in addLeads below.
+                    // Log the search for history/analytics only. Finding and saving leads
+                    // is free — credits are only spent on enrichment.
                     fetch('log_api_call.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -6596,14 +6593,9 @@ class LeadListsApp {
                         const addRes = await this.api('addLeads', { list_id: this.currentList.id, leads }, 'POST');
                         if (addRes.success) {
                             totalInserted += addRes.inserted;
-                            // Server charged 1 credit per new lead saved — sync the true balance.
+                            // Saving is free, so the balance is unchanged; keep the display in sync anyway.
                             if (typeof addRes.credits !== 'undefined') { this.credits = addRes.credits; this.updateCreditsDisplay(); }
                             _logActivity(`+${addRes.inserted} new leads saved from ${city.city}` + (addRes.skipped ? ` (${addRes.skipped} already in list)` : ''), 'success');
-                            if (addRes.skipped_no_credit > 0) {
-                                this.scraping = false;   // out of credits — stop the rest of the run
-                                _logActivity(`Out of credits — some leads in ${city.city} weren't saved. Add credits to continue.`, 'error');
-                                this.showUpgradePrompt(1);
-                            }
                             _updateBar();
                         }
                     } else {

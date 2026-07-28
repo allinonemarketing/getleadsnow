@@ -1,9 +1,11 @@
 <?php
 require_once __DIR__ . '/env_loader.php';
 
-define('STRIPE_PRICE_STARTER', env('STRIPE_PRICE_STARTER'));
-define('STRIPE_PRICE_GROWTH', env('STRIPE_PRICE_GROWTH'));
-define('STRIPE_PRICE_ENTERPRISE', env('STRIPE_PRICE_ENTERPRISE'));
+// Accept either naming convention: STRIPE_PRICE_* (see .env.example) or the
+// *_PRICE_ID names the live .env was actually set up with.
+define('STRIPE_PRICE_STARTER',    env('STRIPE_PRICE_STARTER')    ?: env('STARTER_PRICE_ID'));
+define('STRIPE_PRICE_GROWTH',     env('STRIPE_PRICE_GROWTH')     ?: env('GROWTH_PRICE_ID'));
+define('STRIPE_PRICE_ENTERPRISE', env('STRIPE_PRICE_ENTERPRISE') ?: env('ENTERPRISE_PRICE_ID'));
 
 define('PLAN_STARTER_CREDITS', (int)env('PLAN_STARTER_CREDITS', 1000));
 define('PLAN_GROWTH_CREDITS', (int)env('PLAN_GROWTH_CREDITS', 10000));

@@ -4,26 +4,23 @@ require_once 'includes/auth.php';
 require_once 'config/stripe_config.php';
 require_once 'config/subscription_config.php';
 
-$PLAN_CREDITS = [
-    STRIPE_PRICE_STARTER => PLAN_STARTER_CREDITS,
-    STRIPE_PRICE_GROWTH => PLAN_GROWTH_CREDITS,
-    STRIPE_PRICE_ENTERPRISE => PLAN_ENTERPRISE_CREDITS
-];
-
-// Internal plan-name used across the app (matches subscription_plan values).
-$PRICE_TO_PLAN = [
-    STRIPE_PRICE_STARTER => 'business',
-    STRIPE_PRICE_GROWTH => 'agency',
-    STRIPE_PRICE_ENTERPRISE => 'enterprise'
-];
+// Build the price maps only from configured (non-empty) price IDs. If a price
+// constant is empty (missing from .env) it must NOT become an empty-string key,
+// otherwise an empty price_id would pass validation and hit Stripe with an
+// empty line_items price.
+$PLAN_CREDITS = [];
+$PRICE_TO_PLAN = [];
+if (STRIPE_PRICE_STARTER)    { $PLAN_CREDITS[STRIPE_PRICE_STARTER] = PLAN_STARTER_CREDITS;    $PRICE_TO_PLAN[STRIPE_PRICE_STARTER] = 'business'; }
+if (STRIPE_PRICE_GROWTH)     { $PLAN_CREDITS[STRIPE_PRICE_GROWTH] = PLAN_GROWTH_CREDITS;      $PRICE_TO_PLAN[STRIPE_PRICE_GROWTH] = 'agency'; }
+if (STRIPE_PRICE_ENTERPRISE) { $PLAN_CREDITS[STRIPE_PRICE_ENTERPRISE] = PLAN_ENTERPRISE_CREDITS; $PRICE_TO_PLAN[STRIPE_PRICE_ENTERPRISE] = 'enterprise'; }
 
 header('Content-Type: application/json');
 
 $input = json_decode(file_get_contents('php://input'), true);
-$priceId = $input['price_id'] ?? '';
+$priceId = trim($input['price_id'] ?? '');
 
-if (!isset($PLAN_CREDITS[$priceId])) {
-    echo json_encode(['error' => 'Invalid price ID']);
+if ($priceId === '' || !isset($PLAN_CREDITS[$priceId])) {
+    echo json_encode(['error' => 'This plan isn\'t available for checkout yet. Please contact support.']);
     exit();
 }
 

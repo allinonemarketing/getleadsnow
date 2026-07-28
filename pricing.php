@@ -207,8 +207,8 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <h3>Business</h3>
                         <div class="price">$<?php echo PLAN_STARTER_PRICE; ?><span>/mo</span></div>
                         <ul class="features-list">
-                            <li><i class="fas fa-check"></i> 1,000 Credits / Month</li>
-                            <li><i class="fas fa-check"></i> AI Email Enrichment</li>
+                            <li><i class="fas fa-check"></i> Unlimited Lead Search</li>
+                            <li><i class="fas fa-check"></i> 1,000 Email Enrichments / mo</li>
                             <li><i class="fas fa-check"></i> CSV Export</li>
                             <li><i class="fas fa-check"></i> Lead List CRM</li>
                         </ul>
@@ -225,7 +225,8 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <h3>Agency</h3>
                         <div class="price">$<?php echo PLAN_GROWTH_PRICE; ?><span>/mo</span></div>
                         <ul class="features-list">
-                            <li><i class="fas fa-check"></i> <strong>10,000 Credits / Month</strong></li>
+                            <li><i class="fas fa-check"></i> Unlimited Lead Search</li>
+                            <li><i class="fas fa-check"></i> <strong>10,000 Email Enrichments / mo</strong></li>
                             <li><i class="fas fa-check"></i> Priority Support</li>
                             <li><i class="fas fa-check"></i> Public Share Links</li>
                             <li><i class="fas fa-check"></i> GHL Integration</li>
@@ -243,7 +244,8 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <h3>Enterprise</h3>
                         <div class="price">$<?php echo PLAN_ENTERPRISE_PRICE; ?><span>/mo</span></div>
                         <ul class="features-list">
-                            <li><i class="fas fa-check"></i> <strong>100,000 Credits / Month</strong></li>
+                            <li><i class="fas fa-check"></i> Unlimited Lead Search</li>
+                            <li><i class="fas fa-check"></i> <strong>100,000 Email Enrichments / mo</strong></li>
                             <li><i class="fas fa-check"></i> Dedicated Account Manager</li>
                             <li><i class="fas fa-check"></i> API Access</li>
                             <li><i class="fas fa-check"></i> Custom Search Rules</li>
@@ -266,7 +268,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                 <div class="faq-grid">
                     <div class="faq-item">
                         <div class="faq-question">How do credits work?</div>
-                        <div class="faq-answer">1 Credit = 1 Search. Enriching a result to find its email uses 1 additional credit. You get fresh credits every month.</div>
+                        <div class="faq-answer">Finding and saving leads is free and unlimited. You spend 1 credit only when you enrich a lead to find its email &amp; social profiles. Your plan's credits are added to your balance each billing cycle, and any unused credits roll over.</div>
                     </div>
                     <div class="faq-item">
                         <div class="faq-question">Can I cancel anytime?</div>
@@ -274,7 +276,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                     </div>
                     <div class="faq-item">
                         <div class="faq-question">Do credits roll over?</div>
-                        <div class="faq-answer">Credits reset at the beginning of each billing cycle to ensure fast infrastructure for active users.</div>
+                        <div class="faq-answer">Yes. Your plan's credits are added to your balance each billing cycle, and any unused credits carry over as long as your subscription stays active.</div>
                     </div>
                 </div>
             </div>
