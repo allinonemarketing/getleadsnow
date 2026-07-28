@@ -1,4 +1,20 @@
 <?php
+// --- Clean-URL front controller ---------------------------------------------
+// Cloudways' Nginx routes extensionless URLs (e.g. /login, /dashboard) to this
+// homepage file instead of the matching .php script. Map the path to its real
+// .php file so those URLs work without the extension. Only bare top-level names
+// (letters, digits, _ and -) are allowed — no slashes or dots — so there's no
+// path traversal, and "index" is excluded to avoid recursing into this file.
+$__cleanPath = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+if ($__cleanPath !== '' && $__cleanPath !== 'index' && preg_match('/^[A-Za-z0-9_\-]+$/', $__cleanPath)) {
+    $__routeFile = __DIR__ . '/' . $__cleanPath . '.php';
+    if (is_file($__routeFile)) {
+        require $__routeFile;
+        exit;
+    }
+}
+// ----------------------------------------------------------------------------
+
 session_start();
 require_once 'includes/auth.php';
 require_once 'config/stripe_config.php';
