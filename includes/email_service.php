@@ -14,8 +14,12 @@ function createMailer() {
         $mail->SMTPAuth = true;
         $mail->Username = env('SMTP_USER');
         $mail->Password = env('SMTP_PASS');
-        $mail->SMTPSecure = env('SMTP_SECURE', 'ssl') === 'tls' ? PHPMailer::ENCRYPTION_STARTTLS : PHPMailer::ENCRYPTION_SMTPS;
-        $mail->Port = (int)env('SMTP_PORT', 465);
+        // Accept SMTP_SECURITY (the name used in .env) or the older SMTP_SECURE.
+        $smtpSecurity = strtolower((string) env('SMTP_SECURITY', env('SMTP_SECURE', 'tls')));
+        $mail->SMTPSecure = ($smtpSecurity === 'tls' || $smtpSecurity === 'starttls')
+            ? PHPMailer::ENCRYPTION_STARTTLS
+            : PHPMailer::ENCRYPTION_SMTPS;
+        $mail->Port = (int)env('SMTP_PORT', 587);
         $mail->setFrom(env('SMTP_FROM_EMAIL', env('SMTP_USER')), env('SMTP_FROM_NAME', APP_NAME));
         return $mail;
     } catch (Exception $e) {
