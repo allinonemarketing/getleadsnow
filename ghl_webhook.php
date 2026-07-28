@@ -117,9 +117,16 @@ try {
         $notes = 'GHL provisioning';
     }
 
-    // Ledger entry (amount 0 — they pay outside this app). Use the idempotency
-    // key as the transaction id when provided, else a unique per-event id.
-    $ledgerId = $txnId !== '' ? $txnId : ('GHL_' . $userId . '_' . time());
+    // Ledger entry (amount 0 — they pay outside this app).
+    // On CREATE, tag the ledger row with the monthly-cron key for the current
+    // month so the auto top-up cron treats this month as already granted (no
+    // double credits the month they sign up). On renew, use the idempotency key
+    // when provided, else a unique per-event id.
+    if ($action === 'created') {
+        $ledgerId = 'GHLCRON_' . $userId . '_' . date('Y-m');
+    } else {
+        $ledgerId = $txnId !== '' ? $txnId : ('GHL_' . $userId . '_' . time());
+    }
     $pdo->prepare("
         INSERT INTO credit_transactions (user_id, credits, amount, transaction_id, notes)
         VALUES (?, ?, 0, ?, ?)
