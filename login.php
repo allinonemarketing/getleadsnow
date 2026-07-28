@@ -198,6 +198,7 @@ $appLogo = htmlspecialchars(APP_LOGO);
         <?php if (isset($_GET['checkout']) && $_GET['checkout'] === 'success'): ?>
             <div style="background:#f0faf0;color:#1a7a1a;font-size:14px;padding:14px 16px;border-radius:12px;margin-bottom:20px;line-height:1.5;">
                 Payment received — thank you! We've emailed you a link to set your password. Once it's set, sign in below to access your account.
+                <div style="margin-top:8px;font-size:13px;">Didn't get it? Check spam, or <a href="forgot_password.php" style="color:var(--accent);font-weight:600;">resend the link</a>.</div>
             </div>
         <?php elseif (isset($_GET['reset']) && $_GET['reset'] === 'success'): ?>
             <div style="background:#f0faf0;color:#1a7a1a;font-size:14px;padding:14px 16px;border-radius:12px;margin-bottom:20px;line-height:1.5;">

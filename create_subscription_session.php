@@ -51,7 +51,7 @@ try {
             'metadata' => $metadata
         ],
         'success_url' => $loggedIn
-            ? APP_URL . '/dashboard?payment_success=true&credits=' . $PLAN_CREDITS[$priceId] . '&section=section5'
+            ? APP_URL . '/dashboard.php?payment_success=true&credits=' . $PLAN_CREDITS[$priceId] . '&section=section5'
             : APP_URL . '/login.php?checkout=success',
         'cancel_url' => $loggedIn
             ? APP_URL . '/pricing.php'
