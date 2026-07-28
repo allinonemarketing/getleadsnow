@@ -20,11 +20,9 @@ $userCredits = $uRow['credits'] ?? 0;
 $userHasShared = $uRow['shared_for_credits'] ?? 0;
 
 // --- Billing helpers ---------------------------------------------------------
-// Model: finding and saving leads is FREE. Credits are spent only on enrichment —
-// 1 credit per enrichment ATTEMPT (fireAllScrapes / retryFailedEnrichments),
-// charged only when a prediction is actually created on Replicate. reserveCredit()
-// atomically decrements only if the balance covers it, so it doubles as the
-// "can they afford this?" gate.
+// Model: 1 credit per lead returned by a search (charged as leads are saved in
+// addLeads). Enrichment is FREE. reserveCredit() atomically decrements only if
+// the balance covers it, so it doubles as the "can they afford this?" gate.
 function reserveCredit($pdo, $userId, $n = 1) {
     $s = $pdo->prepare("UPDATE users SET credits = credits - ? WHERE id = ? AND credits >= ?");
     $s->execute([$n, $userId, $n]);
@@ -701,8 +699,10 @@ if (isset($_GET['action'])) {
                 if ($bid && isset($existingIds[$bid])) { $skipped++; continue; }
                 if ($bid) $existingIds[$bid] = true;
 
-                // Finding and saving leads is FREE. Credits are only spent on
-                // enrichment (finding a lead's email & socials).
+                // Charge 1 credit per lead returned by the search. If the balance
+                // can't cover it, stop and report how many were held back so the
+                // UI can prompt to top up. (Enrichment is free.)
+                if (!reserveCredit($pdo, $userId)) { $skippedNoCredit++; continue; }
 
                 try {
                     $leadEmails = $lead['emails'] ?? [];
@@ -734,6 +734,7 @@ if (isset($_GET['action'])) {
                     ]);
                     $inserted++;
                 } catch (Exception $e) {
+                    refundCredit($pdo, $userId);   // insert failed — give the credit back
                     error_log("Error inserting lead: " . $e->getMessage());
                 }
             }
@@ -1341,16 +1342,7 @@ if (isset($_GET['action'])) {
             $resetToPending = $pdo->prepare("UPDATE lead_list_items SET enrichment_status = 'pending', replicate_id = NULL WHERE id = ?");
 
             foreach ($leads as $i => $lead) {
-                // Gate + charge: reserve 1 credit for this enrichment attempt BEFORE firing.
-                // reserveCredit() only succeeds if the balance covers it, so we never spend
-                // Replicate money for a customer who's out of credits. A refund happens below
-                // for any attempt that doesn't actually create a prediction.
-                if (!reserveCredit($pdo, $userId)) {
-                    $outOfCredits = true;
-                    $resetToPending->execute([$lead['id']]);   // leave pending; resumes when they top up
-                    continue;
-                }
-
+                // Enrichment is FREE — no credit charge. Fire for every lead.
                 $url = $lead['website'];
                 if (!preg_match('/^https?:\/\//', $url)) $url = 'https://' . $url;
                 $webhookUrl = $webhookBase . '?lead_id=' . $lead['id'] . '&list_id=' . $listId;
@@ -1402,22 +1394,19 @@ if (isset($_GET['action'])) {
                 $curlErr = curl_error($h['ch']);
                 $resp = json_decode($body, true);
                 if (!empty($resp['id'])) {
-                    // Prediction created -> Replicate charges us, so the reserved credit stays spent.
                     $saveRepId->execute([$resp['id'], $h['lead_id']]);
                     $actualFired++;
                     $dbg("  lead {$h['lead_id']}: OK  http=$httpCode  prediction={$resp['id']}");
                 } elseif ($httpCode == 429 || $httpCode == 0 || $httpCode >= 500) {
                     // Transient: rate-limit (429), dropped/no-response connection (0), or server error (5xx).
-                    // No prediction was created, so refund the credit and leave the lead PENDING to retry.
-                    refundCredit($pdo, $userId);
+                    // No prediction created — leave the lead PENDING to retry. (Enrichment is free.)
                     $resetPending->execute([$h['lead_id']]);
                     $retryCount++;
                     if (isset($resp['retry_after'])) $maxRetryAfter = max($maxRetryAfter, (int)$resp['retry_after']);
-                    $dbg("  lead {$h['lead_id']}: RETRY (left pending, credit refunded) http=$httpCode" . (isset($resp['retry_after']) ? " retry_after={$resp['retry_after']}s" : ""));
+                    $dbg("  lead {$h['lead_id']}: RETRY (left pending) http=$httpCode" . (isset($resp['retry_after']) ? " retry_after={$resp['retry_after']}s" : ""));
                 } else {
                     // Genuine, non-retryable error (401 bad key, 422 bad input/version, 404, etc.).
-                    // No prediction created -> refund the credit, then mark the lead failed.
-                    refundCredit($pdo, $userId);
+                    // No prediction created -> mark the lead failed. (Enrichment is free.)
                     $failCount++;
                     $errDetail = $curlErr ? "cURL: $curlErr" : "HTTP $httpCode - " . substr($body, 0, 500);
                     error_log("Replicate API error for lead {$h['lead_id']}: $errDetail");
@@ -1668,11 +1657,7 @@ if (isset($_GET['action'])) {
                 $mh = curl_multi_init();
                 $handles = [];
                 foreach ($withoutId as $item) {
-                    // Gate + charge for this enrichment attempt (same rule as fireAllScrapes).
-                    if (!reserveCredit($pdo, $userId)) {
-                        $pdo->prepare("UPDATE lead_list_items SET enrichment_status = 'pending', replicate_id = NULL WHERE id = ?")->execute([$item['id']]);
-                        continue;
-                    }
+                    // Enrichment is FREE — no credit charge.
                     $url = $item['website'];
                     if (!preg_match('/^https?:\/\//', $url)) $url = 'https://' . $url;
                     $webhookUrl = $webhookBase . '?lead_id=' . $item['id'] . '&list_id=' . $listId;
@@ -1707,7 +1692,6 @@ if (isset($_GET['action'])) {
                         $saveRepId->execute([$resp['id'], $h['lead_id']]);
                         $retried++;
                     } else {
-                        refundCredit($pdo, $userId);   // no prediction created -> refund the reserved credit
                         $pdo->prepare("UPDATE lead_list_items SET enrichment_status = 'failed', enriched_at = NOW() WHERE id = ?")->execute([$h['lead_id']]);
                     }
                     curl_multi_remove_handle($mh, $h['ch']);
@@ -4173,7 +4157,7 @@ if (isset($_GET['action'])) {
         <div class="welcome-empty">
             <div class="welcome-icon"><i class="fas fa-rocket"></i></div>
             <h2>Welcome to Lead Lists</h2>
-            <p class="welcome-sub">Finding and saving leads is <strong>free</strong> — you only spend <strong>1 credit</strong> to enrich a lead for its email &amp; socials. Create your first list and start building your pipeline.</p>
+            <p class="welcome-sub">Each lead a search returns costs <strong>1 credit</strong>, and enriching them for email &amp; socials is <strong>free</strong>. Create your first list and start building your pipeline.</p>
 
             <div class="free-credits-card">
                 <div class="fcc-header">
@@ -4186,12 +4170,12 @@ if (isset($_GET['action'])) {
                         <div class="fcc-label">Credits Available</div>
                     </div>
                     <div class="fcc-detail">
-                        <div class="fcc-num">Free</div>
-                        <div class="fcc-label">Lead Discovery</div>
+                        <div class="fcc-num">1</div>
+                        <div class="fcc-label">Credit Per Lead</div>
                     </div>
                     <div class="fcc-detail">
-                        <div class="fcc-num">1</div>
-                        <div class="fcc-label">Credit Per Enrichment</div>
+                        <div class="fcc-num">Free</div>
+                        <div class="fcc-label">Email Enrichment</div>
                     </div>
                 </div>
             </div>
@@ -4538,7 +4522,7 @@ if (isset($_GET['action'])) {
                 <div style="font-size:13px;color:var(--text-secondary);">
                     <span id="selectedCitiesCount">0</span> cities selected &middot;
                     up to <strong style="color:var(--accent);"><span id="estimatedCredits">0</span> leads</strong>
-                    &middot; <span style="opacity:.75;">free to find &amp; save — 1 credit each to enrich for email</span>
+                    &middot; <span style="opacity:.75;">1 credit per lead returned · enrichment is free</span>
                 </div>
             </div>
 
@@ -6502,8 +6486,8 @@ class LeadListsApp {
     updateCityCounts() {
         const perCity = parseInt(document.getElementById('scrapeLimit')?.value) || 0;
         document.getElementById('selectedCitiesCount').textContent = this.selectedCities.size;
-        // Show an upper bound of LEADS (cities x results-per-city). Finding and saving
-        // these is free; credits are only spent later when enriching for email & socials.
+        // Upper bound of LEADS (cities x results-per-city). Each lead a search
+        // returns costs 1 credit; enrichment is free.
         document.getElementById('estimatedCredits').textContent = (this.selectedCities.size * perCity).toLocaleString();
     }
 
@@ -6511,8 +6495,8 @@ class LeadListsApp {
         const query = document.getElementById('scrapeQuery').value.trim();
         if (!query) { this.toast('Enter a search query'); return; }
         if (this.selectedCities.size === 0) { this.toast('Select at least one city'); return; }
-        // Finding and saving leads is free — no credit gate here. Credits are only
-        // needed to enrich leads for their email & socials.
+        // Each lead a search returns costs 1 credit. Need at least 1 to start.
+        if (this.credits < 1) { this.showUpgradePrompt(1); return; }
 
         this.scraping = true;
         const limit = parseInt(document.getElementById('scrapeLimit').value);
@@ -6566,8 +6550,8 @@ class LeadListsApp {
                 const fullQuery = `${query} in ${city.city}, ${city.state_name}`;
                 _logActivity(`Searching "${query}" in ${city.city}, ${city.state_name}...`);
                 try {
-                    // Log the search for history/analytics only. Finding and saving leads
-                    // is free — credits are only spent on enrichment.
+                    // Log the search for history/analytics only. Credits are charged
+                    // per lead saved, server-side in addLeads below.
                     fetch('log_api_call.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -6593,9 +6577,14 @@ class LeadListsApp {
                         const addRes = await this.api('addLeads', { list_id: this.currentList.id, leads }, 'POST');
                         if (addRes.success) {
                             totalInserted += addRes.inserted;
-                            // Saving is free, so the balance is unchanged; keep the display in sync anyway.
+                            // Server charged 1 credit per lead saved — sync the true balance.
                             if (typeof addRes.credits !== 'undefined') { this.credits = addRes.credits; this.updateCreditsDisplay(); }
                             _logActivity(`+${addRes.inserted} new leads saved from ${city.city}` + (addRes.skipped ? ` (${addRes.skipped} already in list)` : ''), 'success');
+                            if (addRes.skipped_no_credit > 0) {
+                                this.scraping = false;   // out of credits — stop the rest of the run
+                                _logActivity(`Out of credits — some leads in ${city.city} weren't saved. Add credits to continue.`, 'error');
+                                this.showUpgradePrompt(1);
+                            }
                             _updateBar();
                         }
                     } else {
