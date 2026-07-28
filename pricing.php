@@ -183,9 +183,6 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                     <div style="display:flex;align-items:center;gap:8px;">
                         <span style="font-size:13px;color:var(--text-secondary);">Credits: <strong style="color:var(--text-primary);"><?php echo number_format($userCredits); ?></strong></span>
                         <a href="dashboard.php" class="nav-btn nav-btn-ghost">Dashboard</a>
-                        <?php if ($userPlan !== 'none' && $userPlan !== ''): ?>
-                            <a href="<?php echo STRIPE_BILLING_PORTAL_URL; ?>" target="_blank" class="nav-btn nav-btn-primary">Manage Sub</a>
-                        <?php endif; ?>
                     </div>
                 </nav>
             </div>
