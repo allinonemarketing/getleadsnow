@@ -118,12 +118,13 @@ try {
     }
 
     // Ledger entry (amount 0 — they pay outside this app).
-    // On CREATE, tag the ledger row with the monthly-cron key for the current
-    // month so the auto top-up cron treats this month as already granted (no
-    // double credits the month they sign up). On renew, use the idempotency key
-    // when provided, else a unique per-event id.
+    // On CREATE, tag the ledger row with the anniversary cron key for the signup
+    // day so the auto top-up cron treats this first cycle as already granted (no
+    // double credits when they sign up). The cron renews on each monthly
+    // anniversary of this date. On renew, use the idempotency key when provided,
+    // else a unique per-event id.
     if ($action === 'created') {
-        $ledgerId = 'GHLCRON_' . $userId . '_' . date('Y-m');
+        $ledgerId = 'GHLCYCLE_' . $userId . '_' . date('Y-m-d');
     } else {
         $ledgerId = $txnId !== '' ? $txnId : ('GHL_' . $userId . '_' . time());
     }
