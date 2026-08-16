@@ -4150,14 +4150,17 @@ if (isset($_GET['action'])) {
             <button class="btn btn-primary" onclick="app.openCreateModal()"><i class="fas fa-plus"></i> New List</button>
         </div>
     </div>
-    <?php $lowCredit = $userCredits <= 50; ?>
-    <div id="lowCreditBanner" style="<?php echo $lowCredit ? 'display:flex;' : 'display:none;'; ?>align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(135deg,#fff3ec,#ffe7d7);border:1px solid #f0c9ad;border-radius:14px;padding:13px 18px;margin-bottom:18px;">
+    <?php
+    $lowCredit = $userCredits <= 50;
+    ob_start(); ?>
+    <div class="low-credit-banner" style="<?php echo $lowCredit ? 'display:flex;' : 'display:none;'; ?>align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(135deg,#fff3ec,#ffe7d7);border:1px solid #f0c9ad;border-radius:14px;padding:13px 18px;margin-bottom:18px;">
         <div style="font-size:14px;color:#8a4a1e;line-height:1.4;">
             <i class="fas fa-bolt" style="margin-right:6px;"></i>
-            You have <strong id="lowCreditCount"><?php echo number_format($userCredits); ?></strong> credits left — that's <strong id="lowCreditLeads"><?php echo number_format($userCredits); ?></strong> more leads. Upgrade to keep searching.
+            You have <strong class="lc-count"><?php echo number_format($userCredits); ?></strong> credits left — that's <strong class="lc-count"><?php echo number_format($userCredits); ?></strong> more leads. Upgrade to keep searching.
         </div>
         <button onclick="app.showUpgradePrompt(1)" style="background:#c85719;color:#fff;border:none;border-radius:10px;padding:9px 20px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;">Upgrade</button>
     </div>
+    <?php $lowCreditBannerHtml = ob_get_clean(); echo $lowCreditBannerHtml; ?>
     <div id="folderGrid" class="folder-grid"></div>
     <div id="emptyState" class="empty-state hidden">
         <div class="welcome-empty">
@@ -4213,6 +4216,7 @@ if (isset($_GET['action'])) {
 
 <!-- DETAIL VIEW -->
 <div id="detailView" class="container hidden">
+    <?php echo $lowCreditBannerHtml; ?>
     <div class="detail-header">
         <button class="back-btn" onclick="app.goBack()"><i class="fas fa-arrow-left"></i></button>
         <div class="detail-title">
@@ -4447,13 +4451,7 @@ if (isset($_GET['action'])) {
             </div>
             <?php endforeach; ?>
         </div>
-        <div id="shareForCreditsWrap" style="margin-top:18px;padding-top:18px;border-top:1px solid #f0f0f0;<?php echo $userHasShared ? 'display:none;' : ''; ?>">
-            <div style="font-size:12px;color:#86868b;margin-bottom:10px;">or</div>
-            <button onclick="app.shareForCredits()" id="shareForCreditsBtn" style="display:inline-flex;align-items:center;gap:8px;padding:11px 24px;border-radius:12px;background:linear-gradient(135deg,#34C759,#30B855);color:#fff;font-size:14px;font-weight:600;border:none;cursor:pointer;box-shadow:0 4px 12px rgba(52,199,89,0.25);transition:all 0.2s;">
-                <i class="fas fa-share-nodes"></i> Share &amp; Get 5 Free Credits
-            </button>
-        </div>
-        <div style="margin-top:14px;">
+        <div style="margin-top:18px;">
             <button onclick="app.closeUpgradeModal()" style="background:none;border:none;color:#6e6e73;font-size:13px;cursor:pointer;font-family:inherit;">Maybe later</button>
         </div>
     </div>
@@ -4534,6 +4532,10 @@ if (isset($_GET['action'])) {
                     </div>
                     <div style="padding:6px 8px;border-bottom:1px solid var(--card-border);">
                         <input type="text" id="citySearch" placeholder="Search cities..." oninput="app.filterCities()" style="width:100%;padding:6px 10px;border:1px solid var(--card-border);border-radius:6px;font-size:13px;font-family:inherit;outline:none;background:var(--bg);">
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 14px;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-tertiary);border-bottom:1px solid var(--card-border);">
+                        <span>City</span>
+                        <span>Population</span>
                     </div>
                     <div class="selector-list" id="citiesList">
                         <div style="padding:20px;text-align:center;color:var(--text-tertiary);font-size:13px;">Select a state or region to see cities</div>
@@ -6859,17 +6861,11 @@ class LeadListsApp {
     updateCreditsDisplay() {
         document.getElementById('creditsDisplay').textContent = this.credits.toLocaleString();
         document.getElementById('creditsDisplay2').textContent = this.credits.toLocaleString();
-        // Low-credit upgrade banner (1 credit = 1 lead).
-        const banner = document.getElementById('lowCreditBanner');
-        if (banner) {
-            if (this.credits <= 50) {
-                document.getElementById('lowCreditCount').textContent = this.credits.toLocaleString();
-                document.getElementById('lowCreditLeads').textContent = this.credits.toLocaleString();
-                banner.style.display = 'flex';
-            } else {
-                banner.style.display = 'none';
-            }
-        }
+        // Low-credit upgrade banner (1 credit = 1 lead) — lives in both the
+        // lists view and the list-detail view, updated live as credits change.
+        const low = this.credits <= 50;
+        document.querySelectorAll('.lc-count').forEach(el => { el.textContent = this.credits.toLocaleString(); });
+        document.querySelectorAll('.low-credit-banner').forEach(b => { b.style.display = low ? 'flex' : 'none'; });
         if (window.parent !== window) {
             window.parent.postMessage({ type: 'creditUpdate', credits: this.credits }, '*');
         }
