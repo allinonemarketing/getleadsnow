@@ -6308,8 +6308,28 @@ class LeadListsApp {
     async openAddLeadsModal() {
         document.getElementById('addLeadsModal').classList.add('active');
         this.resetScrapeUI();
+        this.updateScrapeLimitOptions();
         await this.loadStatesForCountry(this.selectedCountry);
         this.renderStates();
+    }
+
+    // Grey out "Results per City" options that would cost more than the user's
+    // remaining credits (1 credit per lead), and nudge them to upgrade.
+    updateScrapeLimitOptions() {
+        const sel = document.getElementById('scrapeLimit');
+        if (!sel) return;
+        Array.from(sel.options).forEach(opt => {
+            const val = parseInt(opt.value, 10);
+            const tooMany = val > this.credits;
+            opt.disabled = tooMany;
+            opt.textContent = tooMany ? `${val} — upgrade for more` : String(val);
+        });
+        // If the current selection is now disabled, drop to the largest allowed option.
+        if (sel.selectedOptions[0] && sel.selectedOptions[0].disabled) {
+            const allowed = Array.from(sel.options).filter(o => !o.disabled);
+            if (allowed.length) { sel.value = allowed[allowed.length - 1].value; }
+        }
+        this.updateCityCounts();
     }
 
     async loadStatesForCountry(country) {
@@ -6663,7 +6683,13 @@ class LeadListsApp {
         this.scraping = false;
 
         await this.refreshCurrentList();
-        this.toast(`${totalInserted.toLocaleString()} leads found across ${total} cities — enrichment starting in background`);
+        if (totalInserted === 0 && totalFound > 0) {
+            this.toast(`No new leads added — those ${totalFound.toLocaleString()} results are already in this list. Try a new city or a different search.`);
+        } else if (this.credits < 1 && totalFound > totalInserted) {
+            this.toast(`${totalInserted.toLocaleString()} new leads added — you ran out of credits before saving the rest. Upgrade to continue.`);
+        } else {
+            this.toast(`${totalInserted.toLocaleString()} new leads added — enrichment starting in background`);
+        }
 
         document.getElementById('addLeadsModal').classList.remove('active');
         this.resetScrapeUI();
@@ -6869,6 +6895,7 @@ class LeadListsApp {
         const low = this.credits <= 50;
         document.querySelectorAll('.lc-count').forEach(el => { el.textContent = this.credits.toLocaleString(); });
         document.querySelectorAll('.low-credit-banner').forEach(b => { b.style.display = low ? 'flex' : 'none'; });
+        if (typeof this.updateScrapeLimitOptions === 'function') this.updateScrapeLimitOptions();
         if (window.parent !== window) {
             window.parent.postMessage({ type: 'creditUpdate', credits: this.credits }, '*');
         }
