@@ -4543,11 +4543,14 @@ if (isset($_GET['action'])) {
                 </div>
             </div>
 
-            <div style="margin-top:16px;display:flex;align-items:center;justify-content:space-between;">
+            <div style="margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
                 <div style="font-size:13px;color:var(--text-secondary);">
                     <span id="selectedCitiesCount">0</span> cities selected &middot;
                     up to <strong style="color:var(--accent);"><span id="estimatedCredits">0</span> leads</strong>
                     &middot; <span style="opacity:.75;">1 credit per lead returned · enrichment is free</span>
+                </div>
+                <div style="font-size:13px;font-weight:700;color:var(--accent);white-space:nowrap;">
+                    <i class="fas fa-coins"></i> <span class="lc-count"><?php echo number_format($userCredits); ?></span> credits left
                 </div>
             </div>
 
