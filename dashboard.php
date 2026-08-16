@@ -170,9 +170,11 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
         }
 
         .logo img {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
+            width: auto;
+            height: auto;
+            max-width: 190px;
+            max-height: 48px;
+            object-fit: contain;
         }
 
         .nav-links {
