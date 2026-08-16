@@ -1,11 +1,12 @@
 <?php
 require_once __DIR__ . '/env_loader.php';
 
-// Accept either naming convention: STRIPE_PRICE_* (see .env.example) or the
-// *_PRICE_ID names the live .env was actually set up with.
-define('STRIPE_PRICE_STARTER',    env('STRIPE_PRICE_STARTER')    ?: env('STARTER_PRICE_ID'));
-define('STRIPE_PRICE_GROWTH',     env('STRIPE_PRICE_GROWTH')     ?: env('GROWTH_PRICE_ID'));
-define('STRIPE_PRICE_ENTERPRISE', env('STRIPE_PRICE_ENTERPRISE') ?: env('ENTERPRISE_PRICE_ID'));
+// Live Stripe price IDs for the current plans ($95 / $295 / $495 per month),
+// created via create_stripe_products.php. Set STRIPE_PRICE_* in .env to override.
+// The stale *_PRICE_ID lines in the live .env are intentionally no longer used.
+define('STRIPE_PRICE_STARTER',    env('STRIPE_PRICE_STARTER')    ?: 'price_1U55g4KOBtDhxvblkIJjjRV4');
+define('STRIPE_PRICE_GROWTH',     env('STRIPE_PRICE_GROWTH')     ?: 'price_1U55g5KOBtDhxvblJKym4ILT');
+define('STRIPE_PRICE_ENTERPRISE', env('STRIPE_PRICE_ENTERPRISE') ?: 'price_1U55g5KOBtDhxvbl8vtX6Bnj');
 
 define('PLAN_STARTER_CREDITS', (int)env('PLAN_STARTER_CREDITS', 1000));
 define('PLAN_GROWTH_CREDITS', (int)env('PLAN_GROWTH_CREDITS', 6000));

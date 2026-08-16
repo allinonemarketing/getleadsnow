@@ -4150,6 +4150,14 @@ if (isset($_GET['action'])) {
             <button class="btn btn-primary" onclick="app.openCreateModal()"><i class="fas fa-plus"></i> New List</button>
         </div>
     </div>
+    <?php $lowCredit = $userCredits <= 50; ?>
+    <div id="lowCreditBanner" style="<?php echo $lowCredit ? 'display:flex;' : 'display:none;'; ?>align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(135deg,#fff3ec,#ffe7d7);border:1px solid #f0c9ad;border-radius:14px;padding:13px 18px;margin-bottom:18px;">
+        <div style="font-size:14px;color:#8a4a1e;line-height:1.4;">
+            <i class="fas fa-bolt" style="margin-right:6px;"></i>
+            You have <strong id="lowCreditCount"><?php echo number_format($userCredits); ?></strong> credits left — that's <strong id="lowCreditLeads"><?php echo number_format($userCredits); ?></strong> more leads. Upgrade to keep searching.
+        </div>
+        <button onclick="app.showUpgradePrompt(1)" style="background:#c85719;color:#fff;border:none;border-radius:10px;padding:9px 20px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;">Upgrade</button>
+    </div>
     <div id="folderGrid" class="folder-grid"></div>
     <div id="emptyState" class="empty-state hidden">
         <div class="welcome-empty">
@@ -6851,6 +6859,17 @@ class LeadListsApp {
     updateCreditsDisplay() {
         document.getElementById('creditsDisplay').textContent = this.credits.toLocaleString();
         document.getElementById('creditsDisplay2').textContent = this.credits.toLocaleString();
+        // Low-credit upgrade banner (1 credit = 1 lead).
+        const banner = document.getElementById('lowCreditBanner');
+        if (banner) {
+            if (this.credits <= 50) {
+                document.getElementById('lowCreditCount').textContent = this.credits.toLocaleString();
+                document.getElementById('lowCreditLeads').textContent = this.credits.toLocaleString();
+                banner.style.display = 'flex';
+            } else {
+                banner.style.display = 'none';
+            }
+        }
         if (window.parent !== window) {
             window.parent.postMessage({ type: 'creditUpdate', credits: this.credits }, '*');
         }
