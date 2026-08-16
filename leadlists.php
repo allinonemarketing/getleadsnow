@@ -4472,6 +4472,8 @@ if (isset($_GET['action'])) {
             <div class="form-group">
                 <label>Results per City</label>
                 <select id="scrapeLimit" onchange="app.updateCityCounts()">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
                     <option value="20">20</option>
                     <option value="50">50</option>
                     <option value="100" selected>100</option>
@@ -4479,6 +4481,7 @@ if (isset($_GET['action'])) {
                     <option value="300">300</option>
                     <option value="400">400</option>
                     <option value="500">500</option>
+                    <option value="all">Use all remaining credits</option>
                 </select>
             </div>
 
@@ -6318,18 +6321,38 @@ class LeadListsApp {
     updateScrapeLimitOptions() {
         const sel = document.getElementById('scrapeLimit');
         if (!sel) return;
+        const credits = this.credits;
         Array.from(sel.options).forEach(opt => {
-            const val = parseInt(opt.value, 10);
-            const tooMany = val > this.credits;
-            opt.disabled = tooMany;
-            opt.textContent = tooMany ? `${val} — upgrade for more` : String(val);
+            if (opt.value === 'all') {
+                opt.disabled = credits < 1;
+                opt.textContent = `Use all remaining credits (${credits.toLocaleString()})`;
+            } else {
+                const val = parseInt(opt.value, 10);
+                const tooMany = val > credits;
+                opt.disabled = tooMany;
+                opt.textContent = tooMany ? `${val} — upgrade for more` : String(val);
+            }
         });
-        // If the current selection is now disabled, drop to the largest allowed option.
+        // If the current selection is now disabled, pick the largest affordable
+        // fixed amount; if none fits (e.g. only a few credits left), fall back to
+        // "use all remaining credits".
         if (sel.selectedOptions[0] && sel.selectedOptions[0].disabled) {
-            const allowed = Array.from(sel.options).filter(o => !o.disabled);
-            if (allowed.length) { sel.value = allowed[allowed.length - 1].value; }
+            const allowedNumeric = Array.from(sel.options).filter(o => o.value !== 'all' && !o.disabled);
+            if (allowedNumeric.length) {
+                sel.value = allowedNumeric[allowedNumeric.length - 1].value;
+            } else if (credits >= 1) {
+                sel.value = 'all';
+            }
         }
         this.updateCityCounts();
+    }
+
+    // Resolve the per-city results limit from the dropdown ("all" = remaining credits).
+    getScrapeLimit() {
+        const sel = document.getElementById('scrapeLimit');
+        if (!sel) return 0;
+        if (sel.value === 'all') return Math.max(1, this.credits);
+        return parseInt(sel.value, 10) || 0;
     }
 
     async loadStatesForCountry(country) {
@@ -6551,7 +6574,7 @@ class LeadListsApp {
     }
 
     updateCityCounts() {
-        const perCity = parseInt(document.getElementById('scrapeLimit')?.value) || 0;
+        const perCity = this.getScrapeLimit();
         document.getElementById('selectedCitiesCount').textContent = this.selectedCities.size;
         // Upper bound of LEADS (cities x results-per-city). Each lead a search
         // returns costs 1 credit; enrichment is free.
@@ -6566,7 +6589,7 @@ class LeadListsApp {
         if (this.credits < 1) { this.showUpgradePrompt(1); return; }
 
         this.scraping = true;
-        const limit = parseInt(document.getElementById('scrapeLimit').value);
+        const limit = this.getScrapeLimit();
         const btn = document.getElementById('startScrapeBtn');
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
