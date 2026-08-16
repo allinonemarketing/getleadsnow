@@ -242,7 +242,6 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <span class="nav-btn nav-btn-ghost">Hi, <?php echo htmlspecialchars($userName); ?></span>
                         <a href="dashboard.php" class="nav-btn nav-btn-primary">Dashboard</a>
                     <?php else: ?>
-                        <a href="#pricing" class="nav-btn nav-btn-ghost">Pricing</a>
                         <a href="#" onclick="openAuthModal(); if (authMode === 'signup') toggleAuthMode(); return false;" class="nav-btn nav-btn-ghost">Sign In</a>
                         <a href="#" onclick="openSignup(); return false;" class="nav-btn nav-btn-primary">Get Started</a>
                     <?php endif; ?>
@@ -352,66 +351,14 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
 
     <section class="pricing-section" id="pricing">
         <div class="container">
-            <div style="text-align:center;">
-                <h2>Simple, Transparent Pricing</h2>
-                <p class="sub" style="margin:12px auto 0;">Pick a plan that matches your outreach goals. Upgrade or cancel anytime.</p>
-            </div>
-            <div class="pricing-grid">
-                <div class="pricing-card">
-                    <h3>Free</h3>
-                    <div class="price">$0</div>
-                    <ul class="features-list">
-                        <li><i class="fas fa-check"></i> <strong>100 Leads to start</strong></li>
-                        <li><i class="fas fa-check"></i> Free AI Email Enrichment</li>
-                        <li><i class="fas fa-check"></i> CSV Export</li>
-                        <li><i class="fas fa-check"></i> Lead List CRM</li>
-                    </ul>
-                    <?php if (isLoggedIn()): ?>
-                        <a href="dashboard.php" class="pricing-btn pricing-btn-secondary">Go to Dashboard</a>
-                    <?php else: ?>
-                        <button onclick="openSignup()" class="pricing-btn pricing-btn-secondary">Start Free</button>
-                    <?php endif; ?>
-                </div>
-                <div class="pricing-card">
-                    <h3>Starter</h3>
-                    <div class="price">$<?php echo PLAN_STARTER_PRICE; ?><span>/mo</span></div>
-                    <ul class="features-list">
-                        <li><i class="fas fa-check"></i> <strong>1,000 Leads per month</strong></li>
-                        <li><i class="fas fa-check"></i> Free AI Email Enrichment</li>
-                        <li><i class="fas fa-check"></i> CSV Export</li>
-                        <li><i class="fas fa-check"></i> Lead List CRM</li>
-                    </ul>
-                    <button onclick="handlePlanSelection('<?php echo STRIPE_PRICE_STARTER; ?>')" class="pricing-btn pricing-btn-secondary">
-                        <?php echo $userPlan === 'business' ? 'Current Plan' : 'Get Started'; ?>
-                    </button>
-                </div>
-                <div class="pricing-card featured">
-                    <h3>Growth</h3>
-                    <div class="price">$<?php echo PLAN_GROWTH_PRICE; ?><span>/mo</span></div>
-                    <ul class="features-list">
-                        <li><i class="fas fa-check"></i> <strong>6,000 Leads per month</strong></li>
-                        <li><i class="fas fa-check"></i> Free AI Email Enrichment</li>
-                        <li><i class="fas fa-check"></i> Social Media Profiles</li>
-                        <li><i class="fas fa-check"></i> Public Share Links</li>
-                        <li><i class="fas fa-check"></i> GHL Integration</li>
-                    </ul>
-                    <button onclick="handlePlanSelection('<?php echo STRIPE_PRICE_GROWTH; ?>')" class="pricing-btn pricing-btn-primary">
-                        <?php echo $userPlan === 'agency' ? 'Current Plan' : 'Get Started'; ?>
-                    </button>
-                </div>
-                <div class="pricing-card">
-                    <h3>Pro</h3>
-                    <div class="price">$<?php echo PLAN_ENTERPRISE_PRICE; ?><span>/mo</span></div>
-                    <ul class="features-list">
-                        <li><i class="fas fa-check"></i> <strong>17,000 Leads per month</strong></li>
-                        <li><i class="fas fa-check"></i> Free AI Email Enrichment</li>
-                        <li><i class="fas fa-check"></i> Priority Support</li>
-                        <li><i class="fas fa-check"></i> GHL Integration</li>
-                    </ul>
-                    <button onclick="handlePlanSelection('<?php echo STRIPE_PRICE_ENTERPRISE; ?>')" class="pricing-btn pricing-btn-secondary">
-                        <?php echo $userPlan === 'enterprise' ? 'Current Plan' : 'Get Started'; ?>
-                    </button>
-                </div>
+            <div style="text-align:center;max-width:600px;margin:0 auto;">
+                <h2>Start Free — 100 Leads on Us</h2>
+                <p class="sub" style="margin:14px auto 28px;">Create your free account and pull your first 100 leads right away. No credit card required — upgrade only when you need more.</p>
+                <?php if (isLoggedIn()): ?>
+                    <a href="dashboard.php" class="hero-btn hero-btn-primary" style="text-decoration:none;"><i class="fas fa-rocket"></i> Go to Dashboard</a>
+                <?php else: ?>
+                    <a href="#" onclick="openSignup(); return false;" class="hero-btn hero-btn-primary" style="text-decoration:none;"><i class="fas fa-rocket"></i> Get Started — 100 Free Leads</a>
+                <?php endif; ?>
             </div>
         </div>
     </section>
@@ -434,7 +381,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                 <div style="font-size:13px;color:var(--text-tertiary);">&copy; 2026 <?php echo htmlspecialchars(APP_NAME); ?>. All rights reserved.</div>
                 <div class="footer-links">
                     <a href="#features">Features</a>
-                    <a href="#pricing">Pricing</a>
+                    <a href="#pricing">Get Started</a>
                     <a href="#demo">Demo</a>
                 </div>
             </div>
