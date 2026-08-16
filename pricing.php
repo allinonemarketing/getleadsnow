@@ -289,7 +289,6 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <div>
                             <h4 style="margin-bottom:16px;font-size:14px;">Product</h4>
                             <a href="dashboard.php">Dashboard</a>
-                            <a href="pricing.php">Pricing</a>
                         </div>
                         <div>
                             <h4 style="margin-bottom:16px;font-size:14px;">Legal</h4>
