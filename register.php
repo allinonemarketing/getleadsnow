@@ -1,5 +1,6 @@
 <?php
 require_once 'config/database.php';
+require_once 'config/subscription_config.php';
 require_once 'includes/email_service.php';
 
 header('Content-Type: application/json');
@@ -29,9 +30,9 @@ try {
     }
 
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-    // No free credits on signup — access and credits come only from a paid subscription.
-    $stmt = $pdo->prepare("INSERT INTO users (name, email, password, credits) VALUES (?, ?, ?, 0)");
-    $stmt->execute([$name, $email, $hashedPassword]);
+    // Free tier: everyone starts with a one-time batch of free credits.
+    $stmt = $pdo->prepare("INSERT INTO users (name, email, password, credits) VALUES (?, ?, ?, ?)");
+    $stmt->execute([$name, $email, $hashedPassword, FREE_TIER_CREDITS]);
     $userId = $pdo->lastInsertId();
 
     if (session_status() === PHP_SESSION_NONE) {

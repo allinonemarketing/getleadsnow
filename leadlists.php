@@ -2,14 +2,12 @@
 session_start();
 require_once 'includes/auth.php';
 require_once 'config/rapidapi.php';
+require_once 'config/subscription_config.php';
 
 if (!isLoggedIn()) {
     header('Location: login.php');
     exit();
 }
-
-// Hard gate: no app access without an active paid plan (admins/comped plans exempt).
-requireActiveSubscription('pricing.php');
 
 $userId = $_SESSION['user_id'];
 $isAdminViewing = isset($_SESSION['admin_original_id']);
@@ -4421,9 +4419,26 @@ if (isset($_GET['action'])) {
         <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#c85719,#1460a6);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
             <i class="fas fa-rocket" style="color:#fff;font-size:22px;"></i>
         </div>
-        <h2 style="font-size:20px;font-weight:700;margin:0 0 8px;">Need More Credits</h2>
-        <p style="color:#6e6e73;font-size:14px;margin:0 0 20px;line-height:1.5;">You need <strong id="upgradeNeeded">0</strong> credits but only have <strong id="upgradeHave">0</strong>. Upgrade your plan to get more credits and keep searching.</p>
-        <a href="/dashboard?section=section5" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:8px;padding:13px 28px;font-size:15px;border-radius:12px;text-decoration:none;font-weight:600;"><i class="fas fa-arrow-up"></i> Upgrade Plan</a>
+        <h2 style="font-size:20px;font-weight:700;margin:0 0 8px;">Out of credits</h2>
+        <p style="color:#6e6e73;font-size:14px;margin:0 0 20px;line-height:1.5;">You have <strong id="upgradeHave">0</strong> credits left. Upgrade to keep searching — <strong>1 credit per lead</strong>, and enrichment is always free.</p>
+        <?php
+            $upgradePlans = [
+                ['id' => STRIPE_PRICE_STARTER,    'name' => 'Starter', 'price' => PLAN_STARTER_PRICE,    'leads' => PLAN_STARTER_CREDITS,    'featured' => false],
+                ['id' => STRIPE_PRICE_GROWTH,     'name' => 'Growth',  'price' => PLAN_GROWTH_PRICE,     'leads' => PLAN_GROWTH_CREDITS,     'featured' => true],
+                ['id' => STRIPE_PRICE_ENTERPRISE, 'name' => 'Pro',     'price' => PLAN_ENTERPRISE_PRICE, 'leads' => PLAN_ENTERPRISE_CREDITS, 'featured' => false],
+            ];
+        ?>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;">
+            <?php foreach ($upgradePlans as $pl): ?>
+            <div style="border:1.5px solid <?php echo $pl['featured'] ? '#c85719' : '#e6e6e6'; ?>;border-radius:14px;padding:18px 10px 14px;position:relative;">
+                <?php if ($pl['featured']): ?><div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#c85719;color:#fff;font-size:9px;font-weight:800;letter-spacing:.04em;padding:2px 9px;border-radius:999px;">POPULAR</div><?php endif; ?>
+                <div style="font-weight:700;font-size:14px;margin-bottom:2px;"><?php echo $pl['name']; ?></div>
+                <div style="font-size:24px;font-weight:800;line-height:1.1;">$<?php echo $pl['price']; ?><span style="font-size:12px;color:#98918a;font-weight:500;">/mo</span></div>
+                <div style="font-size:12.5px;color:#6e6e73;margin:6px 0 14px;"><?php echo number_format($pl['leads']); ?> leads/mo</div>
+                <button onclick="app.upgradeTo('<?php echo htmlspecialchars($pl['id']); ?>', this)" style="width:100%;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:13px;font-family:inherit;background:<?php echo $pl['featured'] ? '#c85719' : '#f1efec'; ?>;color:<?php echo $pl['featured'] ? '#fff' : '#1d1d1f'; ?>;">Upgrade</button>
+            </div>
+            <?php endforeach; ?>
+        </div>
         <div id="shareForCreditsWrap" style="margin-top:18px;padding-top:18px;border-top:1px solid #f0f0f0;<?php echo $userHasShared ? 'display:none;' : ''; ?>">
             <div style="font-size:12px;color:#86868b;margin-bottom:10px;">or</div>
             <button onclick="app.shareForCredits()" id="shareForCreditsBtn" style="display:inline-flex;align-items:center;gap:8px;padding:11px 24px;border-radius:12px;background:linear-gradient(135deg,#34C759,#30B855);color:#fff;font-size:14px;font-weight:600;border:none;cursor:pointer;box-shadow:0 4px 12px rgba(52,199,89,0.25);transition:all 0.2s;">
@@ -5058,12 +5073,29 @@ class LeadListsApp {
     }
 
     showUpgradePrompt(needed) {
-        document.getElementById('upgradeNeeded').textContent = needed;
-        document.getElementById('upgradeHave').textContent = this.credits;
+        const have = document.getElementById('upgradeHave');
+        if (have) have.textContent = this.credits;
         document.getElementById('upgradeModal').style.display = 'flex';
     }
     closeUpgradeModal() {
         document.getElementById('upgradeModal').style.display = 'none';
+    }
+    async upgradeTo(priceId, btnEl) {
+        if (!priceId) { this.toast('This plan is not available yet.'); return; }
+        if (btnEl) { btnEl.disabled = true; btnEl.textContent = 'Redirecting…'; }
+        try {
+            const res = await fetch('create_subscription_session.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ price_id: priceId })
+            });
+            const data = await res.json();
+            if (data.url) { window.location = data.url; return; }
+            this.toast(data.error || 'Could not start checkout.');
+        } catch (e) {
+            this.toast('Could not start checkout.');
+        }
+        if (btnEl) { btnEl.disabled = false; btnEl.textContent = 'Upgrade'; }
     }
 
     async shareForCredits() {
@@ -5368,6 +5400,8 @@ class LeadListsApp {
     }
 
     openCreateModal() {
+        // Out of credits — nudge to upgrade instead of starting a new list.
+        if (this.credits < 1) { this.showUpgradePrompt(1); return; }
         this.editingListId = null;
         document.getElementById('createModalTitle').textContent = 'New Lead List';
         document.getElementById('createListBtn').textContent = 'Create';

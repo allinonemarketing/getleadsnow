@@ -62,9 +62,8 @@ function sendWelcomeEmail($userData) {
         $mail->Body = "
         <html><body>
             <h2>Welcome {$userData['name']}!</h2>
-            <p>Thank you for joining {$appName}. We're excited to have you on board!</p>
-            <p>Choose a plan to activate your account and start finding leads.</p>
-            <p><a href='{$appUrl}/pricing.php' style='background-color:#c85719;color:#fff;padding:10px 20px;text-decoration:none;border-radius:8px;font-weight:600;'>Choose Your Plan</a></p>
+            <p>Thank you for joining {$appName}. You've got <strong>" . (defined('FREE_TIER_CREDITS') ? FREE_TIER_CREDITS : 100) . " free credits</strong> to start finding leads right away — that's 1 credit per lead.</p>
+            <p><a href='{$appUrl}/dashboard.php' style='background-color:#c85719;color:#fff;padding:10px 20px;text-decoration:none;border-radius:8px;font-weight:600;'>Go to Dashboard</a></p>
             <br><p>Best regards,<br>{$appName} Team</p>
         </body></html>";
         return $mail->send();

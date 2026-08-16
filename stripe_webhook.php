@@ -8,7 +8,7 @@ require_once 'includes/email_service.php';
 $PRICE_PLAN = [
     STRIPE_PRICE_STARTER    => ['plan' => 'business',   'credits' => PLAN_STARTER_CREDITS,    'label' => 'Starter'],
     STRIPE_PRICE_GROWTH     => ['plan' => 'agency',     'credits' => PLAN_GROWTH_CREDITS,     'label' => 'Growth'],
-    STRIPE_PRICE_ENTERPRISE => ['plan' => 'enterprise', 'credits' => PLAN_ENTERPRISE_CREDITS, 'label' => 'Enterprise'],
+    STRIPE_PRICE_ENTERPRISE => ['plan' => 'enterprise', 'credits' => PLAN_ENTERPRISE_CREDITS, 'label' => 'Pro'],
 ];
 
 /**

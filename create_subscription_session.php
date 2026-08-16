@@ -68,7 +68,7 @@ try {
 
     $session = \Stripe\Checkout\Session::create($params);
 
-    echo json_encode(['id' => $session->id]);
+    echo json_encode(['id' => $session->id, 'url' => $session->url]);
 
 } catch (Exception $e) {
     error_log("Stripe subscription error: " . $e->getMessage());

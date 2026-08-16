@@ -242,7 +242,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                     <?php else: ?>
                         <a href="#pricing" class="nav-btn nav-btn-ghost">Pricing</a>
                         <a href="#" onclick="openAuthModal(); if (authMode === 'signup') toggleAuthMode(); return false;" class="nav-btn nav-btn-ghost">Sign In</a>
-                        <a href="#pricing" class="nav-btn nav-btn-primary">Get Started</a>
+                        <a href="#" onclick="openSignup(); return false;" class="nav-btn nav-btn-primary">Get Started</a>
                     <?php endif; ?>
                 </div>
             </nav>
@@ -257,7 +257,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                 <?php if (isLoggedIn()): ?>
                     <a href="dashboard.php" class="hero-btn hero-btn-primary"><i class="fas fa-rocket"></i> Go to Dashboard</a>
                 <?php else: ?>
-                    <a href="#pricing" class="hero-btn hero-btn-primary"><i class="fas fa-rocket"></i> Get Started</a>
+                    <a href="#" onclick="openSignup(); return false;" class="hero-btn hero-btn-primary"><i class="fas fa-rocket"></i> Start Free</a>
                 <?php endif; ?>
             </div>
             <div class="hero-stats">
@@ -342,7 +342,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                 <?php if (isLoggedIn()): ?>
                     <a href="dashboard.php" class="hero-btn hero-btn-primary">Open Dashboard</a>
                 <?php else: ?>
-                    <a href="#pricing" class="hero-btn hero-btn-primary">Get Started</a>
+                    <a href="#" onclick="openSignup(); return false;" class="hero-btn hero-btn-primary">Start Free</a>
                 <?php endif; ?>
             </div>
         </div>
@@ -355,6 +355,21 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                 <p class="sub" style="margin:12px auto 0;">Pick a plan that matches your outreach goals. Upgrade or cancel anytime.</p>
             </div>
             <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Free</h3>
+                    <div class="price">$0</div>
+                    <ul class="features-list">
+                        <li><i class="fas fa-check"></i> <strong>100 Leads to start</strong></li>
+                        <li><i class="fas fa-check"></i> Free AI Email Enrichment</li>
+                        <li><i class="fas fa-check"></i> CSV Export</li>
+                        <li><i class="fas fa-check"></i> Lead List CRM</li>
+                    </ul>
+                    <?php if (isLoggedIn()): ?>
+                        <a href="dashboard.php" class="pricing-btn pricing-btn-secondary">Go to Dashboard</a>
+                    <?php else: ?>
+                        <button onclick="openSignup()" class="pricing-btn pricing-btn-secondary">Start Free</button>
+                    <?php endif; ?>
+                </div>
                 <div class="pricing-card">
                     <h3>Starter</h3>
                     <div class="price">$<?php echo PLAN_STARTER_PRICE; ?><span>/mo</span></div>
@@ -372,26 +387,24 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                     <h3>Growth</h3>
                     <div class="price">$<?php echo PLAN_GROWTH_PRICE; ?><span>/mo</span></div>
                     <ul class="features-list">
-                        <li><i class="fas fa-check"></i> <strong>10,000 Leads per month</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>6,000 Leads per month</strong></li>
                         <li><i class="fas fa-check"></i> Free AI Email Enrichment</li>
                         <li><i class="fas fa-check"></i> Social Media Profiles</li>
                         <li><i class="fas fa-check"></i> Public Share Links</li>
                         <li><i class="fas fa-check"></i> GHL Integration</li>
-                        <li><i class="fas fa-check"></i> Priority Support</li>
                     </ul>
                     <button onclick="handlePlanSelection('<?php echo STRIPE_PRICE_GROWTH; ?>')" class="pricing-btn pricing-btn-primary">
                         <?php echo $userPlan === 'agency' ? 'Current Plan' : 'Get Started'; ?>
                     </button>
                 </div>
                 <div class="pricing-card">
-                    <h3>Enterprise</h3>
+                    <h3>Pro</h3>
                     <div class="price">$<?php echo PLAN_ENTERPRISE_PRICE; ?><span>/mo</span></div>
                     <ul class="features-list">
-                        <li><i class="fas fa-check"></i> <strong>100,000 Leads per month</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>17,000 Leads per month</strong></li>
                         <li><i class="fas fa-check"></i> Free AI Email Enrichment</li>
-                        <li><i class="fas fa-check"></i> Dedicated Support</li>
-                        <li><i class="fas fa-check"></i> Custom Search Rules</li>
-                        <li><i class="fas fa-check"></i> API Access</li>
+                        <li><i class="fas fa-check"></i> Priority Support</li>
+                        <li><i class="fas fa-check"></i> GHL Integration</li>
                     </ul>
                     <button onclick="handlePlanSelection('<?php echo STRIPE_PRICE_ENTERPRISE; ?>')" class="pricing-btn pricing-btn-secondary">
                         <?php echo $userPlan === 'enterprise' ? 'Current Plan' : 'Get Started'; ?>
@@ -406,8 +419,8 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
             <div class="cta-card">
                 <h2>Ready to Fill Your Pipeline?</h2>
                 <p class="sub" style="margin:12px auto 0;">Sign up and find your first leads.</p>
-                <form class="cta-form" onsubmit="event.preventDefault(); document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });">
-                    <button type="submit">Get Started</button>
+                <form class="cta-form" onsubmit="event.preventDefault(); openSignup();">
+                    <button type="submit">Start Free</button>
                 </form>
             </div>
         </div>
@@ -571,11 +584,17 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
             }
         }
 
+        // Open the auth modal in SIGN-UP mode (free account).
+        function openSignup() {
+            openAuthModal();
+            if (authMode === 'login') toggleAuthMode();
+        }
         async function handlePlanSelection(priceId) {
-            // Checkout-first: go straight to Stripe. Guests pay first; their account
-            // is created by the webhook after payment. Logged-in users upgrade in place.
+            // Logged-in users upgrade straight to Stripe. Logged-out users create a
+            // free account first; handleAuth then continues to checkout for this plan.
             selectedPlanId = priceId;
-            proceedToCheckout(priceId);
+            if (isLoggedIn) proceedToCheckout(priceId);
+            else openSignup();
         }
         async function proceedToCheckout(priceId) {
             if (!priceId) { alert("This plan isn't available for checkout yet. Please contact support."); return; }

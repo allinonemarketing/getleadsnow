@@ -201,7 +201,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <?php if ($userPlan === 'business'): ?>
                             <div class="badge badge-current">Current Plan</div>
                         <?php endif; ?>
-                        <h3>Business</h3>
+                        <h3>Starter</h3>
                         <div class="price">$<?php echo PLAN_STARTER_PRICE; ?><span>/mo</span></div>
                         <ul class="features-list">
                             <li><i class="fas fa-check"></i> 1,000 Leads / month</li>
@@ -219,10 +219,10 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <?php if ($userPlan === 'agency'): ?>
                             <div class="badge badge-current" style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);">Current Plan</div>
                         <?php endif; ?>
-                        <h3>Agency</h3>
+                        <h3>Growth</h3>
                         <div class="price">$<?php echo PLAN_GROWTH_PRICE; ?><span>/mo</span></div>
                         <ul class="features-list">
-                            <li><i class="fas fa-check"></i> <strong>10,000 Leads / month</strong></li>
+                            <li><i class="fas fa-check"></i> <strong>6,000 Leads / month</strong></li>
                             <li><i class="fas fa-check"></i> Free AI Email Enrichment</li>
                             <li><i class="fas fa-check"></i> Priority Support</li>
                             <li><i class="fas fa-check"></i> Public Share Links</li>
@@ -238,14 +238,13 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <?php if ($userPlan === 'enterprise'): ?>
                             <div class="badge badge-current">Current Plan</div>
                         <?php endif; ?>
-                        <h3>Enterprise</h3>
+                        <h3>Pro</h3>
                         <div class="price">$<?php echo PLAN_ENTERPRISE_PRICE; ?><span>/mo</span></div>
                         <ul class="features-list">
-                            <li><i class="fas fa-check"></i> <strong>100,000 Leads / month</strong></li>
+                            <li><i class="fas fa-check"></i> <strong>17,000 Leads / month</strong></li>
                             <li><i class="fas fa-check"></i> Free AI Email Enrichment</li>
-                            <li><i class="fas fa-check"></i> Dedicated Account Manager</li>
-                            <li><i class="fas fa-check"></i> API Access</li>
-                            <li><i class="fas fa-check"></i> Custom Search Rules</li>
+                            <li><i class="fas fa-check"></i> Priority Support</li>
+                            <li><i class="fas fa-check"></i> GHL Integration</li>
                         </ul>
                         <button class="select-btn <?php echo $userPlan === 'enterprise' ? 'btn-secondary' : 'btn-primary'; ?>"
                                 data-price-id="<?php echo STRIPE_PRICE_ENTERPRISE; ?>">
