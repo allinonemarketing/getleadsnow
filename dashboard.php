@@ -419,7 +419,10 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
     <?php endif; ?>
     <div class="plan-badge">
         <div class="plan-badge-label">Current Plan</div>
-        <div class="plan-badge-value"><?php echo $userPlan === 'none' ? 'No Plan' : ucfirst($userPlan); ?></div>
+        <div class="plan-badge-value"><?php
+            $planLabels = ['none' => 'Free', 'business' => 'Starter', 'agency' => 'Growth', 'enterprise' => 'Pro'];
+            echo $planLabels[$userPlan] ?? ucfirst($userPlan);
+        ?></div>
     </div>
 
     <div class="menu-toggle">
