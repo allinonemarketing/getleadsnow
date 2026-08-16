@@ -174,7 +174,9 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
 
         /* Pricing */
         .pricing-section { background:var(--bg); }
-        .pricing-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; margin-top:48px; }
+        .pricing-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-top:48px; }
+        @media (max-width:1000px){ .pricing-grid { grid-template-columns:repeat(2,1fr); } }
+        @media (max-width:560px){ .pricing-grid { grid-template-columns:1fr; } }
         .pricing-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:20px; padding:40px 32px; text-align:center; position:relative; transition:transform 0.3s, box-shadow 0.3s; }
         .pricing-card:hover { transform:translateY(-4px); box-shadow:0 12px 40px rgba(0,0,0,0.06); }
         .pricing-card.featured { border-color:var(--accent); box-shadow:0 8px 30px rgba(200,87,25,0.1); }

@@ -32,6 +32,14 @@ error_log("REQUEST DATA: " . json_encode([
 ]));
 
 require_once 'includes/auth.php';
+
+// This standalone subscription page is retired — current pricing lives on
+// pricing.php and the in-app upgrade popup. Send page views there so no stale
+// plan info is ever shown.
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    header('Location: pricing.php');
+    exit;
+}
 require_once 'config/database.php';
 require_once 'config/stripe_config.php';
 require_once 'config/subscription_config.php';
