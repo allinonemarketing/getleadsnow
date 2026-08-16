@@ -5106,7 +5106,9 @@ class LeadListsApp {
                 body: JSON.stringify({ price_id: priceId })
             });
             const data = await res.json();
-            if (data.url) { window.location = data.url; return; }
+            // This page runs inside the dashboard iframe; Stripe can't be framed,
+            // so navigate the TOP window out to Checkout.
+            if (data.url) { (window.top || window).location.href = data.url; return; }
             this.toast(data.error || 'Could not start checkout.');
         } catch (e) {
             this.toast('Could not start checkout.');

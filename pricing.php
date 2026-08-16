@@ -361,14 +361,19 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         return;
                     }
                 
-                    const result = await stripe.redirectToCheckout({
-                        sessionId: session.id
-                    });
-                
-                    if (result.error) {
-                        alert(result.error.message);
-                        btn.innerText = originalText;
-                        btn.style.opacity = '1';
+                    // This page can run inside the dashboard iframe, and Stripe
+                    // Checkout can't be framed — navigate the TOP window to the
+                    // checkout URL instead of redirectToCheckout (which targets
+                    // the current frame).
+                    if (session.url) {
+                        (window.top || window).location.href = session.url;
+                    } else {
+                        const result = await stripe.redirectToCheckout({ sessionId: session.id });
+                        if (result.error) {
+                            alert(result.error.message);
+                            btn.innerText = originalText;
+                            btn.style.opacity = '1';
+                        }
                     }
                 } catch (error) {
                     console.error('Error:', error);
