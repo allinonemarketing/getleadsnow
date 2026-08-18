@@ -456,6 +456,12 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
                 </a>
             </li>
             <li class="nav-item">
+                <a href="?section=penny" class="nav-link <?php echo $current_section === 'penny' ? 'active' : ''; ?>" data-section="penny">
+                    <i class="fas fa-bolt"></i>
+                    Get Leads For Less Than 1&cent;
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="?section=section5" class="nav-link <?php echo $current_section === 'section5' ? 'active' : ''; ?>" data-section="section5">
                     <i class="fas fa-credit-card"></i>
                     Plans <span class="credits-pill"><?php echo number_format($userCredits); ?></span>
@@ -489,6 +495,9 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
         <div id="section5" class="content-section <?php echo $current_section === 'section5' ? 'active' : ''; ?>">
             <div id="section5-content"></div>
         </div>
+        <div id="penny" class="content-section <?php echo $current_section === 'penny' ? 'active' : ''; ?>">
+            <div id="penny-content"></div>
+        </div>
     </div>
 
     <div id="loading">
@@ -506,7 +515,8 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             
             const urls = {
                 'lead_lists': 'leadlists.php',
-                'section5': 'pricing.php'
+                'section5': 'pricing.php',
+                'penny': 'resell.php'
             };
 
             const currentSection = '<?php echo $current_section; ?>';

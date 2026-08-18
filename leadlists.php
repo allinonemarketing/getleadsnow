@@ -4210,6 +4210,27 @@ if (isset($_GET['action'])) {
                     <div class="ws-desc">Mark emails, DMs, follow-ups and watch your pipeline grow</div>
                 </div>
             </div>
+
+            <style>
+              .welcome-faqs{max-width:660px;margin:34px auto 0;text-align:left}
+              .welcome-faqs h3{font-size:16px;font-weight:800;text-align:center;margin-bottom:14px;color:var(--text-primary,#141517)}
+              .wfaq{border:1px solid var(--card-border,#e5e7eb);border-radius:12px;background:var(--card-solid,#fff);margin-bottom:10px;overflow:hidden}
+              .wfaq summary{list-style:none;cursor:pointer;padding:14px 16px;font-weight:700;font-size:14px;color:var(--text-primary,#141517);display:flex;align-items:center;justify-content:space-between;gap:12px}
+              .wfaq summary::-webkit-details-marker{display:none}
+              .wfaq summary::after{content:"\f078";font-family:"Font Awesome 6 Free";font-weight:900;font-size:12px;color:var(--accent,#c85719);transition:transform .2s;flex:none}
+              .wfaq[open] summary::after{transform:rotate(180deg)}
+              .wfaq .wfaq-body{padding:0 16px 14px;font-size:13.5px;line-height:1.6;color:var(--text-secondary,#5b6066)}
+            </style>
+            <div class="welcome-faqs">
+              <h3>Frequently asked questions</h3>
+              <details class="wfaq"><summary>Does every lead come with an email address?</summary><div class="wfaq-body">No &mdash; leads are pulled live from Google Maps, so every lead includes the business name, phone, website, rating and address, but not every business lists an email publicly. Our free one-click enrichment then finds emails &amp; social profiles from each lead&rsquo;s website, so leads without a website usually won&rsquo;t return an email.</div></details>
+              <details class="wfaq"><summary>What does a search cost?</summary><div class="wfaq-body">1 credit per lead returned. Enriching leads with emails &amp; socials is always free &mdash; and so is exporting.</div></details>
+              <details class="wfaq"><summary>What data do I get for each lead?</summary><div class="wfaq-body">Business name, phone number, website, rating, address and category &mdash; plus emails and social profiles after free enrichment.</div></details>
+              <details class="wfaq"><summary>Where does the lead data come from?</summary><div class="wfaq-body">Live from Google Maps&rsquo; public business listings &mdash; fresh every search, never a recycled or resold list.</div></details>
+              <details class="wfaq"><summary>How many leads can I pull at once?</summary><div class="wfaq-body">Up to 500 results per city. Select multiple cities or whole states to pull thousands in a single search.</div></details>
+              <details class="wfaq"><summary>Can I export my leads?</summary><div class="wfaq-body">Yes &mdash; use the Export menu to download a CSV, or push your leads straight into GoHighLevel.</div></details>
+              <details class="wfaq"><summary>What if a search returns no leads?</summary><div class="wfaq-body">You&rsquo;re only charged for leads actually returned, so a search that finds nothing costs you no credits.</div></details>
+            </div>
         </div>
     </div>
 </div>
