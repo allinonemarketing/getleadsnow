@@ -8575,5 +8575,129 @@ document.addEventListener('click', (e) => {
     }
 });
 </script>
+
+<!-- ================= Guided first-run walkthrough: how to pull leads ================= -->
+<style>
+  .lt-spot{position:fixed;z-index:99998;border-radius:10px;box-shadow:0 0 0 9999px rgba(12,15,18,.55);pointer-events:none;transition:left .2s ease,top .2s ease,width .2s ease,height .2s ease;display:none}
+  .lt-tip{position:fixed;z-index:100000;max-width:330px;background:#fff;color:#141517;border-radius:14px;box-shadow:0 18px 55px rgba(0,0,0,.32);padding:16px 18px;font-family:inherit;display:none}
+  .lt-tip .lt-badge{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#c85719}
+  .lt-tip h4{font-size:16px;font-weight:800;margin:6px 0 6px;line-height:1.2}
+  .lt-tip p{font-size:13.5px;line-height:1.55;color:#5b6066;margin:0 0 14px}
+  .lt-tip p b{color:#141517;font-weight:800}
+  .lt-tip .lt-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .lt-tip .lt-skip{background:none;border:none;color:#8b9097;font-size:12.5px;font-weight:600;cursor:pointer;padding:6px 2px;font-family:inherit}
+  .lt-tip .lt-actions{display:flex;gap:8px}
+  .lt-tip .lt-btn{border:none;border-radius:9px;padding:9px 16px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit}
+  .lt-tip .lt-next{background:#c85719;color:#fff}
+  .lt-tip .lt-back{background:#f0f1f3;color:#141517}
+  .lt-help{position:fixed;right:16px;bottom:16px;z-index:99990;background:#141517;color:#fff;border:none;border-radius:999px;padding:11px 16px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 8px 24px rgba(0,0,0,.2);display:inline-flex;align-items:center;gap:8px}
+  @media (prefers-reduced-motion: reduce){ .lt-spot{transition:none} }
+</style>
+<script>
+(function(){
+  var KEY='aiom_leadtour_v1';
+  function qs(s){ try{ return document.querySelector(s); }catch(e){ return null; } }
+  function vis(el){ return !!(el && el.offsetParent!==null && el.getClientRects().length); }
+  function firstVisible(sel){ var e=document.querySelectorAll(sel); for(var k=0;k<e.length;k++){ if(vis(e[k])) return e[k]; } return null; }
+
+  var steps=[
+    {badge:'Step 1 of 6',title:'Create a list',
+     text:'Your leads live inside lists. Click <b>New List</b> to make your first one.',
+     target:function(){return firstVisible('[onclick*="openCreateModal"]');},
+     advance:function(){var m=qs('#createModal');return !!(m&&m.classList.contains('active'));}},
+    {badge:'Step 2 of 6',title:'Name your list',
+     text:'Give it a name like &ldquo;Dentists in Texas&rdquo;, then click <b>Create</b>.',
+     target:function(){return vis(qs('#listName'))?qs('#listName'):firstVisible('#createModal .btn-primary');},
+     advance:function(){var m=qs('#createModal');return !(m&&m.classList.contains('active'));}},
+    {badge:'Step 3 of 6',title:'Add leads',
+     text:'Open your list, then click <b>Add Leads</b> to search Google Maps for businesses.',
+     target:function(){return firstVisible('[onclick*="openAddLeadsModal"]');},
+     advance:function(){var m=qs('#addLeadsModal');return !!(m&&m.classList.contains('active'));}},
+    {badge:'Step 4 of 6',title:'Pick a niche &amp; cities',
+     text:'Type the kind of business (e.g. &ldquo;dentists&rdquo;), choose <b>Results per City</b>, and select the cities you want.',
+     target:function(){return vis(qs('#scrapeQuery'))?qs('#scrapeQuery'):qs('#addLeadsModal');},
+     next:true},
+    {badge:'Step 5 of 6',title:'Start the search',
+     text:'Hit <b>Start Search</b> &mdash; we pull every matching business (name, phone, website, rating) into your list. 1 credit per lead.',
+     target:function(){return vis(qs('#startScrapeBtn'))?qs('#startScrapeBtn'):qs('#addLeadsModal');},
+     advance:function(){var p=qs('#scrapeProgress');return vis(p);},next:true},
+    {badge:'Step 6 of 6',title:'Work your leads',
+     text:'Your leads land in the list. <b>Enrich</b> them with emails &amp; socials for free, or <b>Export</b> to CSV anytime. That&rsquo;s it &mdash; happy prospecting!',
+     target:function(){return null;},next:true,last:true}
+  ];
+
+  var i=0, spot=null, tip=null, timer=null;
+  function mk(cls){ var d=document.createElement('div'); d.className=cls; return d; }
+  function build(){ spot=mk('lt-spot'); tip=mk('lt-tip'); document.body.appendChild(spot); document.body.appendChild(tip); }
+
+  function render(){
+    var s=steps[i]; if(!s){ finish(); return; }
+    var actions='';
+    if(i>0) actions+='<button class="lt-btn lt-back" data-a="back">Back</button>';
+    if(s.next||s.last) actions+='<button class="lt-btn lt-next" data-a="next">'+(s.last?'Got it':'Next')+'</button>';
+    tip.innerHTML='<div class="lt-badge">'+s.badge+'</div><h4>'+s.title+'</h4><p>'+s.text+'</p>'+
+      '<div class="lt-row"><button class="lt-skip" data-a="skip">Skip tour</button><div class="lt-actions">'+actions+'</div></div>';
+    Array.prototype.forEach.call(tip.querySelectorAll('[data-a]'),function(b){
+      b.addEventListener('click',function(){var a=b.getAttribute('data-a');
+        if(a==='skip'){finish();} else if(a==='back'){go(i-1);} else if(a==='next'){ if(s.last){finish();}else{go(i+1);} }});
+    });
+    tip.style.display='block';
+    scrollToTarget();
+    position();
+  }
+
+  function scrollToTarget(){
+    var s=steps[i]; var t=null; try{ t=s.target&&s.target(); }catch(e){}
+    if(t&&vis(t)){ try{ t.scrollIntoView({block:'center',behavior:'smooth'}); }catch(e){} }
+  }
+
+  function position(){
+    var s=steps[i]; if(!s||!tip) return;
+    var t=null; try{ t=s.target&&s.target(); }catch(e){}
+    if(t&&vis(t)){
+      var r=t.getBoundingClientRect(), pad=6;
+      spot.style.display='block';
+      spot.style.left=(r.left-pad)+'px'; spot.style.top=(r.top-pad)+'px';
+      spot.style.width=(r.width+pad*2)+'px'; spot.style.height=(r.height+pad*2)+'px';
+      var th=tip.offsetHeight||150, tw=tip.offsetWidth||300;
+      var top=r.bottom+12; if(top+th>window.innerHeight-8){ top=Math.max(8,r.top-12-th); }
+      var left=Math.min(Math.max(8,r.left),window.innerWidth-tw-8);
+      tip.style.left=left+'px'; tip.style.top=top+'px';
+    } else {
+      spot.style.display='none';
+      var tw2=tip.offsetWidth||300, th2=tip.offsetHeight||150;
+      tip.style.left=Math.max(8,(window.innerWidth-tw2)/2)+'px';
+      tip.style.top=Math.max(8,(window.innerHeight-th2)/2)+'px';
+    }
+  }
+
+  function go(n){ i=Math.max(0,Math.min(steps.length-1,n)); render(); }
+
+  function loop(){
+    if(!tip) return;
+    position();
+    var s=steps[i];
+    if(s&&s.advance){ try{ if(s.advance()&&i<steps.length-1){ go(i+1); } }catch(e){} }
+  }
+
+  function start(){ if(!spot){ build(); } i=0; render(); if(timer){ clearInterval(timer); } timer=setInterval(loop,300); }
+  function finish(){ if(timer){ clearInterval(timer); timer=null; } if(tip){ tip.style.display='none'; } if(spot){ spot.style.display='none'; } try{ localStorage.setItem(KEY,'1'); }catch(e){} }
+
+  function addHelp(){ var h=mk('lt-help'); h.innerHTML='<i class="fas fa-circle-question"></i> How to pull leads'; h.addEventListener('click',start); document.body.appendChild(h); }
+
+  function init(){
+    addHelp();
+    var seen=null; try{ seen=localStorage.getItem(KEY); }catch(e){}
+    if(seen){ return; }
+    var tries=0, wait=setInterval(function(){
+      tries++;
+      if(firstVisible('[onclick*="openCreateModal"]')){ clearInterval(wait); start(); }
+      else if(tries>40){ clearInterval(wait); }
+    },300);
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',function(){ setTimeout(init,700); }); }
+  else { setTimeout(init,700); }
+})();
+</script>
 </body>
 </html>
