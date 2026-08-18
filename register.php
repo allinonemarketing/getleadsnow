@@ -3,6 +3,7 @@ require_once 'config/database.php';
 require_once 'config/subscription_config.php';
 require_once 'includes/email_service.php';
 require_once 'includes/facebook.php';
+require_once 'includes/ghl_signup.php';
 
 header('Content-Type: application/json');
 
@@ -82,6 +83,17 @@ try {
         'event_source_url' => trim($_POST['event_source_url'] ?? ($_SERVER['HTTP_REFERER'] ?? '')),
         'ip' => $ip, 'user_agent' => $userAgent,
         'fbp' => trim($_POST['fbp'] ?? ''), 'fbc' => trim($_POST['fbc'] ?? ''),
+    ]);
+
+    // Push the signup into the owner's GoHighLevel account.
+    sendSignupToGHL([
+        'name' => $name, 'email' => $email, 'phone' => $phone,
+        'entry_date' => date('Y-m-d H:i:s'),
+        'wants_ownership' => $wantsOwnership, 'source' => 'free_signup',
+        'utm_source' => $utmSource, 'utm_medium' => $utmMedium, 'utm_campaign' => $utmCampaign,
+        'fbcampaignid' => $fbCampaignId, 'fbplacement' => $fbPlacement,
+        'fbadsetid' => $fbAdsetId, 'fbadid' => $fbAdId,
+        'timezone' => $timezone, 'referrer' => $referrer, 'ip' => $ip, 'user_agent' => $userAgent,
     ]);
 
     echo json_encode(['success' => true, 'message' => 'Registration successful! Welcome aboard.']);
