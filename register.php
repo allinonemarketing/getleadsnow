@@ -48,6 +48,7 @@ try {
 
     sendAdminNotification(['name' => $name, 'email' => $email, 'wants_ownership' => $wantsOwnership]);
     sendWelcomeEmail(['name' => $name, 'email' => $email]);
+    sendSignupToSheet(['name' => $name, 'email' => $email, 'wants_ownership' => $wantsOwnership, 'source' => 'free_signup']);
 
     echo json_encode(['success' => true, 'message' => 'Registration successful! Welcome aboard.']);
 } catch (PDOException $e) {

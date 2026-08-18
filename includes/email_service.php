@@ -28,6 +28,41 @@ function createMailer() {
     }
 }
 
+/**
+ * Append a signup to a Google Sheet via a Google Apps Script web app.
+ * No-op unless SIGNUP_SHEET_WEBHOOK is set in .env. Fire-and-forget: never
+ * blocks or fails the signup if the sheet is unreachable.
+ */
+function sendSignupToSheet($data) {
+    $url = env('SIGNUP_SHEET_WEBHOOK');
+    if (!$url) return false;
+    $payload = json_encode([
+        'date'            => date('Y-m-d H:i:s'),
+        'name'            => $data['name'] ?? '',
+        'email'           => $data['email'] ?? '',
+        'wants_ownership' => $data['wants_ownership'] ?? '',
+        'source'          => $data['source'] ?? 'signup',
+    ]);
+    try {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $payload,
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,   // Apps Script responds with a redirect
+            CURLOPT_CONNECTTIMEOUT => 3,
+            CURLOPT_TIMEOUT        => 6,
+        ]);
+        curl_exec($ch);
+        curl_close($ch);
+        return true;
+    } catch (Exception $e) {
+        error_log("Signup->Sheet failed: " . $e->getMessage());
+        return false;
+    }
+}
+
 function sendAdminNotification($userData) {
     $mail = createMailer();
     if (!$mail) return false;
