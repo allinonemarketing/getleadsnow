@@ -478,8 +478,8 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
       </div>
       <div class="review">
         <div class="rstars" aria-label="Rated 5 out of 5">★★★★★</div>
-        <p class="rtext">“I now have one place to manage contacts, run marketing campaigns and track my progress. The automation saves me hours of work every week.”</p>
-        <div class="rwho"><div class="ravatar" aria-hidden="true">J</div><div><div class="rname">Jeremy Michels</div><div class="rmeta">Trustpilot review · FR</div></div></div>
+        <p class="rtext">“The ease of use is what stands out to me the most. Whether I’m building a funnel or sending a quick email, everything just works.”</p>
+        <div class="rwho"><div class="ravatar" aria-hidden="true">A</div><div><div class="rname">Andy Berg</div><div class="rmeta">Trustpilot review · DE</div></div></div>
       </div>
       <div class="review">
         <div class="rstars" aria-label="Rated 5 out of 5">★★★★★</div>
