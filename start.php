@@ -215,7 +215,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
       .cta .btn{position:relative;font-size:18px;padding:18px 34px}
       .cta .fine{margin-top:16px;color:#9aa0a8;font-size:13px;position:relative}
 
-      footer{border-top:1px solid var(--line);padding:30px 0;color:var(--faint);font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+      footer.wrap{border-top:1px solid var(--line);padding-top:40px;padding-bottom:40px;color:var(--faint);font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
 
       /* sticky mobile CTA bar */
       .mobbar{display:none}
@@ -507,7 +507,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
 </section>
 
 <footer class="wrap">
-  <div>&copy; 2026 <?php echo htmlspecialchars($appName); ?></div>
+  <div>&copy; 2026 All In One Marketing, Inc.</div>
   <div>
     <a href="https://allinonemarketing.com/terms-conditions/" target="_blank" rel="noopener">Terms</a> ·
     <a href="https://allinonemarketing.com/privacy-policy" target="_blank" rel="noopener">Privacy</a>
