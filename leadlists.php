@@ -5544,8 +5544,13 @@ class LeadListsApp {
             await this.api('updateList', { id: this.editingListId, name, description: desc }, 'POST');
             this.toast('List updated');
         } else {
-            await this.api('createList', { name, description: desc }, 'POST');
+            const res = await this.api('createList', { name, description: desc }, 'POST');
             this.toast('List created');
+            this.closeCreateModal();
+            await this.loadLists();
+            // Drop the user straight into the new list so they can add leads immediately.
+            if (res && res.id) { await this.openList(res.id); }
+            return;
         }
         this.closeCreateModal();
         await this.loadLists();
@@ -8601,28 +8606,44 @@ document.addEventListener('click', (e) => {
   function firstVisible(sel){ var e=document.querySelectorAll(sel); for(var k=0;k<e.length;k++){ if(vis(e[k])) return e[k]; } return null; }
 
   var steps=[
-    {badge:'Step 1 of 6',title:'Create a list',
+    {title:'Create a list',
      text:'Your leads live inside lists. Click <b>New List</b> to make your first one.',
      target:function(){return firstVisible('[onclick*="openCreateModal"]');},
      advance:function(){var m=qs('#createModal');return !!(m&&m.classList.contains('active'));}},
-    {badge:'Step 2 of 6',title:'Name your list',
-     text:'Give it a name like &ldquo;Dentists in Texas&rdquo;, then click <b>Create</b>.',
-     target:function(){return vis(qs('#listName'))?qs('#listName'):firstVisible('#createModal .btn-primary');},
+    {title:'Name it, then Create',
+     text:'Give your list a name like &ldquo;Dentists in Texas&rdquo;, then click <b>Create</b> &mdash; we&rsquo;ll drop you right into it.',
+     target:function(){return firstVisible('#createModal .btn-primary');},
      advance:function(){var m=qs('#createModal');return !(m&&m.classList.contains('active'));}},
-    {badge:'Step 3 of 6',title:'Add leads',
-     text:'Open your list, then click <b>Add Leads</b> to search Google Maps for businesses.',
+    {title:'Add leads',
+     text:'You&rsquo;re inside your new list. Click <b>Add Leads</b> to search Google Maps for businesses.',
      target:function(){return firstVisible('[onclick*="openAddLeadsModal"]');},
      advance:function(){var m=qs('#addLeadsModal');return !!(m&&m.classList.contains('active'));}},
-    {badge:'Step 4 of 6',title:'Pick a niche &amp; cities',
-     text:'Type the kind of business (e.g. &ldquo;dentists&rdquo;), choose <b>Results per City</b>, and select the cities you want.',
+    {title:'Type what you sell to',
+     text:'Enter the kind of business you want &mdash; e.g. <b>&ldquo;dentists&rdquo;</b> or &ldquo;roofers&rdquo;.',
      target:function(){return vis(qs('#scrapeQuery'))?qs('#scrapeQuery'):qs('#addLeadsModal');},
      next:true},
-    {badge:'Step 5 of 6',title:'Start the search',
-     text:'Hit <b>Start Search</b> &mdash; we pull every matching business (name, phone, website, rating) into your list. 1 credit per lead.',
+    {title:'Results per city',
+     text:'Choose how many businesses to pull from each city. Start small &mdash; it&rsquo;s 1 credit per lead returned.',
+     target:function(){return vis(qs('#scrapeLimit'))?qs('#scrapeLimit'):qs('#addLeadsModal');},
+     next:true},
+    {title:'Pick a country',
+     text:'Choose the country to search &mdash; United States, United Kingdom or Europe.',
+     target:function(){return vis(qs('#countryPicker'))?qs('#countryPicker'):qs('#addLeadsModal');},
+     next:true},
+    {title:'Choose your states',
+     text:'Tick the states (or regions) you want to search in.',
+     target:function(){return firstVisible('.selector-grid .selector-panel:first-child');},
+     next:true},
+    {title:'Choose your cities',
+     text:'Pick the cities to pull leads from &mdash; selecting a state fills this list.',
+     target:function(){return firstVisible('.selector-grid .selector-panel:last-child');},
+     next:true},
+    {title:'Start the search',
+     text:'When you&rsquo;re ready, hit <b>Start Search</b> &mdash; we pull every matching business (name, phone, website, rating) into your list.',
      target:function(){return vis(qs('#startScrapeBtn'))?qs('#startScrapeBtn'):qs('#addLeadsModal');},
-     advance:function(){var p=qs('#scrapeProgress');return vis(p);},next:true},
-    {badge:'Step 6 of 6',title:'Work your leads',
-     text:'Your leads land in the list. <b>Enrich</b> them with emails &amp; socials for free, or <b>Export</b> to CSV anytime. That&rsquo;s it &mdash; happy prospecting!',
+     advance:function(){var p=qs('#scrapeProgress');return vis(p);}},
+    {title:'Work your leads',
+     text:'Done! Your leads land in the list. <b>Enrich</b> them with emails &amp; socials for free, or <b>Export</b> to CSV anytime. Happy prospecting!',
      target:function(){return null;},next:true,last:true}
   ];
 
@@ -8635,7 +8656,7 @@ document.addEventListener('click', (e) => {
     var actions='';
     if(i>0) actions+='<button class="lt-btn lt-back" data-a="back">Back</button>';
     if(s.next||s.last) actions+='<button class="lt-btn lt-next" data-a="next">'+(s.last?'Got it':'Next')+'</button>';
-    tip.innerHTML='<div class="lt-badge">'+s.badge+'</div><h4>'+s.title+'</h4><p>'+s.text+'</p>'+
+    tip.innerHTML='<div class="lt-badge">Step '+(i+1)+' of '+steps.length+'</div><h4>'+s.title+'</h4><p>'+s.text+'</p>'+
       '<div class="lt-row"><button class="lt-skip" data-a="skip">Skip tour</button><div class="lt-actions">'+actions+'</div></div>';
     Array.prototype.forEach.call(tip.querySelectorAll('[data-a]'),function(b){
       b.addEventListener('click',function(){var a=b.getAttribute('data-a');
