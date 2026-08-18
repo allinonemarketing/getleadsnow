@@ -57,7 +57,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
 
       /* top bar */
       .topbar{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-      .topbar .inner{display:flex;align-items:center;height:64px}
+      .topbar .inner{display:flex;align-items:center;justify-content:center;height:64px}
       .topbar img{max-height:36px;width:auto;height:36px}
 
       /* hero */
@@ -222,7 +222,6 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
 
       @media(max-width:900px){
         .topbar{position:static}
-        .topbar .inner{justify-content:center}
         .hero .grid{grid-template-columns:1fr;gap:26px;padding-top:24px;padding-bottom:40px}
         .mobhook{display:block;order:-3;margin-bottom:-8px;text-align:center}
         .mobhook .mh-proof{text-align:left}
