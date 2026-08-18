@@ -222,6 +222,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
 
       @media(max-width:900px){
         .topbar{position:static}
+        .topbar .inner{justify-content:center}
         .hero .grid{grid-template-columns:1fr;gap:26px;padding-top:24px;padding-bottom:40px}
         .mobhook{display:block;order:-3;margin-bottom:-8px;text-align:center}
         .mobhook .mh-proof{text-align:left}
