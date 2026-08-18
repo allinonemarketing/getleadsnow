@@ -12,6 +12,20 @@
 
 require_once __DIR__ . '/../config/database.php'; // provides env()
 
+/** True if the phone number's area code belongs to Texas (can't message those). */
+function isTexasNumber($phone) {
+    $digits = preg_replace('/\D+/', '', (string) $phone);
+    if (strlen($digits) === 11 && $digits[0] === '1') { $digits = substr($digits, 1); }
+    if (strlen($digits) < 10) return false;
+    $areaCode = substr($digits, 0, 3);
+    static $texas = [
+        '210','214','254','281','325','346','361','409','430','432','469','512',
+        '682','713','726','737','806','817','830','832','903','915','936','940',
+        '945','956','972','979',
+    ];
+    return in_array($areaCode, $texas, true);
+}
+
 function sendSignupToGHL($d) {
     $token      = env('GHL_SIGNUP_TOKEN', 'pit-c783c99a-a551-427c-ba0b-f9c18cfd820a');
     $locationId = env('GHL_SIGNUP_LOCATION', 'rZ5eDWGmionEGPWr3cj4');
@@ -53,6 +67,11 @@ function sendSignupToGHL($d) {
         'timezone'     => $d['timezone'] ?? '',   // IANA zone, e.g. America/New_York
         'customFields' => $customFields,
     ], function ($v) { return $v !== '' && $v !== null && $v !== []; });
+
+    // Texas numbers can't be messaged — mark the contact Do Not Disturb.
+    if (isTexasNumber($d['phone'] ?? '')) {
+        $body['dnd'] = true;
+    }
 
     $headers = [
         'Authorization: Bearer ' . $token,
