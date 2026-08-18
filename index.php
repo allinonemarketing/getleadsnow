@@ -408,6 +408,17 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <label>Password</label>
                         <input type="password" id="authPassword" required placeholder="Create a password" minlength="6">
                     </div>
+                    <div class="form-group" id="ownershipGroup">
+                        <label style="line-height:1.45;">Do you want to own this software, get leads even cheaper, and be able to sell it yourself to make money?</label>
+                        <div style="display:flex;gap:20px;margin-top:10px;">
+                            <label style="display:flex;align-items:center;gap:7px;font-weight:400;cursor:pointer;font-size:14px;">
+                                <input type="radio" name="wantsOwnership" value="yes" style="accent-color:var(--accent);"> Yes
+                            </label>
+                            <label style="display:flex;align-items:center;gap:7px;font-weight:400;cursor:pointer;font-size:14px;">
+                                <input type="radio" name="wantsOwnership" value="no" style="accent-color:var(--accent);"> No
+                            </label>
+                        </div>
+                    </div>
                     <button type="submit" class="nav-btn nav-btn-primary" id="authSubmitBtn" style="width:100%;justify-content:center;padding:13px;font-size:15px;border-radius:12px;">
                         Create Account
                     </button>
@@ -457,18 +468,21 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
         function toggleAuthMode() {
             authMode = authMode === 'signup' ? 'login' : 'signup';
             const nameGroup = document.getElementById('nameGroup');
+            const ownershipGroup = document.getElementById('ownershipGroup');
             const title = document.getElementById('authTitle');
             const subtitle = document.getElementById('authSubtitle');
             const btn = document.getElementById('authSubmitBtn');
             const toggle = document.getElementById('authToggle');
             if (authMode === 'login') {
                 nameGroup.style.display = 'none';
+                ownershipGroup.style.display = 'none';
                 title.textContent = 'Welcome Back';
                 subtitle.textContent = 'Sign in to access your leads and lists.';
                 btn.textContent = 'Sign In';
                 toggle.textContent = "Don't have an account? Sign up";
             } else {
                 nameGroup.style.display = 'block';
+                ownershipGroup.style.display = 'block';
                 title.textContent = 'Create Your Account';
                 subtitle.textContent = 'Create an account or sign in to start finding leads instantly.';
                 btn.textContent = 'Create Account';
@@ -508,10 +522,13 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
             } else {
                 const name = document.getElementById('authName').value.trim();
                 if (!name) { errEl.textContent = 'Please enter your name'; errEl.style.display = 'block'; btn.textContent = 'Create Account'; btn.disabled = false; return; }
+                const ownershipEl = document.querySelector('input[name="wantsOwnership"]:checked');
+                if (!ownershipEl) { errEl.textContent = 'Please answer the ownership question (Yes or No).'; errEl.style.display = 'block'; btn.textContent = 'Create Account'; btn.disabled = false; return; }
                 const fd = new FormData();
                 fd.append('name', name);
                 fd.append('email', email);
                 fd.append('password', password);
+                fd.append('wants_ownership', ownershipEl.value);
                 fd.append('phone', '');
                 fd.append('experience', 'Not Specified');
                 fd.append('role', 'Not Specified');

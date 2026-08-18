@@ -34,13 +34,18 @@ function sendAdminNotification($userData) {
     try {
         $mail->addAddress(ADMIN_EMAIL);
         $mail->isHTML(true);
-        $mail->Subject = "New User Registration - " . APP_NAME;
+        $wantsOwnership = ($userData['wants_ownership'] ?? 'no') === 'yes';
+        $mail->Subject = ($wantsOwnership ? "New User (WANTS OWNERSHIP) - " : "New User Registration - ") . APP_NAME;
+        $ownershipRow = $wantsOwnership
+            ? "<span style='color:#127c2e;font-weight:700;'>YES — interested in owning &amp; reselling</span>"
+            : "No";
         $mail->Body = "
         <html><body>
             <h2>New User Registration</h2>
             <table>
                 <tr><td><strong>Name:</strong></td><td>{$userData['name']}</td></tr>
                 <tr><td><strong>Email:</strong></td><td>{$userData['email']}</td></tr>
+                <tr><td><strong>Wants to own &amp; resell:</strong></td><td>{$ownershipRow}</td></tr>
             </table>
         </body></html>";
         return $mail->send();
