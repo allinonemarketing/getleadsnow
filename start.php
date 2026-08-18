@@ -370,7 +370,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
         <div class="fstep" data-step="4" hidden>
           <fieldset class="qbox" id="ownOpts" aria-describedby="ownErr">
             <legend class="qh">One quick question</legend>
-            <p>Do you also want to offer this tool to your own clients? <span class="qsub">Either answer still gets you your 100 leads.</span></p>
+            <p>Do you want to get leads for less than 1 penny, plus sell this tool to create an additional revenue stream? <span class="qsub">Either answer still gets you your 100 leads.</span></p>
             <div class="qopts">
               <label for="own_yes"><input type="radio" name="own" id="own_yes" value="yes"><span>Yes, show me</span></label>
               <label for="own_no"><input type="radio" name="own" id="own_no" value="no"><span>No, just the leads</span></label>
