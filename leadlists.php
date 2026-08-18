@@ -8583,7 +8583,7 @@ document.addEventListener('click', (e) => {
 
 <!-- ================= Guided first-run walkthrough: how to pull leads ================= -->
 <style>
-  .lt-spot{position:fixed;z-index:99998;border-radius:10px;box-shadow:0 0 0 9999px rgba(12,15,18,.55);pointer-events:none;transition:left .2s ease,top .2s ease,width .2s ease,height .2s ease;display:none}
+  .lt-mask{position:fixed;inset:0;z-index:99998;pointer-events:none;display:none}
   .lt-tip{position:fixed;z-index:100000;max-width:330px;background:#fff;color:#141517;border-radius:14px;box-shadow:0 18px 55px rgba(0,0,0,.32);padding:16px 18px;font-family:inherit;display:none}
   .lt-tip .lt-badge{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#c85719}
   .lt-tip h4{font-size:16px;font-weight:800;margin:6px 0 6px;line-height:1.2}
@@ -8596,13 +8596,13 @@ document.addEventListener('click', (e) => {
   .lt-tip .lt-next{background:#c85719;color:#fff}
   .lt-tip .lt-back{background:#f0f1f3;color:#141517}
   .lt-help{position:fixed;right:16px;bottom:16px;z-index:99990;background:#141517;color:#fff;border:none;border-radius:999px;padding:11px 16px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 8px 24px rgba(0,0,0,.2);display:inline-flex;align-items:center;gap:8px}
-  @media (prefers-reduced-motion: reduce){ .lt-spot{transition:none} }
+  .lt-mask rect{ } /* spotlight is an SVG mask (supports multiple highlights) */
 </style>
 <script>
 (function(){
   var KEY='aiom_leadtour_v1';
   function qs(s){ try{ return document.querySelector(s); }catch(e){ return null; } }
-  function vis(el){ return !!(el && el.offsetParent!==null && el.getClientRects().length); }
+  function vis(el){ if(!el) return false; var r=el.getClientRects(); if(!r.length) return false; var cs=window.getComputedStyle(el); return cs.visibility!=='hidden' && cs.display!=='none' && r[0].width>0 && r[0].height>0; }
   function firstVisible(sel){ var e=document.querySelectorAll(sel); for(var k=0;k<e.length;k++){ if(vis(e[k])) return e[k]; } return null; }
 
   var steps=[
@@ -8612,7 +8612,7 @@ document.addEventListener('click', (e) => {
      advance:function(){var m=qs('#createModal');return !!(m&&m.classList.contains('active'));}},
     {title:'Name it, then Create',
      text:'Give your list a name like &ldquo;Dentists in Texas&rdquo;, then click <b>Create</b> &mdash; we&rsquo;ll drop you right into it.',
-     target:function(){return firstVisible('#createModal .btn-primary');},
+     target:function(){return [qs('#listName'), firstVisible('#createModal .btn-primary')];},
      advance:function(){var m=qs('#createModal');return !(m&&m.classList.contains('active'));}},
     {title:'Add leads',
      text:'You&rsquo;re inside your new list. Click <b>Add Leads</b> to search Google Maps for businesses.',
@@ -8647,16 +8647,36 @@ document.addEventListener('click', (e) => {
      target:function(){return null;},next:true,last:true}
   ];
 
-  var i=0, spot=null, tip=null, timer=null;
+  var SVGNS='http://www.w3.org/2000/svg';
+  var i=0, mask=null, tip=null, timer=null;
   function mk(cls){ var d=document.createElement('div'); d.className=cls; return d; }
-  function build(){ spot=mk('lt-spot'); tip=mk('lt-tip'); document.body.appendChild(spot); document.body.appendChild(tip); }
+  function build(){
+    mask=document.createElementNS(SVGNS,'svg'); mask.setAttribute('class','lt-mask'); mask.style.display='none';
+    document.body.appendChild(mask);
+    tip=mk('lt-tip'); document.body.appendChild(tip);
+  }
+
+  function targets(){
+    var s=steps[i]; var t; try{ t=s.target&&s.target(); }catch(e){ t=null; }
+    if(!t) return [];
+    if(!Array.isArray(t)) t=[t];
+    return t.filter(function(el){ return el && vis(el); });
+  }
+
+  function drawMask(rects){
+    var W=window.innerWidth, H=window.innerHeight;
+    var holes=rects.map(function(r){ return '<rect x="'+r.x+'" y="'+r.y+'" width="'+r.w+'" height="'+r.h+'" rx="10" ry="10" fill="#000"/>'; }).join('');
+    mask.setAttribute('width',W); mask.setAttribute('height',H); mask.setAttribute('viewBox','0 0 '+W+' '+H);
+    mask.innerHTML='<defs><mask id="ltHole"><rect x="0" y="0" width="'+W+'" height="'+H+'" fill="#fff"/>'+holes+'</mask></defs>'+
+      '<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="rgba(12,15,18,0.55)" mask="url(#ltHole)"/>';
+  }
 
   function render(){
     var s=steps[i]; if(!s){ finish(); return; }
     var actions='';
     if(i>0) actions+='<button class="lt-btn lt-back" data-a="back">Back</button>';
     if(s.next||s.last) actions+='<button class="lt-btn lt-next" data-a="next">'+(s.last?'Got it':'Next')+'</button>';
-    tip.innerHTML='<div class="lt-badge">Step '+(i+1)+' of '+steps.length+'</div><h4>'+s.title+'</h4><p>'+s.text+'</p>'+
+    tip.innerHTML='<div class="lt-badge">Step '+(i+1)+' of '+steps.length+'</div><h4>'+s.title+'</h4><p>'+(s.text||'')+'</p>'+
       '<div class="lt-row"><button class="lt-skip" data-a="skip">Skip tour</button><div class="lt-actions">'+actions+'</div></div>';
     Array.prototype.forEach.call(tip.querySelectorAll('[data-a]'),function(b){
       b.addEventListener('click',function(){var a=b.getAttribute('data-a');
@@ -8668,24 +8688,22 @@ document.addEventListener('click', (e) => {
   }
 
   function scrollToTarget(){
-    var s=steps[i]; var t=null; try{ t=s.target&&s.target(); }catch(e){}
-    if(t&&vis(t)){ try{ t.scrollIntoView({block:'center',behavior:'smooth'}); }catch(e){} }
+    var els=targets(); if(els.length){ try{ els[0].scrollIntoView({block:'center',behavior:'smooth'}); }catch(e){} }
   }
 
   function position(){
-    var s=steps[i]; if(!s||!tip) return;
-    var t=null; try{ t=s.target&&s.target(); }catch(e){}
-    if(t&&vis(t)){
-      var r=t.getBoundingClientRect(), pad=6;
-      spot.style.display='block';
-      spot.style.left=(r.left-pad)+'px'; spot.style.top=(r.top-pad)+'px';
-      spot.style.width=(r.width+pad*2)+'px'; spot.style.height=(r.height+pad*2)+'px';
+    if(!tip) return;
+    var els=targets(), pad=6;
+    if(els.length){
+      var rects=els.map(function(el){ var r=el.getBoundingClientRect(); return {x:r.left-pad,y:r.top-pad,w:r.width+pad*2,h:r.height+pad*2}; });
+      mask.style.display='block'; drawMask(rects);
+      var ar=els[els.length-1].getBoundingClientRect();
       var th=tip.offsetHeight||150, tw=tip.offsetWidth||300;
-      var top=r.bottom+12; if(top+th>window.innerHeight-8){ top=Math.max(8,r.top-12-th); }
-      var left=Math.min(Math.max(8,r.left),window.innerWidth-tw-8);
+      var top=ar.bottom+12; if(top+th>window.innerHeight-8){ top=Math.max(8,ar.top-12-th); }
+      var left=Math.min(Math.max(8,ar.left),window.innerWidth-tw-8);
       tip.style.left=left+'px'; tip.style.top=top+'px';
     } else {
-      spot.style.display='none';
+      mask.style.display='none';
       var tw2=tip.offsetWidth||300, th2=tip.offsetHeight||150;
       tip.style.left=Math.max(8,(window.innerWidth-tw2)/2)+'px';
       tip.style.top=Math.max(8,(window.innerHeight-th2)/2)+'px';
@@ -8701,13 +8719,52 @@ document.addEventListener('click', (e) => {
     if(s&&s.advance){ try{ if(s.advance()&&i<steps.length-1){ go(i+1); } }catch(e){} }
   }
 
-  function start(){ if(!spot){ build(); } i=0; render(); if(timer){ clearInterval(timer); } timer=setInterval(loop,300); }
-  function finish(){ if(timer){ clearInterval(timer); timer=null; } if(tip){ tip.style.display='none'; } if(spot){ spot.style.display='none'; } try{ localStorage.setItem(KEY,'1'); }catch(e){} }
+  function start(){ if(!mask){ build(); } i=0; render(); if(timer){ clearInterval(timer); } timer=setInterval(loop,300); }
+  function finish(){ if(timer){ clearInterval(timer); timer=null; } if(tip){ tip.style.display='none'; } if(mask){ mask.style.display='none'; } try{ localStorage.setItem(KEY,'1'); }catch(e){} }
 
   function addHelp(){ var h=mk('lt-help'); h.innerHTML='<i class="fas fa-circle-question"></i> How to pull leads'; h.addEventListener('click',start); document.body.appendChild(h); }
 
+  // One-off follow-up tip on the Export button, shown once leads have populated.
+  var EKEY='aiom_exporttip_v1';
+  function exportTip(){
+    var btn=firstVisible('#exportMenuBtn'); if(!btn) return;
+    var em=document.createElementNS(SVGNS,'svg'); em.setAttribute('class','lt-mask'); document.body.appendChild(em);
+    var et=mk('lt-tip'); document.body.appendChild(et);
+    et.innerHTML='<div class="lt-badge">You&rsquo;ve got leads!</div><h4>Get your leads out</h4>'+
+      '<p>Click <b>Export</b> to download a <b>CSV</b>, or <b>connect GoHighLevel</b> to push your leads straight into your CRM.</p>'+
+      '<div class="lt-row"><span></span><div class="lt-actions"><button class="lt-btn lt-next" data-a="ok">Got it</button></div></div>';
+    function place(){
+      var r=btn.getBoundingClientRect(), pad=6, W=window.innerWidth, H=window.innerHeight;
+      em.setAttribute('width',W); em.setAttribute('height',H); em.setAttribute('viewBox','0 0 '+W+' '+H);
+      em.innerHTML='<defs><mask id="ltHoleE"><rect width="'+W+'" height="'+H+'" fill="#fff"/>'+
+        '<rect x="'+(r.left-pad)+'" y="'+(r.top-pad)+'" width="'+(r.width+pad*2)+'" height="'+(r.height+pad*2)+'" rx="10" fill="#000"/></mask></defs>'+
+        '<rect width="'+W+'" height="'+H+'" fill="rgba(12,15,18,0.55)" mask="url(#ltHoleE)"/>';
+      var th=et.offsetHeight||150, tw=et.offsetWidth||300;
+      var top=r.bottom+12; if(top+th>H-8){ top=Math.max(8,r.top-12-th); }
+      var left=Math.min(Math.max(8,r.right-tw),W-tw-8);
+      et.style.left=left+'px'; et.style.top=top+'px';
+    }
+    place(); et.style.display='block'; em.style.display='block';
+    var iv=setInterval(place,300);
+    et.querySelector('[data-a="ok"]').addEventListener('click',function(){
+      clearInterval(iv); if(et.parentNode)et.remove(); if(em.parentNode)em.remove();
+      try{ localStorage.setItem(EKEY,'1'); }catch(e){}
+    });
+  }
+  function watchExport(){
+    var shown=null; try{ shown=localStorage.getItem(EKEY); }catch(e){}
+    if(shown){ return; }
+    var iv=setInterval(function(){
+      if(tip && tip.style.display!=='none'){ return; }
+      var body=qs('#leadsBody');
+      var hasLeads=!!(body && body.querySelector('tr'));
+      if(hasLeads && firstVisible('#exportMenuBtn')){ clearInterval(iv); exportTip(); }
+    },800);
+  }
+
   function init(){
     addHelp();
+    watchExport();
     var seen=null; try{ seen=localStorage.getItem(KEY); }catch(e){}
     if(seen){ return; }
     var tries=0, wait=setInterval(function(){
