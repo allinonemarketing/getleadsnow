@@ -2,15 +2,15 @@
 require_once __DIR__ . '/includes/auth.php';
 if (isLoggedIn()) { header('Location: dashboard.php'); exit; }
 $appName = defined('APP_NAME') ? APP_NAME : 'All In One Leads Tool';
-$appLogo = defined('APP_LOGO') ? APP_LOGO : '';
+$appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Get 100 Free Business Leads — <?php echo htmlspecialchars($appName); ?></title>
-    <meta name="description" content="Search any industry + city and instantly pull business names, phone numbers, emails and socials live from Google Maps. Start free with 100 leads — no card.">
+    <title>Get 100 Business Leads — <?php echo htmlspecialchars($appName); ?></title>
+    <meta name="description" content="Search any industry + city and instantly pull business names, phone numbers, emails and socials live from Google Maps. 100 leads included when you create your account — no card.">
     <link rel="icon" type="image/jpeg" href="<?php echo htmlspecialchars($appLogo); ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -53,13 +53,12 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '';
       .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
         color:var(--accent);background:var(--accent-soft);padding:7px 13px;border-radius:999px}
       .eyebrow .ic{font-size:14px}
+      .copy .eyebrow{margin-bottom:18px}
 
       /* top bar */
       .topbar{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
       .topbar .inner{display:flex;align-items:center;justify-content:space-between;height:64px;gap:14px}
-      .topbar img{max-height:34px;width:auto;height:34px}
-      .topbar .right{display:flex;align-items:center;gap:8px}
-      .topbar .login{font-size:14px;font-weight:700;color:var(--muted);padding:11px 12px;min-height:44px;display:inline-flex;align-items:center}
+      .topbar img{max-height:36px;width:auto;height:36px}
       .topbar .cta-mini{background:var(--ink);color:#fff;font-weight:700;font-size:14px;padding:12px 18px;border-radius:10px;min-height:44px;display:inline-flex;align-items:center}
 
       /* hero */
@@ -67,7 +66,7 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '';
         radial-gradient(1100px 500px at 82% -8%, #fff2e9 0%, rgba(255,242,233,0) 60%),
         radial-gradient(900px 500px at -5% 0%, #eef4ff 0%, rgba(238,244,255,0) 55%),
         var(--bg)}
-      .hero .grid{display:grid;grid-template-columns:1.08fr .92fr;gap:56px;align-items:start;padding:56px 0 68px}
+      .hero .grid{display:grid;grid-template-columns:1.08fr .92fr;gap:56px;align-items:start;padding-top:56px;padding-bottom:68px}
       h1{font-size:clamp(2.15rem,4.4vw,3.55rem);line-height:1.05;letter-spacing:-.03em;font-weight:900;text-wrap:balance}
       h1 .hl{color:var(--accent)}
       .lede{font-size:clamp(1.05rem,1.5vw,1.22rem);color:var(--muted);margin-top:18px;max-width:40ch}
@@ -113,14 +112,13 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '';
       .card .kicker{display:flex;align-items:center;gap:9px;font-weight:800;font-size:14px;color:var(--accent)}
       .card h2{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:8px 0 3px}
       .card .sub{color:var(--muted);font-size:14px;margin-bottom:8px}
-      .anchor{display:flex;align-items:flex-start;line-height:1.4;gap:9px;font-size:13px;font-weight:700;color:#14713a;background:#eefaf1;border:1px solid #cdeed7;border-radius:9px;padding:9px 12px;margin-bottom:14px}
-      .anchor .ic{margin-top:2px}
-      .anchor .big{font-size:16px;font-weight:900;color:var(--accent-d)}
+      .anchor{display:flex;align-items:flex-start;line-height:1.45;gap:9px;font-size:13px;font-weight:600;color:#14713a;background:#eefaf1;border:1px solid #cdeed7;border-radius:9px;padding:10px 13px;margin-bottom:16px}
+      .anchor .ic{margin-top:2px;font-size:15px}
+      .anchor span{flex:1;min-width:0}
+      .anchor .big{font-weight:900;color:var(--accent-d)}
       .anchor s{color:var(--faint);font-weight:600}
       .cardprov{display:flex;align-items:flex-start;gap:8px;font-size:12px;font-weight:600;color:var(--muted);margin:2px 0 10px;line-height:1.45}
       .cardprov .ic{color:var(--green);font-size:14px;margin-top:2px;flex:none}
-      .builtby{text-align:center;font-size:12px;font-weight:600;color:var(--muted);margin-top:10px}
-      .builtby a{color:var(--ink)}
       .btn .spin{display:none;width:16px;height:16px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
       .btn.loading{pointer-events:none;opacity:.9}
       .btn.loading .spin{display:inline-block}
@@ -146,14 +144,25 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '';
       .qopts input:checked ~ span{color:var(--accent-d)}
       .qopts label:has(input:checked){border-color:var(--accent);background:var(--accent-soft);color:var(--accent-d)}
       .form-btn{width:100%;font-size:17px;margin-top:2px}
+      /* multi-step form */
+      .fprogress{height:5px;background:#edeef0;border-radius:999px;overflow:hidden;margin-bottom:8px}
+      .fbar{display:block;height:100%;width:25%;background:var(--accent);border-radius:999px;transition:width .25s ease}
+      .fstepnum{font-size:11px;font-weight:700;color:var(--faint);letter-spacing:.04em;text-transform:uppercase;margin-bottom:14px}
+      .fstep[hidden]{display:none}
+      .fnav{display:flex;gap:10px;align-items:stretch;margin-top:2px}
+      .fnav .btn{flex:1;margin-top:0}
+      .btn-ghost{display:inline-flex;align-items:center;justify-content:center;background:transparent;color:var(--muted);font-weight:700;font-size:15px;border:1.5px solid #e0e2e6;border-radius:13px;padding:14px 18px;cursor:pointer;font-family:inherit;transition:background .12s}
+      .btn-ghost:hover{background:var(--panel)}
       .whyfree{font-size:11.5px;color:var(--faint);text-align:center;margin:10px 0 2px;line-height:1.5}
       .microtrust{text-align:center;font-size:12px;color:var(--faint);margin-top:11px;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;line-height:1.7}
+      .tcpa{font-size:6px;color:var(--faint);line-height:1.4;margin-top:12px;text-align:left;opacity:.85}
+      .tcpa a{color:var(--muted);text-decoration:underline;font-weight:700}
       .err{display:none;background:#fdeaea;color:var(--red);font-size:13px;font-weight:600;padding:10px 12px;border-radius:10px;margin-bottom:12px}
       .err a{color:var(--accent-d);text-decoration:underline;font-weight:800}
 
       /* capability strip (honest capabilities, not unverifiable social proof) */
       .metrics{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--panel)}
-      .metrics .row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:24px 0;text-align:center}
+      .metrics .row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding-top:24px;padding-bottom:24px;text-align:center}
       .metrics .n{font-size:clamp(1.5rem,2.7vw,2.1rem);font-weight:900;letter-spacing:-.02em;display:flex;align-items:center;justify-content:center;gap:9px}
       .metrics .n .ic{color:var(--accent);font-size:.8em}
       .metrics .l{font-size:13px;color:var(--muted);font-weight:600;margin-top:3px}
@@ -175,6 +184,16 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '';
       .feat .ic{color:var(--accent);font-size:20px;margin-top:2px}
       .feat h4{font-size:16px;font-weight:800;margin-bottom:4px}
       .feat p{color:var(--muted);font-size:13.5px}
+
+      /* customer reviews (real, attributed) */
+      .reviews{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+      .review{border:1px solid var(--line);border-radius:16px;background:#fff;padding:22px;box-shadow:var(--shadow);display:flex;flex-direction:column}
+      .review .rstars{color:var(--gold);letter-spacing:1px;font-size:14px;font-weight:800}
+      .review .rtext{color:var(--ink);font-size:14px;line-height:1.55;margin:10px 0 16px;flex:1}
+      .review .rwho{display:flex;align-items:center;gap:11px}
+      .review .ravatar{width:36px;height:36px;border-radius:50%;background:var(--accent-soft);color:var(--accent-d);font-weight:800;display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}
+      .review .rname{font-weight:800;font-size:13.5px}
+      .review .rmeta{font-size:11.5px;color:var(--faint);font-weight:600;margin-top:1px}
 
       /* compare / anchor block */
       .compare{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:820px;margin:0 auto}
@@ -203,13 +222,13 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '';
       .mobbar{display:none}
 
       @media(max-width:900px){
-        .hero .grid{grid-template-columns:1fr;gap:26px;padding:24px 0 40px}
+        .hero .grid{grid-template-columns:1fr;gap:26px;padding-top:24px;padding-bottom:40px}
         .mobhook{display:block;order:-3;margin-bottom:-8px}
         .card{order:-2;position:static}
         .lede{max-width:none}
         .hero .copy .preview{display:none}   /* desktop preview hidden; compact mh-proof shows instead */
-        .steps,.feats,.compare{grid-template-columns:1fr}
-        .metrics .row{grid-template-columns:1fr;gap:16px;padding:20px 0}
+        .steps,.feats,.compare,.reviews{grid-template-columns:1fr}
+        .metrics .row{grid-template-columns:1fr;gap:16px;padding-top:20px;padding-bottom:20px}
         section.blk{padding:52px 0}
         .cta{padding:42px 22px}
         body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
@@ -249,11 +268,8 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '';
 
 <header class="topbar">
   <div class="wrap inner">
-    <?php if ($appLogo): ?><img src="<?php echo htmlspecialchars($appLogo); ?>" alt="<?php echo htmlspecialchars($appName); ?>" width="120" height="34"><?php else: ?><strong><?php echo htmlspecialchars($appName); ?></strong><?php endif; ?>
-    <div class="right">
-      <a href="login.php" class="login">Log in</a>
-      <a href="#signup" class="cta-mini js-focus">Get 100 Free Leads</a>
-    </div>
+    <?php if ($appLogo): ?><img src="<?php echo htmlspecialchars($appLogo); ?>" alt="<?php echo htmlspecialchars($appName); ?>"><?php else: ?><strong><?php echo htmlspecialchars($appName); ?></strong><?php endif; ?>
+    <a href="#signup" class="cta-mini js-focus">Get 100 Leads</a>
   </div>
 </header>
 
@@ -261,19 +277,19 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '';
 <section class="hero">
   <div class="wrap grid">
     <div class="mobhook" aria-hidden="true">
-      <span class="eyebrow"><svg class="ic"><use href="#i-bolt"/></svg> 100 free leads</span>
-      <div class="mh-title" id="mh1">100 fresh local business leads — <span class="hl">free, live from Google Maps.</span></div>
+      <span class="eyebrow"><svg class="ic"><use href="#i-bolt"/></svg> 100 leads included</span>
+      <div class="mh-title" id="mh1">100 local business leads — <span class="hl">pulled live from Google Maps.</span></div>
       <div class="mh-proof"><span class="mh-q" id="mhq">🔍 Dentists in Austin, TX</span><b>Hill Country Dental Co.</b> · (512)&nbsp;448‑7290 · <span class="mh-ok">✓ email ✓ social</span> · <span class="mh-rt">★4.8</span> <span class="mh-more">+341 more found</span></div>
-      <div class="mh-note">100 leads free · no credit card · no catch</div>
+      <div class="mh-note">100 leads included · no credit card · no catch</div>
     </div>
     <div class="copy">
-      <span class="eyebrow"><svg class="ic"><use href="#i-bolt"/></svg> For agencies, closers &amp; local businesses</span>
-      <h1 id="h1">100 fresh local business leads — <span class="hl">free, pulled live from Google Maps.</span></h1>
-      <p class="lede">Stop paying for stale, resold lists. Type a niche and a city and instantly get business names, <strong>real phone numbers, emails and social profiles</strong> — no scrapers, no VAs, no recycled data.</p>
+      <span class="eyebrow"><svg class="ic"><use href="#i-bolt"/></svg> For businesses of all types, agencies &amp; closers</span>
+      <h1 id="h1">100 local business leads — <span class="hl">pulled live from Google Maps.</span></h1>
+      <p class="lede">Included when you create your account — no credit card. Stop paying for stale, resold lists: type a niche and a city and instantly get business names, <strong>real phone numbers, emails and social profiles</strong>.</p>
       <ul class="checks">
-        <li><svg class="ic"><use href="#i-check-circle"/></svg> Live phone numbers + one-click AI email enrichment (free)</li>
+        <li><svg class="ic"><use href="#i-check-circle"/></svg> Live phone numbers + one-click AI email enrichment (included)</li>
         <li><svg class="ic"><use href="#i-check-circle"/></svg> Export to CSV or work them in the built-in CRM</li>
-        <li><svg class="ic"><use href="#i-check-circle"/></svg> 100 leads free — no credit card, no catch</li>
+        <li><svg class="ic"><use href="#i-check-circle"/></svg> 100 leads included when you sign up — no credit card, no catch</li>
       </ul>
 
       <!-- Honest product preview: a representation of what a search returns -->
@@ -283,7 +299,7 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '';
         <div class="lead-row"><div><div class="biz">Bright Smile Dental</div><div class="sub">Cosmetic dentist · 342 reviews</div><div class="em">✓ hello@brightsmiledental.com</div></div><div class="ph">(512) 704‑2318</div><div class="rt">★ 4.8</div></div>
         <div class="lead-row"><div><div class="biz">Lone Star Family Dentistry</div><div class="sub">General dentist · 118 reviews</div><div class="em">✓ front@lonestardental.com</div></div><div class="ph">(512) 386‑9075</div><div class="rt">★ 4.6</div></div>
         <div class="lead-row"><div><div class="biz">Congress Ave Orthodontics</div><div class="sub">Orthodontist · 261 reviews</div><div class="em">✓ info@congressortho.com</div></div><div class="ph">(512) 249‑6640</div><div class="rt">★ 4.9</div></div>
-        <div class="foot">342 businesses found — your free plan pulls the first 100</div>
+        <div class="foot">342 businesses found — your account pulls the first 100</div>
         <div class="samplenote">Example of a search result — every field is real data in the app</div>
       </div>
       <div class="prov"><svg class="ic"><use href="#i-shield"/></svg> Fresh results pulled the moment you search — never a recycled, resold list.</div>
@@ -291,50 +307,79 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '';
 
     <!-- SIGNUP CARD -->
     <div class="card" id="signup">
-      <div class="kicker"><svg class="ic"><use href="#i-gift"/></svg> Free account · search in ~20 seconds</div>
-      <h2>Claim your 100 free leads</h2>
-      <div class="sub">Create your free account and search your first city right away.</div>
-      <div class="anchor"><svg class="ic"><use href="#i-tag"/></svg> Most lead tools charge <s>$99+/mo</s> — your first 100 are <span class="big">Free</span>, with phone, email &amp; socials on every lead</div>
+      <div class="kicker"><svg class="ic"><use href="#i-gift"/></svg> Create your account · search in ~20 seconds</div>
+      <h2>Claim your 100 leads</h2>
+      <div class="sub">Create your account and search your first city right away.</div>
+      <div class="anchor"><svg class="ic"><use href="#i-tag"/></svg><span>Most lead tools charge <s>$99+/mo</s>. Your <b class="big">100 leads are included</b> when you create your account — phone, email &amp; socials on each.</span></div>
       <div class="err" id="err" role="alert" aria-live="assertive"></div>
       <form id="leadForm" novalidate>
-        <div class="field">
-          <label for="f_name">Full name</label>
-          <input type="text" id="f_name" placeholder="Jordan Blake" autocomplete="name" autocapitalize="words" enterkeyhint="next" required aria-describedby="fe_name">
-          <div class="fe" id="fe_name">Please enter your name.</div>
-        </div>
-        <div class="field">
-          <label for="f_email">Email</label>
-          <input type="email" id="f_email" placeholder="you@company.com" autocomplete="email" inputmode="email" autocapitalize="none" enterkeyhint="next" required aria-describedby="fe_email">
-          <div class="fe" id="fe_email">Please enter a valid email.</div>
-        </div>
-        <div class="field">
-          <label for="f_phone">Phone <span class="hint">· for account recovery — never sold or shared</span></label>
-          <input type="tel" id="f_phone" placeholder="(555) 123-4567" autocomplete="tel-national" inputmode="tel" enterkeyhint="next" required aria-describedby="fe_phone">
-          <div class="fe" id="fe_phone">Please enter a valid 10-digit phone number.</div>
-        </div>
-        <div class="field">
-          <label for="f_pass">Create a password <span class="hint">· instant access, no email confirmation to wait on</span></label>
-          <div class="pwrap">
-            <input type="password" id="f_pass" placeholder="At least 6 characters" autocomplete="new-password" enterkeyhint="done" required aria-describedby="fe_pass">
-            <button type="button" class="pwtoggle" id="pwToggle" aria-label="Show password">Show</button>
+        <div class="fprogress"><span class="fbar" id="fbar"></span></div>
+        <div class="fstepnum" id="fstepnum">Step 1 of 4</div>
+
+        <!-- Step 1: name + email -->
+        <div class="fstep" data-step="1">
+          <div class="field">
+            <label for="f_name">Full name</label>
+            <input type="text" id="f_name" placeholder="Jordan Blake" autocomplete="name" autocapitalize="words" enterkeyhint="next" required aria-describedby="fe_name">
+            <div class="fe" id="fe_name">Please enter your name.</div>
           </div>
-          <div class="fe" id="fe_pass">Password must be at least 6 characters.</div>
-        </div>
-        <fieldset class="qbox" id="ownOpts" aria-describedby="ownErr">
-          <legend class="qh">One quick question</legend>
-          <p>Do you also want to offer this tool to your own clients? <span class="qsub">Either answer still gets you your 100 free leads.</span></p>
-          <div class="qopts">
-            <label for="own_no"><input type="radio" name="own" id="own_no" value="no"><span>No, just the leads</span></label>
-            <label for="own_yes"><input type="radio" name="own" id="own_yes" value="yes"><span>Yes, show me</span></label>
+          <div class="field">
+            <label for="f_email">Email</label>
+            <input type="email" id="f_email" placeholder="you@company.com" autocomplete="email" inputmode="email" autocapitalize="none" enterkeyhint="next" required aria-describedby="fe_email">
+            <div class="fe" id="fe_email">Please enter a valid email.</div>
           </div>
-          <div class="fe" id="ownErr" style="display:none" aria-live="polite">Please pick Yes or No.</div>
-        </fieldset>
-        <div class="cardprov"><svg class="ic"><use href="#i-shield"/></svg> Pulled live from Google’s public data — verify any lead yourself.</div>
-        <div class="whyfree">Why free? Most people upgrade once they see the numbers are real — so your first 100 are on us.</div>
-        <button type="submit" class="btn form-btn" id="submitBtn"><span class="spin" aria-hidden="true"></span><span class="btn-label">Get My 100 Free Leads →</span></button>
+          <button type="submit" class="btn form-btn">Continue →</button>
+        </div>
+
+        <!-- Step 2: phone -->
+        <div class="fstep" data-step="2" hidden>
+          <div class="field">
+            <label for="f_phone">Phone <span class="hint">· for account recovery — never sold or shared</span></label>
+            <input type="tel" id="f_phone" placeholder="(555) 123-4567" autocomplete="tel-national" inputmode="tel" enterkeyhint="next" required aria-describedby="fe_phone">
+            <div class="fe" id="fe_phone">Please enter a valid 10-digit phone number.</div>
+          </div>
+          <div class="fnav">
+            <button type="button" class="btn-ghost backBtn">← Back</button>
+            <button type="submit" class="btn">Continue →</button>
+          </div>
+        </div>
+
+        <!-- Step 3: password -->
+        <div class="fstep" data-step="3" hidden>
+          <div class="field">
+            <label for="f_pass">Create a password <span class="hint">· instant access, no email confirmation to wait on</span></label>
+            <div class="pwrap">
+              <input type="password" id="f_pass" placeholder="At least 6 characters" autocomplete="new-password" enterkeyhint="next" required aria-describedby="fe_pass">
+              <button type="button" class="pwtoggle" id="pwToggle" aria-label="Show password">Show</button>
+            </div>
+            <div class="fe" id="fe_pass">Password must be at least 6 characters.</div>
+          </div>
+          <div class="fnav">
+            <button type="button" class="btn-ghost backBtn">← Back</button>
+            <button type="submit" class="btn">Continue →</button>
+          </div>
+        </div>
+
+        <!-- Step 4: ownership question + submit -->
+        <div class="fstep" data-step="4" hidden>
+          <fieldset class="qbox" id="ownOpts" aria-describedby="ownErr">
+            <legend class="qh">One quick question</legend>
+            <p>Do you also want to offer this tool to your own clients? <span class="qsub">Either answer still gets you your 100 leads.</span></p>
+            <div class="qopts">
+              <label for="own_yes"><input type="radio" name="own" id="own_yes" value="yes"><span>Yes, show me</span></label>
+              <label for="own_no"><input type="radio" name="own" id="own_no" value="no"><span>No, just the leads</span></label>
+            </div>
+            <div class="fe" id="ownErr" style="display:none" aria-live="polite">Please pick Yes or No.</div>
+          </fieldset>
+          <div class="cardprov"><svg class="ic"><use href="#i-shield"/></svg> Pulled live from Google’s public data — verify any lead yourself.</div>
+          <div class="fnav">
+            <button type="button" class="btn-ghost backBtn">← Back</button>
+            <button type="submit" class="btn form-btn" id="submitBtn"><span class="spin" aria-hidden="true"></span><span class="btn-label">Get My 100 Leads →</span></button>
+          </div>
+          <div class="tcpa">By clicking “Get My 100 Leads”, I consent to receive calls, texts, and emails from All In One Marketing.com via automated calling and prerecorded voice; consent not required to purchase - opt out anytime at info@allinonemarketing.com. I agree to the <a href="https://allinonemarketing.com/terms-conditions/" target="_blank" rel="noopener">Terms &amp; Conditions</a> &amp; <a href="https://allinonemarketing.com/privacy-policy" target="_blank" rel="noopener">Privacy Policy</a> (incl. arbitration). Msg &amp; data rates may apply.</div>
+        </div>
+
         <div class="microtrust"><svg class="ic"><use href="#i-lock"/></svg> No card · Your first list on screen in ~20s · Delete anytime</div>
-        <div class="builtby">Built by <a href="https://allinonemarketing.com" target="_blank" rel="noopener">All In One Marketing</a></div>
-        <div class="whyfree" style="margin-top:6px">By signing up you agree to our <a href="https://allinonemarketing.com/terms-conditions/" target="_blank" rel="noopener">Terms</a> &amp; <a href="https://allinonemarketing.com/privacy-policy" target="_blank" rel="noopener">Privacy</a>.</div>
       </form>
     </div>
   </div>
@@ -345,7 +390,7 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '';
   <div class="wrap row">
     <div><div class="n"><svg class="ic"><use href="#i-activity"/></svg>Live</div><div class="l">Pulled from Google Maps in real time</div></div>
     <div><div class="n"><svg class="ic"><use href="#i-building"/></svg>Any U.S. city</div><div class="l">Search any niche in any market</div></div>
-    <div><div class="n"><svg class="ic"><use href="#i-bolt"/></svg>$0 to start</div><div class="l">100 leads free — no card required</div></div>
+    <div><div class="n"><svg class="ic"><use href="#i-bolt"/></svg>$0 to start</div><div class="l">100 leads included — no card required</div></div>
   </div>
   <div class="wrap worksrow">Works with your stack — export straight to GoHighLevel, Close, Instantly, or any CRM via CSV.</div>
 </div>
@@ -356,7 +401,7 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '';
     <div class="h2c"><h2>From “I need leads” to a full pipeline in 3 steps</h2><p>No tech skills. No spreadsheets. No paying $2 a lead for stale lists.</p></div>
     <div class="steps">
       <div class="step"><div class="num">1</div><h3>Search a niche + city</h3><p>“Dentists in Austin.” “Roofers in Miami.” Anything. We pull every matching business from Google Maps.</p></div>
-      <div class="step"><div class="num">2</div><h3>Get contact-ready leads</h3><p>Business name, phone, website, rating — then one click enriches each lead with emails &amp; socials, free.</p></div>
+      <div class="step"><div class="num">2</div><h3>Get contact-ready leads</h3><p>Business name, phone, website, rating — then one click enriches each lead with emails &amp; socials, included.</p></div>
       <div class="step"><div class="num">3</div><h3>Work them &amp; close</h3><p>Track outreach in the built-in CRM or export to CSV and drop them into your dialer, CRM, or cold-email tool.</p></div>
     </div>
   </div>
@@ -380,9 +425,9 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '';
         <h4><svg class="ic"><use href="#i-check-circle"/></svg> Leads from <?php echo htmlspecialchars($appName); ?></h4>
         <ul>
           <li><svg class="ic"><use href="#i-check"/></svg> Pulled fresh, live from Google Maps, on demand</li>
-          <li><svg class="ic"><use href="#i-check"/></svg> Real phone numbers + free AI-enriched emails</li>
+          <li><svg class="ic"><use href="#i-check"/></svg> Real phone numbers + AI-enriched emails included</li>
           <li><svg class="ic"><use href="#i-check"/></svg> Ratings + social profiles to qualify before you call</li>
-          <li><svg class="ic"><use href="#i-check"/></svg> Verify any lead yourself — your first 100 are free</li>
+          <li><svg class="ic"><use href="#i-check"/></svg> Verify any lead yourself — your first 100 are included</li>
         </ul>
       </div>
     </div>
@@ -395,11 +440,50 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '';
     <div class="h2c"><h2>Everything you need to fill your calendar</h2></div>
     <div class="feats">
       <div class="feat"><svg class="ic"><use href="#i-phone"/></svg><div><h4>Live phone numbers</h4><p>Direct business lines pulled live from Google Maps — not recycled list data.</p></div></div>
-      <div class="feat"><svg class="ic"><use href="#i-mail"/></svg><div><h4>Free AI email enrichment</h4><p>Find decision-maker emails with one click. Enrichment never costs extra credits.</p></div></div>
+      <div class="feat"><svg class="ic"><use href="#i-mail"/></svg><div><h4>AI email enrichment included</h4><p>Find decision-maker emails with one click. Enrichment never costs extra credits.</p></div></div>
       <div class="feat"><svg class="ic"><use href="#i-share"/></svg><div><h4>Social profiles</h4><p>Instagram, Facebook &amp; more, so you can warm up leads before you reach out.</p></div></div>
       <div class="feat"><svg class="ic"><use href="#i-list"/></svg><div><h4>Built-in lead CRM</h4><p>Organize lists, tag statuses, and track who you’ve contacted — no extra tools.</p></div></div>
       <div class="feat"><svg class="ic"><use href="#i-file"/></svg><div><h4>One-click CSV export</h4><p>Send leads straight to your dialer, GHL, or cold-email platform in seconds.</p></div></div>
-      <div class="feat"><svg class="ic"><use href="#i-infinity"/></svg><div><h4>Scale when ready</h4><p>Start free, then unlock thousands of leads a month when it’s paying off.</p></div></div>
+      <div class="feat"><svg class="ic"><use href="#i-infinity"/></svg><div><h4>Scale when ready</h4><p>Start with your 100 included, then unlock thousands of leads a month when it’s paying off.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- REVIEWS (real customer reviews from Trustpilot) -->
+<section class="blk" style="background:var(--panel);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="h2c"><h2>What All In One Marketing customers say</h2><p>Real reviews from customers on Trustpilot.</p></div>
+    <div class="reviews">
+      <div class="review">
+        <div class="rstars" aria-label="Rated 5 out of 5">★★★★★</div>
+        <p class="rtext">“Managing my leads and communication has never been easier. I’m really glad I found a solution that lets me automate so much and keep everything organized in one place.”</p>
+        <div class="rwho"><div class="ravatar" aria-hidden="true">C</div><div><div class="rname">Christelle Cordier</div><div class="rmeta">Trustpilot review · FR</div></div></div>
+      </div>
+      <div class="review">
+        <div class="rstars" aria-label="Rated 5 out of 5">★★★★★</div>
+        <p class="rtext">“A+ for efficiency. Generating ROI since day 1.”</p>
+        <div class="rwho"><div class="ravatar" aria-hidden="true">C</div><div><div class="rname">Conrad Ambroise</div><div class="rmeta">Trustpilot review · US</div></div></div>
+      </div>
+      <div class="review">
+        <div class="rstars" aria-label="Rated 5 out of 5">★★★★★</div>
+        <p class="rtext">“Having everything in one place has been incredibly efficient. The automation options really help me stay on top of everything without getting bogged down in the details.”</p>
+        <div class="rwho"><div class="ravatar" aria-hidden="true">M</div><div><div class="rname">Mia Nickel</div><div class="rmeta">Trustpilot review · DE</div></div></div>
+      </div>
+      <div class="review">
+        <div class="rstars" aria-label="Rated 5 out of 5">★★★★★</div>
+        <p class="rtext">“I now have one place to manage contacts, run marketing campaigns and track my progress. The automation saves me hours of work every week.”</p>
+        <div class="rwho"><div class="ravatar" aria-hidden="true">J</div><div><div class="rname">Jeremy Michels</div><div class="rmeta">Trustpilot review · FR</div></div></div>
+      </div>
+      <div class="review">
+        <div class="rstars" aria-label="Rated 5 out of 5">★★★★★</div>
+        <p class="rtext">“The flexibility of the platform is great. I can customize everything to fit my business needs and I love how I can easily track customer interactions across different channels.”</p>
+        <div class="rwho"><div class="ravatar" aria-hidden="true">B</div><div><div class="rname">Beatrice Vitale</div><div class="rmeta">Trustpilot review · IT</div></div></div>
+      </div>
+      <div class="review">
+        <div class="rstars" aria-label="Rated 5 out of 5">★★★★★</div>
+        <p class="rtext">“I’ve been able to automate a lot of my processes, which has saved me tons of time.”</p>
+        <div class="rwho"><div class="ravatar" aria-hidden="true">O</div><div><div class="rname">Olivia Adam</div><div class="rmeta">Trustpilot review · FR</div></div></div>
+      </div>
     </div>
   </div>
 </section>
@@ -409,8 +493,8 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '';
   <div class="wrap">
     <div class="cta">
       <h2>Your next 100 customers are already on Google Maps.</h2>
-      <p>Your competitor can pull the same list tomorrow. Grab your 100 free leads and get there first — before you close this tab.</p>
-      <a href="#signup" class="btn js-focus">Get My 100 Free Leads →</a>
+      <p>Your competitor can pull the same list tomorrow. Grab your 100 leads and get there first — before you close this tab.</p>
+      <a href="#signup" class="btn js-focus">Get My 100 Leads →</a>
       <div class="fine">No credit card · Instant access · Delete your account anytime</div>
     </div>
   </div>
@@ -425,7 +509,7 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '';
 </footer>
 
 <!-- STICKY MOBILE CTA -->
-<div class="mobbar"><a href="#signup" class="btn js-focus">Get My 100 Free Leads →</a></div>
+<div class="mobbar"><a href="#signup" class="btn js-focus">Get My 100 Leads →</a></div>
 
 <script>
   // Attribution capture (UTM/fb params persisted; timezone; referrer; fbp/fbc).
@@ -452,9 +536,9 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '';
       const subject = niche ? (esc(niche)+' leads') : 'local business leads';
       const where = city ? (' in '+esc(city)) : '';
       const h1=document.getElementById('h1');
-      if(h1) h1.innerHTML='100 fresh '+subject+where+' — <span class="hl">free, pulled live from Google Maps.</span>';
+      if(h1) h1.innerHTML='100 '+subject+where+' — <span class="hl">pulled live from Google Maps.</span>';
       const mh=document.getElementById('mh1');
-      if(mh) mh.innerHTML='100 fresh '+subject+where+' — <span class="hl">free, live from Google Maps.</span>';
+      if(mh) mh.innerHTML='100 '+subject+where+' — <span class="hl">pulled live from Google Maps.</span>';
       const q=document.getElementById('pvq');
       if(q){
         if(niche) q.innerHTML='🔍 <b>'+esc(niche)+'</b>'+(city?(' in <b>'+esc(city)+'</b>'):'');
@@ -532,23 +616,52 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '';
   [F.name,F.email,F.phone,F.pass].forEach(el=>el.addEventListener('input',function(){ if(el.classList.contains('bad')) setField(el,true); }));
 
   // Render error text safely (never inject server-supplied strings as HTML).
-  function fail(msg){ err.textContent=msg; err.style.display='block'; btn.classList.remove('loading'); btn.disabled=false; btnLabel.textContent='Get My 100 Free Leads →'; }
+  function fail(msg){ err.textContent=msg; err.style.display='block'; btn.classList.remove('loading'); btn.disabled=false; btnLabel.textContent='Get My 100 Leads →'; }
   function focusInvalid(el){ if(!el) return; try{ el.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){ try{el.scrollIntoView();}catch(_){} } setTimeout(function(){ try{ el.focus({preventScroll:true}); }catch(e){} }, 300); }
   // Clear the radio error as soon as the user picks an option.
   document.querySelectorAll('input[name="own"]').forEach(r=>r.addEventListener('change',function(){ document.getElementById('ownErr').style.display='none'; }));
 
+  // ---- Multi-step flow ----
+  const fsteps=[].slice.call(form.querySelectorAll('.fstep'));
+  const fbarEl=document.getElementById('fbar'), fstepnumEl=document.getElementById('fstepnum');
+  const TOTAL=fsteps.length;
+  let currentStep=1;
+  function showStep(n,doFocus){
+    currentStep=n;
+    fsteps.forEach(function(s){ s.hidden=(parseInt(s.getAttribute('data-step'),10)!==n); });
+    if(fbarEl) fbarEl.style.width=(n/TOTAL*100)+'%';
+    if(fstepnumEl) fstepnumEl.textContent='Step '+n+' of '+TOTAL;
+    err.style.display='none';
+    if(doFocus){
+      var fe = n===1?F.name : n===2?F.phone : n===3?F.pass : document.getElementById('own_yes');
+      if(fe){ try{ fe.focus({preventScroll:true}); }catch(e){} }
+    }
+  }
+  function validateStep(n){
+    if(n===1){ var a=vName(), b=vEmail(); if(!(a&&b)){ focusInvalid(!a?F.name:F.email); return false; } return true; }
+    if(n===2){ if(!vPhone()){ focusInvalid(F.phone); return false; } return true; }
+    if(n===3){ if(!vPass()){ focusInvalid(F.pass); return false; } return true; }
+    return true;
+  }
+  form.querySelectorAll('.backBtn').forEach(function(b){ b.addEventListener('click',function(){ if(currentStep>1) showStep(currentStep-1,true); }); });
+  showStep(1,false);
+
   form.addEventListener('submit', function(e){
     e.preventDefault();
+    // Steps 1–3: validate the visible step, then advance to the next.
+    if(currentStep < TOTAL){
+      if(validateStep(currentStep)) showStep(currentStep+1,true);
+      return;
+    }
+    // Final step: re-validate everything, jumping back to any invalid step.
     err.style.display='none';
     const okN=vName(), okE=vEmail(), okP=vPhone(), okW=vPass();
+    if(!okN||!okE){ showStep(1,true); focusInvalid(!okN?F.name:F.email); return fail('Please fix the highlighted fields.'); }
+    if(!okP){ showStep(2,true); return fail('Please enter a valid 10-digit phone number.'); }
+    if(!okW){ showStep(3,true); return fail('Password must be at least 6 characters.'); }
     const own=document.querySelector('input[name="own"]:checked');
     const ownErr=document.getElementById('ownErr'); ownErr.style.display = own ? 'none':'block';
-    if(!(okN&&okE&&okP&&okW)){
-      const first=[[okN,F.name],[okE,F.email],[okP,F.phone],[okW,F.pass]].find(x=>!x[0]);
-      focusInvalid(first?first[1]:null);
-      return fail('Please fix the highlighted fields.');
-    }
-    if(!own){ focusInvalid(document.getElementById('own_no')); return fail('Please answer the question above.'); }
+    if(!own){ focusInvalid(document.getElementById('own_yes')); return fail('Please answer the question above.'); }
 
     btn.disabled=true; btn.classList.add('loading'); btnLabel.textContent='Creating your account…';
     var settled=false;
