@@ -68,9 +68,11 @@ function sendSignupToGHL($d) {
         'customFields' => $customFields,
     ], function ($v) { return $v !== '' && $v !== null && $v !== []; });
 
-    // Texas numbers can't be messaged — mark the contact Do Not Disturb.
+    // Texas numbers can't be texted — set SMS-only DND (calls/email unaffected).
     if (isTexasNumber($d['phone'] ?? '')) {
-        $body['dnd'] = true;
+        $body['dndSettings'] = [
+            'SMS' => ['status' => 'active', 'message' => 'Texas number - SMS not allowed'],
+        ];
     }
 
     $headers = [

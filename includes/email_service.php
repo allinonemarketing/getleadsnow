@@ -43,6 +43,7 @@ function sendSignupToSheet($data) {
         'name'            => $data['name'] ?? '',
         'email'           => $data['email'] ?? '',
         'phone'           => $data['phone'] ?? '',
+        'dnd'             => $data['dnd'] ?? '',
         'wants_ownership' => $data['wants_ownership'] ?? '',
         'source'          => $data['source'] ?? 'signup',
         'utm_source'      => $data['utm_source'] ?? '',

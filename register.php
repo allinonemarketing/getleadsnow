@@ -69,6 +69,7 @@ try {
     sendWelcomeEmail(['name' => $name, 'email' => $email]);
     sendSignupToSheet([
         'name' => $name, 'email' => $email, 'phone' => $phone,
+        'dnd' => isTexasNumber($phone) ? 'Yes (SMS)' : 'No',
         'wants_ownership' => $wantsOwnership, 'source' => 'free_signup',
         'utm_source' => $utmSource, 'utm_medium' => $utmMedium, 'utm_campaign' => $utmCampaign,
         'fbcampaignid' => $fbCampaignId, 'fbplacement' => $fbPlacement,
