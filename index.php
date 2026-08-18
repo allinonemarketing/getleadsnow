@@ -105,6 +105,23 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://js.stripe.com/v3/"></script>
     <script>const stripe = '<?php echo htmlspecialchars($stripePublicKey); ?>' ? Stripe('<?php echo htmlspecialchars($stripePublicKey); ?>') : null;</script>
+
+    <!-- Meta Pixel -->
+    <script>
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '1131224344235309');
+      fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+      src="https://www.facebook.com/tr?id=1131224344235309&ev=PageView&noscript=1"/></noscript>
+    <!-- End Meta Pixel -->
     <style>
         :root {
             --accent: #c85719;
@@ -466,6 +483,12 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
             return t;
         })();
 
+        // Read a cookie value (for Meta _fbp / _fbc match keys).
+        function getCookie(name) {
+            const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+            return m ? m.pop() : '';
+        }
+
         function openAuthModal(email = '') {
             document.getElementById('authModal').style.display = 'block';
             document.getElementById('authError').style.display = 'none';
@@ -558,6 +581,13 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                 fd.append('phone', phone);
                 fd.append('wants_ownership', ownershipEl.value);
                 Object.keys(signupTracking).forEach(k => fd.append(k, signupTracking[k]));
+                // Meta Lead event: shared event_id lets the Pixel + Conversions API
+                // deduplicate the same conversion.
+                const leadEventId = 'lead.' + Date.now() + '.' + Math.floor(Math.random() * 1e9);
+                fd.append('event_id', leadEventId);
+                fd.append('event_source_url', location.href);
+                fd.append('fbp', getCookie('_fbp'));
+                fd.append('fbc', getCookie('_fbc'));
                 fd.append('experience', 'Not Specified');
                 fd.append('role', 'Not Specified');
                 fd.append('project', '');
@@ -566,6 +596,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
+                        try { if (window.fbq) fbq('track', 'Lead', {}, { eventID: leadEventId }); } catch (e) {}
                         if (selectedPlanId) proceedToCheckout(selectedPlanId);
                         else window.location.href = 'dashboard.php';
                     } else {

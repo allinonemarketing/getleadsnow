@@ -2,6 +2,7 @@
 require_once 'config/database.php';
 require_once 'config/subscription_config.php';
 require_once 'includes/email_service.php';
+require_once 'includes/facebook.php';
 
 header('Content-Type: application/json');
 
@@ -72,6 +73,15 @@ try {
         'fbcampaignid' => $fbCampaignId, 'fbplacement' => $fbPlacement,
         'fbadsetid' => $fbAdsetId, 'fbadid' => $fbAdId,
         'timezone' => $timezone, 'referrer' => $referrer, 'ip' => $ip, 'user_agent' => $userAgent,
+    ]);
+
+    // Meta Conversions API — server-side Lead (deduped with the Pixel via event_id).
+    sendFacebookLead([
+        'email' => $email, 'phone' => $phone,
+        'event_id' => trim($_POST['event_id'] ?? ''),
+        'event_source_url' => trim($_POST['event_source_url'] ?? ($_SERVER['HTTP_REFERER'] ?? '')),
+        'ip' => $ip, 'user_agent' => $userAgent,
+        'fbp' => trim($_POST['fbp'] ?? ''), 'fbc' => trim($_POST['fbc'] ?? ''),
     ]);
 
     echo json_encode(['success' => true, 'message' => 'Registration successful! Welcome aboard.']);
