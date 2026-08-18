@@ -8728,10 +8728,14 @@ document.addEventListener('click', (e) => {
     try{
       var cm=qs('#createModal'); if(cm){ cm.classList.remove('active'); }
       var am=qs('#addLeadsModal'); if(am){ am.classList.remove('active'); }
-      var dv=qs('#detailView');
-      if(dv && !dv.classList.contains('hidden') && window.app && typeof app.goBack==='function'){ try{ app.goBack(); }catch(e){} }
+      var dv=qs('#detailView'), lv=qs('#listsView');
+      if(dv && !dv.classList.contains('hidden')){
+        var done=false;
+        if(window.app && typeof app.goBack==='function'){ try{ app.goBack(); done=true; }catch(e){} }
+        if(!done && lv){ dv.classList.add('hidden'); lv.classList.remove('hidden'); } // fallback: toggle views directly
+      }
     }catch(e){}
-    setTimeout(start,60);
+    setTimeout(start,120);
   }
   function addHelp(){ var h=mk('lt-help'); h.innerHTML='<i class="fas fa-circle-question"></i> How to pull leads'; h.addEventListener('click',restartTour); document.body.appendChild(h); }
 
@@ -8778,14 +8782,17 @@ document.addEventListener('click', (e) => {
     watchExport();
     var seen=null; try{ seen=localStorage.getItem(KEY); }catch(e){}
     if(seen){ return; }
+    // Auto-start for first-time users. Prefer starting once the "New List" entry
+    // point is on screen, but start anyway after a few seconds — step 1 will
+    // snap onto the button as soon as it renders (never leaves new users hanging).
     var tries=0, wait=setInterval(function(){
       tries++;
       if(firstVisible('[onclick*="openCreateModal"]')){ clearInterval(wait); start(); }
-      else if(tries>40){ clearInterval(wait); }
+      else if(tries>=20){ clearInterval(wait); start(); }
     },300);
   }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',function(){ setTimeout(init,700); }); }
-  else { setTimeout(init,700); }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',function(){ setTimeout(init,400); }); }
+  else { setTimeout(init,400); }
 })();
 </script>
 </body>
