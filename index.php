@@ -400,6 +400,10 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <label>Full Name</label>
                         <input type="text" id="authName" placeholder="John Doe">
                     </div>
+                    <div class="form-group" id="phoneGroup">
+                        <label>Phone Number</label>
+                        <input type="tel" id="authPhone" placeholder="(555) 123-4567">
+                    </div>
                     <div class="form-group">
                         <label>Email</label>
                         <input type="email" id="authEmail" required placeholder="you@company.com">
@@ -444,6 +448,24 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
         let authMode = 'signup';
         const isLoggedIn = <?php echo json_encode(isLoggedIn()); ?>;
 
+        // Capture attribution once on landing: UTM/Facebook params (persisted so
+        // they survive navigation), plus browser timezone and referrer.
+        const signupTracking = (function () {
+            const p = new URLSearchParams(location.search);
+            const keys = ['utm_source', 'utm_medium', 'utm_campaign', 'fbcampaignid', 'fbplacement', 'fbadsetid', 'fbadid'];
+            const t = {};
+            let hasNew = false;
+            keys.forEach(k => { const v = p.get(k); if (v) { t[k] = v; hasNew = true; } });
+            try {
+                if (hasNew) { localStorage.setItem('signupTracking', JSON.stringify(t)); }
+                else { const s = localStorage.getItem('signupTracking'); if (s) { Object.assign(t, JSON.parse(s)); } }
+            } catch (e) {}
+            keys.forEach(k => { if (!t[k]) t[k] = ''; });
+            try { t.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { t.timezone = ''; }
+            t.referrer = document.referrer || '';
+            return t;
+        })();
+
         function openAuthModal(email = '') {
             document.getElementById('authModal').style.display = 'block';
             document.getElementById('authError').style.display = 'none';
@@ -468,6 +490,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
         function toggleAuthMode() {
             authMode = authMode === 'signup' ? 'login' : 'signup';
             const nameGroup = document.getElementById('nameGroup');
+            const phoneGroup = document.getElementById('phoneGroup');
             const ownershipGroup = document.getElementById('ownershipGroup');
             const title = document.getElementById('authTitle');
             const subtitle = document.getElementById('authSubtitle');
@@ -475,6 +498,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
             const toggle = document.getElementById('authToggle');
             if (authMode === 'login') {
                 nameGroup.style.display = 'none';
+                phoneGroup.style.display = 'none';
                 ownershipGroup.style.display = 'none';
                 title.textContent = 'Welcome Back';
                 subtitle.textContent = 'Sign in to access your leads and lists.';
@@ -482,6 +506,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                 toggle.textContent = "Don't have an account? Sign up";
             } else {
                 nameGroup.style.display = 'block';
+                phoneGroup.style.display = 'block';
                 ownershipGroup.style.display = 'block';
                 title.textContent = 'Create Your Account';
                 subtitle.textContent = 'Create an account or sign in to start finding leads instantly.';
@@ -522,14 +547,17 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
             } else {
                 const name = document.getElementById('authName').value.trim();
                 if (!name) { errEl.textContent = 'Please enter your name'; errEl.style.display = 'block'; btn.textContent = 'Create Account'; btn.disabled = false; return; }
+                const phone = document.getElementById('authPhone').value.trim();
+                if (!phone) { errEl.textContent = 'Please enter your phone number'; errEl.style.display = 'block'; btn.textContent = 'Create Account'; btn.disabled = false; return; }
                 const ownershipEl = document.querySelector('input[name="wantsOwnership"]:checked');
                 if (!ownershipEl) { errEl.textContent = 'Please answer the ownership question (Yes or No).'; errEl.style.display = 'block'; btn.textContent = 'Create Account'; btn.disabled = false; return; }
                 const fd = new FormData();
                 fd.append('name', name);
                 fd.append('email', email);
                 fd.append('password', password);
+                fd.append('phone', phone);
                 fd.append('wants_ownership', ownershipEl.value);
-                fd.append('phone', '');
+                Object.keys(signupTracking).forEach(k => fd.append(k, signupTracking[k]));
                 fd.append('experience', 'Not Specified');
                 fd.append('role', 'Not Specified');
                 fd.append('project', '');

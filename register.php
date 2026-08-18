@@ -13,7 +13,22 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $name = trim($_POST['name'] ?? '');
 $email = trim($_POST['email'] ?? '');
 $password = $_POST['password'] ?? '';
+$phone = trim($_POST['phone'] ?? '');
 $wantsOwnership = (($_POST['wants_ownership'] ?? '') === 'yes') ? 'yes' : 'no';
+
+// Attribution / context captured client-side + server-side.
+$utmSource   = trim($_POST['utm_source'] ?? '');
+$utmMedium   = trim($_POST['utm_medium'] ?? '');
+$utmCampaign = trim($_POST['utm_campaign'] ?? '');
+$fbCampaignId = trim($_POST['fbcampaignid'] ?? '');
+$fbPlacement  = trim($_POST['fbplacement'] ?? '');
+$fbAdsetId    = trim($_POST['fbadsetid'] ?? '');
+$fbAdId       = trim($_POST['fbadid'] ?? '');
+$timezone    = trim($_POST['timezone'] ?? '');
+$referrer    = trim($_POST['referrer'] ?? '');
+$ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? ($_SERVER['REMOTE_ADDR'] ?? '');
+if (strpos($ip, ',') !== false) { $ip = trim(explode(',', $ip)[0]); } // first hop in a proxy chain
+$userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
 
 if (empty($name) || empty($email) || empty($password)) {
     echo json_encode(['success' => false, 'message' => 'Name, email, and password are required.']);
@@ -23,9 +38,11 @@ if (empty($name) || empty($email) || empty($password)) {
 try {
     global $pdo;
 
-    // Make sure the ownership-interest column exists (asked at signup).
+    // Make sure the signup columns exist.
     try { $pdo->query("SELECT wants_ownership FROM users LIMIT 1"); }
     catch (Exception $e) { $pdo->exec("ALTER TABLE users ADD COLUMN wants_ownership VARCHAR(3) DEFAULT NULL"); }
+    try { $pdo->query("SELECT phone FROM users LIMIT 1"); }
+    catch (Exception $e) { $pdo->exec("ALTER TABLE users ADD COLUMN phone VARCHAR(40) DEFAULT NULL"); }
 
     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->execute([$email]);
@@ -36,8 +53,8 @@ try {
 
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
     // Free tier: everyone starts with a one-time batch of free credits.
-    $stmt = $pdo->prepare("INSERT INTO users (name, email, password, credits, wants_ownership) VALUES (?, ?, ?, ?, ?)");
-    $stmt->execute([$name, $email, $hashedPassword, FREE_TIER_CREDITS, $wantsOwnership]);
+    $stmt = $pdo->prepare("INSERT INTO users (name, email, password, credits, wants_ownership, phone) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$name, $email, $hashedPassword, FREE_TIER_CREDITS, $wantsOwnership, $phone]);
     $userId = $pdo->lastInsertId();
 
     if (session_status() === PHP_SESSION_NONE) {
@@ -48,7 +65,14 @@ try {
 
     sendAdminNotification(['name' => $name, 'email' => $email, 'wants_ownership' => $wantsOwnership]);
     sendWelcomeEmail(['name' => $name, 'email' => $email]);
-    sendSignupToSheet(['name' => $name, 'email' => $email, 'wants_ownership' => $wantsOwnership, 'source' => 'free_signup']);
+    sendSignupToSheet([
+        'name' => $name, 'email' => $email, 'phone' => $phone,
+        'wants_ownership' => $wantsOwnership, 'source' => 'free_signup',
+        'utm_source' => $utmSource, 'utm_medium' => $utmMedium, 'utm_campaign' => $utmCampaign,
+        'fbcampaignid' => $fbCampaignId, 'fbplacement' => $fbPlacement,
+        'fbadsetid' => $fbAdsetId, 'fbadid' => $fbAdId,
+        'timezone' => $timezone, 'referrer' => $referrer, 'ip' => $ip, 'user_agent' => $userAgent,
+    ]);
 
     echo json_encode(['success' => true, 'message' => 'Registration successful! Welcome aboard.']);
 } catch (PDOException $e) {

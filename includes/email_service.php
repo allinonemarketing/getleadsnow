@@ -42,8 +42,20 @@ function sendSignupToSheet($data) {
         'date'            => date('Y-m-d H:i:s'),
         'name'            => $data['name'] ?? '',
         'email'           => $data['email'] ?? '',
+        'phone'           => $data['phone'] ?? '',
         'wants_ownership' => $data['wants_ownership'] ?? '',
         'source'          => $data['source'] ?? 'signup',
+        'utm_source'      => $data['utm_source'] ?? '',
+        'utm_medium'      => $data['utm_medium'] ?? '',
+        'utm_campaign'    => $data['utm_campaign'] ?? '',
+        'fbcampaignid'    => $data['fbcampaignid'] ?? '',
+        'fbplacement'     => $data['fbplacement'] ?? '',
+        'fbadsetid'       => $data['fbadsetid'] ?? '',
+        'fbadid'          => $data['fbadid'] ?? '',
+        'timezone'        => $data['timezone'] ?? '',
+        'referrer'        => $data['referrer'] ?? '',
+        'ip'              => $data['ip'] ?? '',
+        'user_agent'      => $data['user_agent'] ?? '',
     ]);
     try {
         $ch = curl_init($url);
