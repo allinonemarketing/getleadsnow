@@ -221,10 +221,18 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
       .mobbar{display:none}
 
       @media(max-width:900px){
+        .topbar{position:static}
         .hero .grid{grid-template-columns:1fr;gap:26px;padding-top:24px;padding-bottom:40px}
-        .mobhook{display:block;order:-3;margin-bottom:-8px}
+        .mobhook{display:block;order:-3;margin-bottom:-8px;text-align:center}
+        .mobhook .mh-proof{text-align:left}
         .card{order:-2;position:static}
         .lede{max-width:none}
+        .copy{text-align:center}
+        .copy .checks li{justify-content:center}
+        .copy .prov{justify-content:center}
+        .mobhook .eyebrow{display:none}
+        .mh-note{display:none}
+        .copy .eyebrow{display:none}
         .hero .copy .preview{display:none}   /* desktop preview hidden; compact mh-proof shows instead */
         .steps,.feats,.compare,.reviews{grid-template-columns:1fr}
         .metrics .row{grid-template-columns:1fr;gap:16px;padding-top:20px;padding-bottom:20px}
