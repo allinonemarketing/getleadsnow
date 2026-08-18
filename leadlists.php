@@ -8722,7 +8722,18 @@ document.addEventListener('click', (e) => {
   function start(){ if(!mask){ build(); } i=0; render(); if(timer){ clearInterval(timer); } timer=setInterval(loop,300); }
   function finish(){ if(timer){ clearInterval(timer); timer=null; } if(tip){ tip.style.display='none'; } if(mask){ mask.style.display='none'; } try{ localStorage.setItem(KEY,'1'); }catch(e){} }
 
-  function addHelp(){ var h=mk('lt-help'); h.innerHTML='<i class="fas fa-circle-question"></i> How to pull leads'; h.addEventListener('click',start); document.body.appendChild(h); }
+  // Restart the whole walkthrough: close any modal, return to the lists grid so
+  // step 1 makes sense, then start from the top.
+  function restartTour(){
+    try{
+      var cm=qs('#createModal'); if(cm){ cm.classList.remove('active'); }
+      var am=qs('#addLeadsModal'); if(am){ am.classList.remove('active'); }
+      var dv=qs('#detailView');
+      if(dv && !dv.classList.contains('hidden') && window.app && typeof app.goBack==='function'){ try{ app.goBack(); }catch(e){} }
+    }catch(e){}
+    setTimeout(start,60);
+  }
+  function addHelp(){ var h=mk('lt-help'); h.innerHTML='<i class="fas fa-circle-question"></i> How to pull leads'; h.addEventListener('click',restartTour); document.body.appendChild(h); }
 
   // One-off follow-up tip on the Export button, shown once leads have populated.
   var EKEY='aiom_exporttip_v1';

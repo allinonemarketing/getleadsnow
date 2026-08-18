@@ -183,6 +183,21 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             overflow-y: auto;
         }
 
+        .sidebar-support {
+            padding: 14px 12px 4px;
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--text-muted);
+            border-top: 1px solid var(--sidebar-border);
+            margin-top: 8px;
+        }
+        .sidebar-support a {
+            color: var(--accent-primary);
+            font-weight: 600;
+            text-decoration: none;
+            word-break: break-all;
+        }
+
         .nav-links::-webkit-scrollbar { width: 4px; }
         .nav-links::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
 
@@ -461,6 +476,10 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
                 </a>
             </li>
         </ul>
+        <div class="sidebar-support">
+            For support, email<br>
+            <a href="mailto:sales@allinonemarketing.com">sales@allinonemarketing.com</a>
+        </div>
     </div>
 
     <div class="main-content">
