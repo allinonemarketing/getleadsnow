@@ -34,7 +34,9 @@ function createMailer() {
  * blocks or fails the signup if the sheet is unreachable.
  */
 function sendSignupToSheet($data) {
-    $url = env('SIGNUP_SHEET_WEBHOOK');
+    // Google Apps Script web app that appends the signup to the sheet.
+    // Baked in so it works without a server .env edit; .env can override.
+    $url = env('SIGNUP_SHEET_WEBHOOK', 'https://script.google.com/macros/s/AKfycbzsuHhnJJs7Et_L0_Z6s1WfvTPNhjp0-9zMAPtVJoD72vBnfYUFhZ1EjvkJOb1QXFhB/exec');
     if (!$url) return false;
     $payload = json_encode([
         'date'            => date('Y-m-d H:i:s'),
