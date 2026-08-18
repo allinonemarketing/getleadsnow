@@ -57,9 +57,8 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
 
       /* top bar */
       .topbar{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-      .topbar .inner{display:flex;align-items:center;justify-content:space-between;height:64px;gap:14px}
+      .topbar .inner{display:flex;align-items:center;height:64px}
       .topbar img{max-height:36px;width:auto;height:36px}
-      .topbar .cta-mini{background:var(--ink);color:#fff;font-weight:700;font-size:14px;padding:12px 18px;border-radius:10px;min-height:44px;display:inline-flex;align-items:center}
 
       /* hero */
       .hero{position:relative;overflow:hidden;background:
@@ -269,7 +268,6 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
 <header class="topbar">
   <div class="wrap inner">
     <?php if ($appLogo): ?><img src="<?php echo htmlspecialchars($appLogo); ?>" alt="<?php echo htmlspecialchars($appName); ?>"><?php else: ?><strong><?php echo htmlspecialchars($appName); ?></strong><?php endif; ?>
-    <a href="#signup" class="cta-mini js-focus">Get 100 Leads</a>
   </div>
 </header>
 
@@ -376,10 +374,10 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
             <button type="button" class="btn-ghost backBtn">← Back</button>
             <button type="submit" class="btn form-btn" id="submitBtn"><span class="spin" aria-hidden="true"></span><span class="btn-label">Get My 100 Leads →</span></button>
           </div>
-          <div class="tcpa">By clicking “Get My 100 Leads”, I consent to receive calls, texts, and emails from All In One Marketing.com via automated calling and prerecorded voice; consent not required to purchase - opt out anytime at info@allinonemarketing.com. I agree to the <a href="https://allinonemarketing.com/terms-conditions/" target="_blank" rel="noopener">Terms &amp; Conditions</a> &amp; <a href="https://allinonemarketing.com/privacy-policy" target="_blank" rel="noopener">Privacy Policy</a> (incl. arbitration). Msg &amp; data rates may apply.</div>
         </div>
 
         <div class="microtrust"><svg class="ic"><use href="#i-lock"/></svg> No card · Your first list on screen in ~20s · Delete anytime</div>
+        <div class="tcpa">By clicking “Get My 100 Leads”, I consent to receive calls, texts, and emails from All In One Marketing.com via automated calling and prerecorded voice; consent not required to purchase - opt out anytime at info@allinonemarketing.com. I agree to the <a href="https://allinonemarketing.com/terms-conditions/" target="_blank" rel="noopener">Terms &amp; Conditions</a> &amp; <a href="https://allinonemarketing.com/privacy-policy" target="_blank" rel="noopener">Privacy Policy</a> (incl. arbitration). Msg &amp; data rates may apply.</div>
       </form>
     </div>
   </div>
