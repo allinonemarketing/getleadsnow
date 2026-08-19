@@ -491,7 +491,7 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             </li>
             <?php endif; ?>
             <li class="nav-item">
-                <a href="mailto:sales@allinonemarketing.com?subject=Support" class="nav-link">
+                <a href="?section=support" class="nav-link <?php echo $current_section === 'support' ? 'active' : ''; ?>" data-section="support">
                     <i class="fas fa-life-ring"></i>
                     Support
                 </a>
@@ -519,6 +519,9 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
         <div id="penny" class="content-section <?php echo $current_section === 'penny' ? 'active' : ''; ?>">
             <div id="penny-content"></div>
         </div>
+        <div id="support" class="content-section <?php echo $current_section === 'support' ? 'active' : ''; ?>">
+            <div id="support-content"></div>
+        </div>
     </div>
 
     <div id="loading">
@@ -537,7 +540,8 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             const urls = {
                 'lead_lists': 'leadlists.php',
                 'section5': 'pricing.php',
-                'penny': 'resell.php'
+                'penny': 'resell.php',
+                'support': 'support.php'
             };
 
             const currentSection = '<?php echo $current_section; ?>';
