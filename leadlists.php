@@ -6337,6 +6337,8 @@ class LeadListsApp {
     // ADD LEADS - BULK SCRAPE
 
     async openAddLeadsModal() {
+        // Out of credits — prompt to upgrade instead of opening the search modal.
+        if (this.credits < 1) { this.showUpgradePrompt(1); return; }
         document.getElementById('addLeadsModal').classList.add('active');
         this.resetScrapeUI();
         this.updateScrapeLimitOptions();

@@ -491,6 +491,12 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             </li>
             <?php endif; ?>
             <li class="nav-item">
+                <a href="mailto:sales@allinonemarketing.com?subject=Support" class="nav-link">
+                    <i class="fas fa-life-ring"></i>
+                    Support
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="#" class="nav-link" id="logoutBtn">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
