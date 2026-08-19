@@ -191,7 +191,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <?php endif; ?>
                         <h3>Starter</h3>
                         <div class="price">$<?php echo PLAN_STARTER_PRICE; ?><span>/mo</span></div>
-                        <div style="margin:-14px 0 18px;font-size:13px;font-weight:600;color:var(--text-tertiary);"><?php echo number_format(PLAN_STARTER_PRICE / PLAN_STARTER_CREDITS * 100, 1); ?>&cent; per lead</div>
+                        <div style="margin:-6px 0 22px;"><span style="display:inline-block;background:var(--accent-light);color:var(--accent);font-weight:800;font-size:16px;padding:8px 18px;border-radius:999px;letter-spacing:-.01em;"><?php echo number_format(PLAN_STARTER_PRICE / PLAN_STARTER_CREDITS * 100, 1); ?>&cent; per lead</span></div>
                         <ul class="features-list">
                             <li><i class="fas fa-check"></i> 1,000 Leads / month</li>
                             <li><i class="fas fa-check"></i> Free AI Email Enrichment</li>
@@ -210,7 +210,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <?php endif; ?>
                         <h3>Growth</h3>
                         <div class="price">$<?php echo PLAN_GROWTH_PRICE; ?><span>/mo</span></div>
-                        <div style="margin:-14px 0 18px;font-size:13px;font-weight:600;color:var(--text-tertiary);"><?php echo number_format(PLAN_GROWTH_PRICE / PLAN_GROWTH_CREDITS * 100, 1); ?>&cent; per lead</div>
+                        <div style="margin:-6px 0 22px;"><span style="display:inline-block;background:var(--accent-light);color:var(--accent);font-weight:800;font-size:16px;padding:8px 18px;border-radius:999px;letter-spacing:-.01em;"><?php echo number_format(PLAN_GROWTH_PRICE / PLAN_GROWTH_CREDITS * 100, 1); ?>&cent; per lead</span></div>
                         <ul class="features-list">
                             <li><i class="fas fa-check"></i> <strong>6,000 Leads / month</strong></li>
                             <li><i class="fas fa-check"></i> Free AI Email Enrichment</li>
@@ -229,7 +229,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <?php endif; ?>
                         <h3>Pro</h3>
                         <div class="price">$<?php echo PLAN_ENTERPRISE_PRICE; ?><span>/mo</span></div>
-                        <div style="margin:-14px 0 18px;font-size:13px;font-weight:600;color:var(--text-tertiary);"><?php echo number_format(PLAN_ENTERPRISE_PRICE / PLAN_ENTERPRISE_CREDITS * 100, 1); ?>&cent; per lead</div>
+                        <div style="margin:-6px 0 22px;"><span style="display:inline-block;background:var(--accent-light);color:var(--accent);font-weight:800;font-size:16px;padding:8px 18px;border-radius:999px;letter-spacing:-.01em;"><?php echo number_format(PLAN_ENTERPRISE_PRICE / PLAN_ENTERPRISE_CREDITS * 100, 1); ?>&cent; per lead</span></div>
                         <ul class="features-list">
                             <li><i class="fas fa-check"></i> <strong>17,000 Leads / month</strong></li>
                             <li><i class="fas fa-check"></i> Free AI Email Enrichment</li>
