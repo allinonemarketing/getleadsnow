@@ -79,7 +79,7 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '/assets/logo.svg';
 
   <div class="grid">
     <div class="card"><i class="fas fa-coins"></i><h3>Leads at cost</h3><p>We give you direct access to our partners so you get the leads at cost!</p></div>
-    <div class="card"><i class="fas fa-tags"></i><h3>Sell it yourself</h3><p>White-label the whole platform and resell it to your clients at whatever price you choose.</p></div>
+    <div class="card"><i class="fas fa-tags"></i><h3>Sell it yourself</h3><p>You own the software and resell it to your clients at whatever price you choose.</p></div>
     <div class="card"><i class="fas fa-arrow-trend-up"></i><h3>Recurring revenue</h3><p>Turn a tool you already use into a monthly income stream you fully control.</p></div>
   </div>
 
