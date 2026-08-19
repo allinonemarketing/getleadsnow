@@ -422,11 +422,47 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             color: #ffffff;
         }
 
+        /* Mobile chrome: fixed top bar + slide-in drawer + backdrop */
+        .mobile-topbar { display: none; }
+        .sidebar-backdrop { display: none; }
+        .sidebar-close { display: none; }
+
         @media (max-width: 768px) {
-            .menu-toggle { display: block; }
-            .sidebar { transform: translateX(-100%); }
+            .menu-toggle { display: none; }   /* replaced by the fixed top bar's burger */
+
+            .mobile-topbar {
+                display: flex; align-items: center; gap: 12px;
+                position: fixed; top: 0; left: 0; right: 0; height: 56px; z-index: 1000;
+                background: #ffffff; border-bottom: 1px solid var(--sidebar-border);
+                padding: 0 12px;
+            }
+            .mobile-topbar .mt-burger {
+                background: none; border: none; color: var(--text-main);
+                font-size: 20px; cursor: pointer; padding: 8px; display: flex;
+                align-items: center; justify-content: center; border-radius: 10px;
+            }
+            .mobile-topbar .mt-burger:active { background: rgba(0,0,0,0.06); }
+            .mobile-topbar .mt-logo { display: flex; align-items: center; }
+            .mobile-topbar .mt-logo img { height: 26px; }
+
+            .sidebar-backdrop {
+                display: block; position: fixed; inset: 0; z-index: 1001;
+                background: rgba(10,15,25,0.45); opacity: 0; pointer-events: none;
+                transition: opacity 0.3s ease;
+            }
+            .sidebar-backdrop.active { opacity: 1; pointer-events: auto; }
+
+            .sidebar { transform: translateX(-100%); z-index: 1002; box-shadow: 0 0 40px rgba(0,0,0,0.18); }
             .sidebar.active { transform: translateX(0); }
-            .main-content { margin-left: 0; width: 100%; padding-top: 60px; box-sizing: border-box; }
+
+            .sidebar-close {
+                display: flex; position: absolute; top: 16px; right: 14px;
+                width: 36px; height: 36px; align-items: center; justify-content: center;
+                background: rgba(0,0,0,0.05); border: none; border-radius: 10px;
+                color: var(--text-main); font-size: 18px; cursor: pointer;
+            }
+
+            .main-content { margin-left: 0; width: 100%; padding-top: 56px; box-sizing: border-box; }
             .plan-badge { display: none; }
         }
 
@@ -463,7 +499,15 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
         <i class="fas fa-bars"></i>
     </div>
 
+    <!-- Fixed mobile top bar -->
+    <div class="mobile-topbar">
+        <button class="mt-burger" type="button" aria-label="Open menu"><i class="fas fa-bars"></i></button>
+        <a class="mt-logo" href="?section=lead_lists" data-section="lead_lists"><img src="<?php echo APP_LOGO; ?>" alt="<?php echo APP_NAME; ?>"></a>
+    </div>
+    <div class="sidebar-backdrop"></div>
+
     <div class="sidebar">
+        <button class="sidebar-close" type="button" aria-label="Close menu"><i class="fas fa-times"></i></button>
         <div class="logo">
             <img src="<?php echo APP_LOGO; ?>" alt="<?php echo APP_NAME; ?>">
         </div>
@@ -557,7 +601,16 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             const loading = document.getElementById('loading');
             const menuToggle = document.querySelector('.menu-toggle');
             const sidebar = document.querySelector('.sidebar');
+            const backdrop = document.querySelector('.sidebar-backdrop');
             const logoutBtn = document.getElementById('logoutBtn');
+
+            function openMenu() { sidebar.classList.add('active'); if (backdrop) backdrop.classList.add('active'); }
+            function closeMenu() { sidebar.classList.remove('active'); if (backdrop) backdrop.classList.remove('active'); }
+            const mtBurger = document.querySelector('.mt-burger');
+            const sidebarClose = document.querySelector('.sidebar-close');
+            if (mtBurger) mtBurger.addEventListener('click', openMenu);
+            if (sidebarClose) sidebarClose.addEventListener('click', closeMenu);
+            if (backdrop) backdrop.addEventListener('click', closeMenu);
             
             const urls = {
                 'lead_lists': 'leadlists.php',
@@ -588,7 +641,7 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
 
                         loadContent(sectionId);
 
-                        sidebar.classList.remove('active');   // close the mobile menu after picking an item
+                        closeMenu();   // close the mobile drawer after picking an item
                     });
                 }
             });
@@ -607,7 +660,7 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             });
 
             menuToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('active');
+                if (sidebar.classList.contains('active')) closeMenu(); else openMenu();
             });
 
             async function loadContent(sectionId) {
@@ -789,7 +842,7 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
                     window.history.pushState({}, '', `?section=${sectionId}`);
 
                     if (window.innerWidth <= 768) {
-                        sidebar.classList.remove('active');
+                        closeMenu();
                     }
                 });
             });
