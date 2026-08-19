@@ -232,6 +232,21 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             color: var(--accent-primary);
         }
 
+        /* Always-red promo item (stays red even when not the active tab) */
+        .nav-link.nav-penny,
+        .nav-link.nav-penny.active {
+            background: #dc2626;
+            color: #ffffff;
+        }
+        .nav-link.nav-penny:hover {
+            background: #b91c1c;
+            color: #ffffff;
+        }
+        .nav-link.nav-penny i,
+        .nav-link.nav-penny.active i {
+            color: #ffffff;
+        }
+
         .nav-link i {
             width: 20px;
             text-align: center;
@@ -450,15 +465,15 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
         </div>
         <ul class="nav-links">
             <li class="nav-item">
-                <a href="?section=lead_lists" class="nav-link <?php echo $current_section === 'lead_lists' ? 'active' : ''; ?>" data-section="lead_lists">
-                    <i class="fas fa-folder-open"></i>
-                    Lead Lists
+                <a href="?section=penny" class="nav-link nav-penny <?php echo $current_section === 'penny' ? 'active' : ''; ?>" data-section="penny">
+                    <i class="fas fa-bolt"></i>
+                    Get Leads For Less Than 1&cent;
                 </a>
             </li>
             <li class="nav-item">
-                <a href="?section=penny" class="nav-link <?php echo $current_section === 'penny' ? 'active' : ''; ?>" data-section="penny">
-                    <i class="fas fa-bolt"></i>
-                    Get Leads For Less Than 1&cent;
+                <a href="?section=lead_lists" class="nav-link <?php echo $current_section === 'lead_lists' ? 'active' : ''; ?>" data-section="lead_lists">
+                    <i class="fas fa-folder-open"></i>
+                    Lead Lists
                 </a>
             </li>
             <li class="nav-item">

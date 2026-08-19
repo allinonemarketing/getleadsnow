@@ -71,8 +71,14 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '/assets/logo.svg';
     <div class="sub">per lead when you own the platform<br>vs. 1 credit per lead today</div>
   </div>
 
+  <div class="cta">
+    <h2>Interested In Getting This?</h2>
+    <p>Watch the video above, then reach out and we&rsquo;ll walk you through getting set up.</p>
+    <a href="sms:+13479211788?&body=Software"><i class="fas fa-comment-dots"></i> Text &ldquo;Software&rdquo; to 347-921-1788</a>
+  </div>
+
   <div class="grid">
-    <div class="card"><i class="fas fa-coins"></i><h3>Leads at cost</h3><p>Pull leads at raw data cost &mdash; a fraction of a penny each &mdash; instead of spending credits.</p></div>
+    <div class="card"><i class="fas fa-coins"></i><h3>Leads at cost</h3><p>We give you direct access to our partners so you get the leads at cost!</p></div>
     <div class="card"><i class="fas fa-tags"></i><h3>Sell it yourself</h3><p>White-label the whole platform and resell it to your clients at whatever price you choose.</p></div>
     <div class="card"><i class="fas fa-arrow-trend-up"></i><h3>Recurring revenue</h3><p>Turn a tool you already use into a monthly income stream you fully control.</p></div>
   </div>
@@ -80,18 +86,13 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '/assets/logo.svg';
   <div class="points">
     <h2>How it works</h2>
     <ul>
-      <li><i class="fas fa-check-circle"></i> You get your own white-label copy of this lead + CRM platform.</li>
-      <li><i class="fas fa-check-circle"></i> You connect it to the data source directly, so leads cost you pennies &mdash; not credits.</li>
+      <li><i class="fas fa-check-circle"></i> You own this exact software.</li>
+      <li><i class="fas fa-check-circle"></i> We give you direct access to the data at cost.</li>
       <li><i class="fas fa-check-circle"></i> You add your branding and set your own prices for clients.</li>
       <li><i class="fas fa-check-circle"></i> You keep the recurring revenue from every client you sign up.</li>
     </ul>
   </div>
 
-  <div class="cta">
-    <h2>Want the full breakdown?</h2>
-    <p>Watch the video above, then reach out and we&rsquo;ll walk you through getting set up.</p>
-    <a href="sms:+13479211788?&body=Software"><i class="fas fa-comment-dots"></i> Text &ldquo;Software&rdquo; to 347-921-1788</a>
-  </div>
 </div>
 </body>
 </html>
