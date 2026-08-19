@@ -470,8 +470,8 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
   <div class="wrap" style="text-align:center">
     <div class="incl-save"><svg class="ic" style="font-size:17px"><use href="#i-gift"/></svg> Normally $97/month &mdash; included 100% free. You save $1,164/year.</div>
     <div class="h2c" style="margin-bottom:26px">
-      <h2>Plus a complete AI marketing suite &amp; CRM &mdash; <span class="hl">included free</span></h2>
-      <p>Your account comes with the entire all-in-one marketing platform &amp; CRM at no cost &mdash; the software other companies charge $97/month for. One-click export your new leads straight into it and start closing. You only ever pay for the marketing usage you actually send (texts, calls, emails).</p>
+      <h2>Plus complete marketing software, AI software &amp; a CRM &mdash; <span class="hl">included free</span></h2>
+      <p>Your account comes with the entire all-in-one marketing platform, AI tools, and a CRM (the system that stores your leads and tracks every follow-up) at no cost &mdash; the software other companies charge $97/month for. One-click export your new leads straight into it and start closing. You only ever pay for the marketing usage you actually send (texts, calls, emails).</p>
     </div>
 
     <div class="incl-chips">
