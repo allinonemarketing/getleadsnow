@@ -107,10 +107,14 @@ function sendSignupToGHL($d) {
 
     // 2) Append the signup tags (adds only; preserves existing tags).
     try {
+        // Every signup gets the two base tags; email-referral signups (/leads page)
+        // get a third tag so they can be segmented/automated separately in GHL.
+        $tags = ['lead gen software signup', 'lead gen software signup dnd'];
+        if (($d['source'] ?? '') === 'email_referral') { $tags[] = 'lead gen software email referral'; }
         $ch = curl_init("https://services.leadconnectorhq.com/contacts/{$contactId}/tags");
         curl_setopt_array($ch, [
             CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => json_encode(['tags' => ['lead gen software signup', 'lead gen software signup dnd']]),
+            CURLOPT_POSTFIELDS     => json_encode(['tags' => $tags]),
             CURLOPT_HTTPHEADER     => $headers,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CONNECTTIMEOUT => 4,
