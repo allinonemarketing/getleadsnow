@@ -4297,7 +4297,7 @@ if (isset($_GET['action'])) {
                 <button class="btn btn-secondary" id="exportMenuBtn" onclick="app.toggleExportMenu()"><i class="fas fa-download"></i> Export</button>
                 <div id="exportMenu" class="hidden" style="position:absolute;top:100%;right:0;margin-top:6px;background:var(--card-solid);border:1px solid var(--card-border);border-radius:var(--radius-xs);box-shadow:var(--shadow-lg);min-width:200px;z-index:100;padding:6px;">
                     <button class="btn btn-ghost" style="width:100%;justify-content:flex-start;" onclick="app.openExportPreview('csv')"><i class="fas fa-file-csv"></i> Export CSV</button>
-                    <button class="btn btn-ghost" style="width:100%;justify-content:flex-start;" onclick="app.openGHLExport()"><i class="fas fa-paper-plane"></i> Export to Free CRM</button>
+                    <button class="btn btn-ghost" style="width:100%;justify-content:flex-start;text-align:left;" onclick="app.openGHLExport()"><i class="fas fa-paper-plane"></i> Export to Free CRM</button>
                 </div>
             </div>
         </div>
