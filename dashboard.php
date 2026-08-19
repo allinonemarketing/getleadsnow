@@ -542,6 +542,12 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
                 </a>
             </li>
             <li class="nav-item">
+                <a href="?section=aibot" class="nav-link <?php echo $current_section === 'aibot' ? 'active' : ''; ?>" data-section="aibot">
+                    <i class="fas fa-robot"></i>
+                    Get AI Calling Bot
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="?section=lead_lists" class="nav-link <?php echo $current_section === 'lead_lists' ? 'active' : ''; ?>" data-section="lead_lists">
                     <i class="fas fa-folder-open"></i>
                     Lead Lists
@@ -604,6 +610,9 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
         <div id="freecrm" class="content-section <?php echo $current_section === 'freecrm' ? 'active' : ''; ?>">
             <div id="freecrm-content"></div>
         </div>
+        <div id="aibot" class="content-section <?php echo $current_section === 'aibot' ? 'active' : ''; ?>">
+            <div id="aibot-content"></div>
+        </div>
         <div id="penny" class="content-section <?php echo $current_section === 'penny' ? 'active' : ''; ?>">
             <div id="penny-content"></div>
         </div>
@@ -654,6 +663,7 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
                 'lead_lists': 'leadlists.php',
                 'section5': 'pricing.php',
                 'freecrm': 'freecrm.php',
+                'aibot': 'aibot.php',
                 'penny': 'resell.php',
                 'faqs': 'faq.php',
                 'support': 'support.php'
