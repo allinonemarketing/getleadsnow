@@ -135,8 +135,8 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
       .pwtoggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:transparent;color:var(--faint);font-size:12px;font-weight:800;cursor:pointer;padding:11px 10px;min-height:44px}
       .qbox{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:2px 0 13px}
       .qbox .qh{color:var(--faint);font-weight:700;font-size:11.5px;margin-bottom:3px;display:block}
-      .qbox p{font-size:12.5px;font-weight:600;line-height:1.4;margin-bottom:9px;color:var(--muted)}
-      .qbox .qsub{display:block;font-weight:500;color:var(--faint);font-size:11.5px;margin-top:3px}
+      .qbox p{font-size:15px;font-weight:600;line-height:1.45;margin-bottom:10px;color:var(--muted)}
+      .qbox .qsub{display:block;font-weight:500;color:var(--faint);font-size:12.5px;margin-top:4px}
       .qopts{display:flex;gap:10px}
       .qopts label{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;border:1.5px solid #e0e2e6;border-radius:10px;padding:10px;font-weight:700;font-size:13px;cursor:pointer;background:#fff;transition:.12s;text-align:center}
       .qopts input{accent-color:var(--accent);width:15px;height:15px;flex:none}
