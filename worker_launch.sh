@@ -9,10 +9,9 @@
 # (~30 min / 300 jobs); if any exit or die, the next cron run tops them back up.
 # No sudo, no Supervisord, no Laravel needed. Change $TARGET to scale concurrency.
 
-# 2 workers ≈ 40-60 city-searches/min — plenty for launch. Each PHP CLI worker
-# costs ~40-60MB RSS; on a small box RAM is the scarce resource, not throughput.
-# Raise this only after the server has real memory headroom.
-TARGET=2
+# Each worker ≈ +20 city-searches/min for ~50MB RSS. 4 workers ≈ 80-100 cities/min
+# — comfortable for multiple simultaneous searchers on the 4GB/2-core box.
+TARGET=4
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT="$DIR/search_worker.php"
