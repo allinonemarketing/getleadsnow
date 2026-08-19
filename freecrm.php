@@ -106,6 +106,16 @@ if (!isLoggedIn()) { header('Location: login.php'); exit(); }
   </div>
 </section>
 
+<!-- DEMO VIDEO -->
+<section class="sec" style="padding-top:36px">
+  <div class="wrap" style="max-width:880px">
+    <div class="h2c" style="margin-bottom:20px"><h2>See it in action</h2><p>A quick tour of the free all-in-one platform.</p></div>
+    <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:18px;box-shadow:0 20px 60px rgba(15,24,40,.16);border:1px solid var(--line);background:#000">
+      <iframe src="https://player.vimeo.com/video/1027977967" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write" allowfullscreen title="Free CRM demo"></iframe>
+    </div>
+  </div>
+</section>
+
 <!-- REPLACE SUBSCRIPTIONS -->
 <section class="sec">
   <div class="wrap">
