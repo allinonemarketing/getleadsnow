@@ -24,10 +24,7 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '/assets/logo.svg';
   h1 .hl{color:var(--accent)}
   .lede{font-size:17px;color:var(--muted);max-width:60ch}
   /* video placeholder — swap the inner markup for your <iframe> embed when ready */
-  .video{position:relative;margin:26px 0 8px;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#1a1c1f,#25292e);box-shadow:0 24px 60px rgba(16,20,30,.18);aspect-ratio:16/9;display:flex;align-items:center;justify-content:center}
-  .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-  .video .play{width:78px;height:78px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 10px 30px rgba(200,87,25,.45)}
-  .video .vnote{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#c8ccd2;font-size:13px;font-weight:600}
+  .video{position:relative;margin:26px 0 8px;border-radius:18px;overflow:hidden;box-shadow:0 24px 60px rgba(16,20,30,.18);background:#1a1c1f}
   .cost{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:22px 0 2px}
   .cost .big{font-size:clamp(2rem,5vw,3rem);font-weight:900;color:var(--green);letter-spacing:-.02em}
   .cost .sub{font-size:14px;color:var(--muted)}
@@ -53,11 +50,20 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '/assets/logo.svg';
   <h1>Get leads for <span class="hl">less than 1 penny</span> each &mdash; and resell this tool for profit.</h1>
   <p class="lede">Right now each lead costs 1 credit. When you own the software, you plug in your own data source and pull leads at raw cost &mdash; fractions of a penny each &mdash; then sell the exact same tool to your clients as a recurring revenue stream.</p>
 
-  <!-- ===== VIDEO PLACEHOLDER — replace the inner content with your embed, e.g.:
-       <iframe src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen></iframe>  ===== -->
+  <!-- Vidalytics video embed -->
   <div class="video">
-    <div class="play"><i class="fas fa-play"></i></div>
-    <div class="vnote">Your video goes here</div>
+    <div id="vidalytics_embed_xePpQ8RsRXz6j0ye" style="width: 100%; position:relative; padding-top: 56.25%;"></div>
+    <script type="text/javascript">
+    (function (v, i, d, a, l, y, t, c, s) {
+        y='_'+d.toLowerCase();c=d+'L';if(!v[d]){v[d]={};}if(!v[c]){v[c]={};}if(!v[y]){v[y]={};}var vl='Loader',vli=v[y][vl],vsl=v[c][vl + 'Script'],vlf=v[c][vl + 'Loaded'],ve='Embed';
+        if (!vsl){vsl=function(u,cb){
+            if(t){cb();return;}s=i.createElement("script");s.type="text/javascript";s.async=1;s.src=u;
+            if(s.readyState){s.onreadystatechange=function(){if(s.readyState==="loaded"||s.readyState=="complete"){s.onreadystatechange=null;vlf=1;cb();}};}else{s.onload=function(){vlf=1;cb();};}
+            i.getElementsByTagName("head")[0].appendChild(s);
+        };}
+        vsl(l+'loader.min.js',function(){if(!vli){var vlc=v[c][vl];vli=new vlc();}vli.loadScript(l+'player.min.js',function(){var vec=v[d][ve];t=new vec();t.run(a);});});
+    })(window, document, 'Vidalytics', 'vidalytics_embed_xePpQ8RsRXz6j0ye', 'https://quick.vidalytics.com/embeds/rkXHVyr9/xePpQ8RsRXz6j0ye/');
+    </script>
   </div>
 
   <div class="cost">

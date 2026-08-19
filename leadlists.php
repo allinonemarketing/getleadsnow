@@ -8664,8 +8664,11 @@ document.addEventListener('click', (e) => {
      target:function(){return vis(qs('#startScrapeBtn'))?qs('#startScrapeBtn'):qs('#addLeadsModal');},
      advance:function(){var p=qs('#scrapeProgress');return vis(p);}},
     {title:'Work your leads',
-     text:'Done! Your leads land in the list. <b>Enrich</b> them with emails &amp; socials for free, or <b>Export</b> to CSV anytime. Happy prospecting!',
-     target:function(){return null;},next:true,last:true}
+     text:'Done! Your leads land in the list. <b>Enrich</b> them with emails &amp; socials for free, or <b>Export</b> to CSV anytime.',
+     target:function(){return null;},next:true},
+    {title:'Get leads even cheaper &mdash; less than 1&cent;!',
+     text:'Want leads for a fraction of a penny each? Own the software, pull leads at cost and even resell it for profit. Check out the <b>Get Leads For Less Than 1&cent;</b> tab in the menu.',
+     target:function(){return null;},last:true,cta:{label:'Show me how &rarr;',href:'dashboard.php?section=penny'}}
   ];
 
   var SVGNS='http://www.w3.org/2000/svg';
@@ -8696,12 +8699,17 @@ document.addEventListener('click', (e) => {
     var s=steps[i]; if(!s){ finish(); return; }
     var actions='';
     if(i>0) actions+='<button class="lt-btn lt-back" data-a="back">Back</button>';
-    if(s.next||s.last) actions+='<button class="lt-btn lt-next" data-a="next">'+(s.last?'Got it':'Next')+'</button>';
+    if(s.next||s.last){ var nlabel=s.last?(s.cta?s.cta.label:'Got it'):'Next'; actions+='<button class="lt-btn lt-next" data-a="next">'+nlabel+'</button>'; }
     tip.innerHTML='<div class="lt-badge">Step '+(i+1)+' of '+steps.length+'</div><h4>'+s.title+'</h4><p>'+(s.text||'')+'</p>'+
       '<div class="lt-row"><button class="lt-skip" data-a="skip">Skip tour</button><div class="lt-actions">'+actions+'</div></div>';
     Array.prototype.forEach.call(tip.querySelectorAll('[data-a]'),function(b){
       b.addEventListener('click',function(){var a=b.getAttribute('data-a');
-        if(a==='skip'){finish();} else if(a==='back'){go(i-1);} else if(a==='next'){ if(s.last){finish();}else{go(i+1);} }});
+        if(a==='skip'){finish();}
+        else if(a==='back'){go(i-1);}
+        else if(a==='next'){
+          if(s.last){ if(s.cta){ try{ (window.top||window).location.href=s.cta.href; }catch(e){ try{ location.href=s.cta.href; }catch(_){} } } finish(); }
+          else { go(i+1); }
+        }});
     });
     tip.style.display='block';
     scrollToTarget();
