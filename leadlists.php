@@ -11,11 +11,12 @@ if (!isLoggedIn()) {
 
 $userId = $_SESSION['user_id'];
 $isAdminViewing = isset($_SESSION['admin_original_id']);
-$stmt = $pdo->prepare("SELECT credits, shared_for_credits FROM users WHERE id = ?");
+$stmt = $pdo->prepare("SELECT credits, shared_for_credits, subscription_plan FROM users WHERE id = ?");
 $stmt->execute([$userId]);
 $uRow = $stmt->fetch(PDO::FETCH_ASSOC);
 $userCredits = $uRow['credits'] ?? 0;
 $userHasShared = $uRow['shared_for_credits'] ?? 0;
+$userPlan = $uRow['subscription_plan'] ?? 'none';
 
 // --- Billing helpers ---------------------------------------------------------
 // Model: 1 credit per lead returned by a search (charged as leads are saved in
@@ -4486,27 +4487,45 @@ if (isset($_GET['action'])) {
         <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#c85719,#1460a6);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
             <i class="fas fa-rocket" style="color:#fff;font-size:22px;"></i>
         </div>
-        <h2 style="font-size:20px;font-weight:700;margin:0 0 8px;">Out of credits</h2>
-        <p style="color:#6e6e73;font-size:14px;margin:0 0 20px;line-height:1.5;">You have <strong id="upgradeHave">0</strong> credits left. Upgrade to keep searching — <strong>1 credit per lead</strong>, and enrichment is always free.</p>
         <?php
-            $upgradePlans = [
-                ['id' => STRIPE_PRICE_STARTER,    'name' => 'Starter', 'price' => PLAN_STARTER_PRICE,    'leads' => PLAN_STARTER_CREDITS,    'featured' => false],
-                ['id' => STRIPE_PRICE_GROWTH,     'name' => 'Growth',  'price' => PLAN_GROWTH_PRICE,     'leads' => PLAN_GROWTH_CREDITS,     'featured' => true],
-                ['id' => STRIPE_PRICE_ENTERPRISE, 'name' => 'Pro',     'price' => PLAN_ENTERPRISE_PRICE, 'leads' => PLAN_ENTERPRISE_CREDITS, 'featured' => false],
+            // Plan-aware upgrade prompt. Show only tiers ABOVE the user's current
+            // plan; if they're already on the top plan, promote the 1¢ page instead.
+            $planRank = ['none' => 0, 'business' => 1, 'agency' => 2, 'enterprise' => 3];
+            $curRank  = $planRank[$userPlan] ?? 0;
+            $allPlans = [
+                ['id' => STRIPE_PRICE_STARTER,    'name' => 'Starter', 'price' => PLAN_STARTER_PRICE,    'leads' => PLAN_STARTER_CREDITS,    'rank' => 1],
+                ['id' => STRIPE_PRICE_GROWTH,     'name' => 'Growth',  'price' => PLAN_GROWTH_PRICE,     'leads' => PLAN_GROWTH_CREDITS,     'rank' => 2],
+                ['id' => STRIPE_PRICE_ENTERPRISE, 'name' => 'Pro',     'price' => PLAN_ENTERPRISE_PRICE, 'leads' => PLAN_ENTERPRISE_CREDITS, 'rank' => 3],
             ];
+            $planNames  = ['none' => 'Free', 'business' => 'Starter', 'agency' => 'Growth', 'enterprise' => 'Pro'];
+            $curName    = $planNames[$userPlan] ?? 'your';
+            $upgradePlans = array_values(array_filter($allPlans, function($p) use ($curRank) { return $p['rank'] > $curRank; }));
+            $isTopPlan  = ($curRank >= 3) || empty($upgradePlans);
         ?>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;">
-            <?php foreach ($upgradePlans as $pl): ?>
-            <div style="border:1.5px solid <?php echo $pl['featured'] ? '#c85719' : '#e6e6e6'; ?>;border-radius:14px;padding:18px 10px 14px;position:relative;">
-                <?php if ($pl['featured']): ?><div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#c85719;color:#fff;font-size:9px;font-weight:800;letter-spacing:.04em;padding:2px 9px;border-radius:999px;">POPULAR</div><?php endif; ?>
+        <?php if ($isTopPlan): ?>
+        <h2 style="font-size:20px;font-weight:700;margin:0 0 8px;">You&rsquo;re on our biggest plan</h2>
+        <p style="color:#6e6e73;font-size:14px;margin:0 0 20px;line-height:1.55;">You have <strong id="upgradeHave">0</strong> credits left and you&rsquo;re already on <strong>Pro</strong> &mdash; our highest tier. The best way to keep pulling leads now is to get them <strong>at cost, for less than 1&cent; each</strong>. Own the software, pull leads directly from the source, and even resell them to your clients.</p>
+        <div style="border:1.5px solid #dc2626;border-radius:14px;padding:20px 16px;background:#fff5f5;margin-bottom:6px;">
+            <div style="font-weight:800;font-size:16px;color:#b91c1c;margin-bottom:4px;"><i class="fas fa-bolt"></i> Get Leads For Less Than 1&cent;</div>
+            <div style="font-size:13px;color:#6e6e73;line-height:1.5;margin-bottom:14px;">The best plan for high-volume users like you &mdash; leads at cost instead of a fixed monthly cap.</div>
+            <button onclick="app.gotoPenny()" style="width:100%;padding:12px;border-radius:10px;border:none;cursor:pointer;font-weight:800;font-size:14px;font-family:inherit;background:#dc2626;color:#fff;">Show me how &rarr;</button>
+        </div>
+        <?php else: ?>
+        <h2 style="font-size:20px;font-weight:700;margin:0 0 8px;">Out of credits</h2>
+        <p style="color:#6e6e73;font-size:14px;margin:0 0 20px;line-height:1.5;">You have <strong id="upgradeHave">0</strong> credits left<?php echo $curRank > 0 ? ' on the <strong>' . htmlspecialchars($curName) . '</strong> plan' : ''; ?>. Upgrade to keep searching &mdash; <strong>1 credit per lead</strong>, and enrichment is always free.</p>
+        <div style="display:grid;grid-template-columns:repeat(<?php echo count($upgradePlans); ?>,1fr);gap:10px;text-align:center;">
+            <?php foreach ($upgradePlans as $idx => $pl): $featured = ($idx === 0); ?>
+            <div style="border:1.5px solid <?php echo $featured ? '#c85719' : '#e6e6e6'; ?>;border-radius:14px;padding:18px 10px 14px;position:relative;">
+                <?php if ($featured): ?><div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#c85719;color:#fff;font-size:9px;font-weight:800;letter-spacing:.04em;padding:2px 9px;border-radius:999px;">NEXT TIER</div><?php endif; ?>
                 <div style="font-weight:700;font-size:14px;margin-bottom:2px;"><?php echo $pl['name']; ?></div>
                 <div style="font-size:24px;font-weight:800;line-height:1.1;">$<?php echo $pl['price']; ?><span style="font-size:12px;color:#98918a;font-weight:500;">/mo</span></div>
                 <div style="font-size:12.5px;color:#6e6e73;margin:6px 0 3px;"><?php echo number_format($pl['leads']); ?> leads/mo</div>
                 <div style="font-size:11px;color:#98918a;font-weight:600;margin:0 0 14px;"><?php echo number_format($pl['price'] / $pl['leads'] * 100, 1); ?>&cent; per lead</div>
-                <button onclick="app.upgradeTo('<?php echo htmlspecialchars($pl['id']); ?>', this)" style="width:100%;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:13px;font-family:inherit;background:<?php echo $pl['featured'] ? '#c85719' : '#f1efec'; ?>;color:<?php echo $pl['featured'] ? '#fff' : '#1d1d1f'; ?>;">Upgrade</button>
+                <button onclick="app.upgradeTo('<?php echo htmlspecialchars($pl['id']); ?>', this)" style="width:100%;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:13px;font-family:inherit;background:<?php echo $featured ? '#c85719' : '#f1efec'; ?>;color:<?php echo $featured ? '#fff' : '#1d1d1f'; ?>;">Upgrade</button>
             </div>
             <?php endforeach; ?>
         </div>
+        <?php endif; ?>
         <div style="margin-top:18px;">
             <button onclick="app.closeUpgradeModal()" style="background:none;border:none;color:#6e6e73;font-size:13px;cursor:pointer;font-family:inherit;">Maybe later</button>
         </div>
@@ -5151,6 +5170,11 @@ class LeadListsApp {
     }
     closeUpgradeModal() {
         document.getElementById('upgradeModal').style.display = 'none';
+    }
+    gotoPenny() {
+        // Top-plan users are promoted to the 1¢ page instead of an upgrade.
+        this.closeUpgradeModal();
+        (window.top || window).location.href = 'dashboard.php?section=penny';
     }
     async upgradeTo(priceId, btnEl) {
         if (!priceId) { this.toast('This plan is not available yet.'); return; }
