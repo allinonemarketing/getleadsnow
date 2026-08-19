@@ -238,8 +238,9 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
         .card{order:-2;position:static}
         .lede{max-width:none}
         .copy{text-align:center}
-        .copy .checks li{justify-content:center}
-        .copy .prov{justify-content:center}
+        .copy .checks{text-align:left}
+        .copy .checks li{justify-content:flex-start}
+        .copy .prov{justify-content:flex-start;text-align:left}
         .mobhook .eyebrow{display:none}
         .mh-note{display:none}
         .copy .eyebrow{display:none}
