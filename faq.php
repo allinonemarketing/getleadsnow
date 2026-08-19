@@ -42,12 +42,12 @@ if (!isLoggedIn()) { header('Location: login.php'); exit(); }
 
   <details class="faq" open>
     <summary>I got 100 leads but only some have emails &mdash; why?</summary>
-    <div class="body">Not every business has an email available. We pull <b>every matching business</b> from Google Maps, so every lead comes with a name, phone, website, rating and address. Our free enrichment then scans each lead&rsquo;s website for emails and social profiles &mdash; but businesses that don&rsquo;t have a website, or don&rsquo;t list an email publicly, simply won&rsquo;t return one. You&rsquo;ll still have their phone and socials to reach out.</div>
+    <div class="body">Not every business has an email available. We pull <b>every matching business</b> from Google Maps, so every lead comes with a name, phone, website, rating and address. Our free enrichment then fills in emails and social profiles wherever they exist &mdash; but not every business publishes an email, so some leads simply won&rsquo;t have one. You&rsquo;ll still have their phone and socials to reach out.</div>
   </details>
 
   <details class="faq">
     <summary>How do I find emails for a lead that doesn&rsquo;t have one yet?</summary>
-    <div class="body">Click <b>enrich</b> on the lead (or <b>Re-Enrich All</b> for the whole list). We scan the business&rsquo;s website for emails and social media. If the business has no website there&rsquo;s usually nothing to find &mdash; reach them by phone instead. Enrichment is always <b>free</b> and never costs credits.</div>
+    <div class="body">Click <b>enrich</b> on the lead (or <b>Re-Enrich All</b> for the whole list) and we&rsquo;ll pull in any email and social profiles that are available for that business. If none are publicly listed, reach them by phone instead. Enrichment is always <b>free</b> and never costs credits.</div>
   </details>
 
   <details class="faq">
