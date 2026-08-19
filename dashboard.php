@@ -247,21 +247,6 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             color: #ffffff;
         }
 
-        /* Green promo item — Get Free CRM */
-        .nav-link.nav-free,
-        .nav-link.nav-free.active {
-            background: #16a34a;
-            color: #ffffff;
-        }
-        .nav-link.nav-free:hover {
-            background: #15803d;
-            color: #ffffff;
-        }
-        .nav-link.nav-free i,
-        .nav-link.nav-free.active i {
-            color: #ffffff;
-        }
-
         .nav-link i {
             width: 20px;
             text-align: center;
@@ -484,15 +469,15 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
         </div>
         <ul class="nav-links">
             <li class="nav-item">
-                <a href="?section=freecrm" class="nav-link nav-free <?php echo $current_section === 'freecrm' ? 'active' : ''; ?>" data-section="freecrm">
-                    <i class="fas fa-gift"></i>
-                    Get Free CRM
-                </a>
-            </li>
-            <li class="nav-item">
                 <a href="?section=penny" class="nav-link nav-penny <?php echo $current_section === 'penny' ? 'active' : ''; ?>" data-section="penny">
                     <i class="fas fa-bolt"></i>
                     Get Leads For Less Than 1&cent;
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="?section=freecrm" class="nav-link <?php echo $current_section === 'freecrm' ? 'active' : ''; ?>" data-section="freecrm">
+                    <i class="fas fa-gift"></i>
+                    Get Free CRM
                 </a>
             </li>
             <li class="nav-item">
