@@ -820,6 +820,15 @@ if (isset($_GET['action'])) {
             ]);
             exit;
 
+        case 'cancelSearch':
+            $batchId = $input['batch_id'] ?? '';
+            if ($batchId) {
+                // Drop only jobs not yet picked up; ones already processing finish.
+                $pdo->prepare("DELETE FROM search_jobs WHERE batch_id = ? AND user_id = ? AND status = 'pending'")->execute([$batchId, $userId]);
+            }
+            echo json_encode(['success' => true]);
+            exit;
+
         case 'updateLead':
             $id = $input['id'] ?? 0;
             $allowed = ['notes', 'status', 'visited_website', 'visited_social', 'reached_out', 'emails', 'social_media_links', 'visited_socials', 'pipeline_stage', 'outreach_email', 'outreach_instagram', 'follow_up_count'];
@@ -6779,101 +6788,58 @@ class LeadListsApp {
             if (cityObj) cityList.push(cityObj);
         });
 
-        let completed = 0;
         const total = cityList.length;
-        let totalInserted = 0;
-        let totalFound = 0;
+        document.getElementById('scrapeProgressText').textContent = `Queuing ${total} ${total === 1 ? 'city' : 'cities'}...`;
 
-        const _updateBar = () => {
-            const pct = Math.round((completed / total) * 100);
-            document.getElementById('scrapeProgressBar').style.width = pct + '%';
-            document.getElementById('scrapeProgressText').textContent = `${completed} of ${total} cities (${pct}%)`;
-            document.getElementById('scrapeProgressCount').textContent = `${totalFound.toLocaleString()} found · ${totalInserted.toLocaleString()} saved`;
-        };
-
-        document.getElementById('scrapeProgressText').textContent = `0 of ${total} cities (0%)`;
-
-        const chunkSize = 3;
-        for (let i = 0; i < cityList.length; i += chunkSize) {
-            if (!this.scraping) break;
-            const chunk = cityList.slice(i, i + chunkSize);
-
-            const promises = chunk.map(async (city) => {
-                const fullQuery = `${query} in ${city.city}, ${city.state_name}`;
-                _logActivity(`Searching "${query}" in ${city.city}, ${city.state_name}...`);
-                try {
-                    // Log the search for history/analytics only. Credits are charged
-                    // per lead saved, server-side in addLeads below.
-                    fetch('log_api_call.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ credits_used: 0, scraper_model: 'google_maps', search_query: fullQuery, input_params: { limit }, status: 'pending' })
-                    }).catch(() => {});
-
-                    const res = await fetch(`${this.mapsApiUrl}&term=${encodeURIComponent(query)}&city=${encodeURIComponent(city.city)}&state=${encodeURIComponent(city.state_name)}&limit=${limit}`);
-                    const data = await res.json();
-                    const results = data?.data || [];
-
-                    totalFound += results.length;
-                    completed++;
-                    _updateBar();
-
-                    if (results.length > 0) {
-                        _logActivity(`Found ${results.length} businesses in ${city.city}`, 'success');
-
-                        const leads = results.map(r => ({
-                            ...r,
-                            city: city.city,
-                            state: city.state_name
-                        }));
-                        const addRes = await this.api('addLeads', { list_id: this.currentList.id, leads }, 'POST');
-                        if (addRes.success) {
-                            totalInserted += addRes.inserted;
-                            // Server charged 1 credit per lead saved — sync the true balance.
-                            if (typeof addRes.credits !== 'undefined') { this.credits = addRes.credits; this.updateCreditsDisplay(); }
-                            _logActivity(`+${addRes.inserted} new leads saved from ${city.city}` + (addRes.skipped ? ` (${addRes.skipped} already in list)` : ''), 'success');
-                            if (addRes.skipped_no_credit > 0) {
-                                this.scraping = false;   // out of credits — stop the rest of the run
-                                _logActivity(`Out of credits — some leads in ${city.city} weren't saved. Add credits to continue.`, 'error');
-                                this.showUpgradePrompt(1);
-                            }
-                            _updateBar();
-                        }
-                    } else {
-                        _logActivity(`No results for ${city.city}`, 'warn');
-                    }
-
-                    this.api('logSearch', {
-                        list_id: this.currentList.id,
-                        search_query: query,
-                        state_name: city.state_name,
-                        city: city.city,
-                        results_count: results.length
-                    }, 'POST');
-
-                    return results.length;
-                } catch (err) {
-                    console.error(`Error scraping ${city.city}:`, err);
-                    _logActivity(`Error: ${city.city} - ${err.message}`, 'error');
-                    completed++;
-                    _updateBar();
-                    return 0;
-                }
-            });
-
-            await Promise.all(promises);
-            this.loadLeads();
+        // Hand the whole search to the background queue — one job per city. The
+        // Supervisord/cron workers do the RapidAPI calls + saving; the browser just
+        // enqueues and polls for progress, so it never holds a server worker.
+        const cities = cityList.map(c => ({ city: c.city, state_name: c.state_name }));
+        const enq = await this.api('enqueueSearch', { list_id: this.currentList.id, query, per_city: limit, cities }, 'POST');
+        if (!enq || !enq.success) {
+            this.scraping = false;
+            this.resetScrapeUI();
+            if (enq && enq.out_of_credits) { this.showUpgradePrompt(1); }
+            else { this.toast((enq && enq.error) || 'Could not start the search'); }
+            return;
         }
+        const batchId = enq.batch_id;
+        _logActivity(`Queued ${total} ${total === 1 ? 'city' : 'cities'} — searching in the background...`);
+
+        let finalFound = 0, finalInserted = 0, finalNoCredit = 0, lastLoaded = -1;
+        await new Promise((resolve) => {
+            const poll = setInterval(async () => {
+                if (!this.scraping) {   // user cancelled — drop any still-pending jobs
+                    clearInterval(poll);
+                    this.api('cancelSearch', { batch_id: batchId }, 'POST').catch(() => {});
+                    resolve();
+                    return;
+                }
+                let p;
+                try { p = await this.api('searchProgress&batch_id=' + batchId); } catch (e) { return; }
+                if (!p || !p.success) return;
+                const done = (p.done || 0) + (p.failed || 0);
+                const pct = total ? Math.round((done / total) * 100) : 100;
+                document.getElementById('scrapeProgressBar').style.width = pct + '%';
+                document.getElementById('scrapeProgressText').textContent = `${done} of ${total} cities (${pct}%)`;
+                document.getElementById('scrapeProgressCount').textContent = `${(p.found || 0).toLocaleString()} found · ${(p.inserted || 0).toLocaleString()} saved`;
+                if (typeof p.credits !== 'undefined') { this.credits = p.credits; this.updateCreditsDisplay(); }
+                if ((p.inserted || 0) !== lastLoaded && this.currentList) { lastLoaded = p.inserted || 0; this.loadLeads(); }
+                finalFound = p.found || 0; finalInserted = p.inserted || 0; finalNoCredit = p.skipped_no_credit || 0;
+                if (p.complete) { clearInterval(poll); resolve(); }
+            }, 1500);
+        });
 
         this.scraping = false;
 
         await this.refreshCurrentList();
-        if (totalInserted === 0 && totalFound > 0) {
-            this.toast(`No new leads added — those ${totalFound.toLocaleString()} results are already in this list. Try a new city or a different search.`);
-        } else if (this.credits < 1 && totalFound > totalInserted) {
-            this.toast(`${totalInserted.toLocaleString()} new leads added — you ran out of credits before saving the rest. Upgrade to continue.`);
+        if (finalInserted === 0 && finalFound > 0) {
+            this.toast(`No new leads added — those ${finalFound.toLocaleString()} results are already in this list. Try a new city or a different search.`);
+        } else if (finalNoCredit > 0) {
+            this.toast(`${finalInserted.toLocaleString()} new leads added — you ran out of credits before saving the rest. Upgrade to continue.`);
+            this.showUpgradePrompt(1);
         } else {
-            this.toast(`${totalInserted.toLocaleString()} new leads added — enrichment starting in background`);
+            this.toast(`${finalInserted.toLocaleString()} new leads added — enrichment starting in background`);
         }
 
         document.getElementById('addLeadsModal').classList.remove('active');
