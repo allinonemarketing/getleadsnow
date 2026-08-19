@@ -81,6 +81,8 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
         error_log("Error processing success payment: " . $e->getMessage());
     }
 }
+// All session-touching work is done — release the lock before rendering.
+session_write_close();
 ?>
 <!DOCTYPE html>
 <html lang="en">

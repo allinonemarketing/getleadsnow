@@ -57,6 +57,9 @@ $planLabels = ['none' => 'Free', 'business' => 'Starter', 'agency' => 'Growth', 
 $planLabel  = $planLabels[$planKey] ?? ucfirst((string)$planKey);
 $memberSince = '';
 if (!empty($u['created_at'])) { $memberSince = date('F j, Y', strtotime($u['created_at'])); }
+// Render path only (action handlers above exit): release the session lock so this
+// page doesn't serialize behind other same-user requests.
+session_write_close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
