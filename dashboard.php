@@ -19,45 +19,53 @@ try {
     die("Database connection error. Please check the logs.");
 }
 
-try {
-    $tableExists = $pdo->query("SHOW TABLES LIKE 'api_calls'")->rowCount() > 0;
-    
-    if (!$tableExists) {
-        $pdo->exec("CREATE TABLE api_calls (
-            id BIGINT AUTO_INCREMENT PRIMARY KEY,
-            user_id INT NOT NULL,
-            credits_used INT NOT NULL,
-            scraper_model VARCHAR(50) NOT NULL,
-            url VARCHAR(2048) NOT NULL,
-            input_params JSON,
-            status VARCHAR(50),
-            error_message TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            INDEX idx_user_date (user_id, created_at)
-        )");
-        error_log("Created api_calls table successfully");
-    }
-} catch (PDOException $e) {
-    error_log("Table creation error: " . $e->getMessage());
-}
+// Schema preflight — gated behind a one-time flag so these SHOW/ALTER round-trips
+// run only once per deploy instead of on every dashboard load. Bump the version in
+// the filename if you add a migration below.
+$dashSchemaFlag = sys_get_temp_dir() . '/getleadsnow_dashboard_schema_v1.ok';
+if (!@is_file($dashSchemaFlag)) {
+    try {
+        $tableExists = $pdo->query("SHOW TABLES LIKE 'api_calls'")->rowCount() > 0;
 
-try {
-    $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'subscription_plan'");
-    if ($stmt->rowCount() == 0) {
-        $pdo->exec("ALTER TABLE users ADD COLUMN subscription_plan VARCHAR(50) DEFAULT 'none'");
-        error_log("Added subscription_plan column successfully");
+        if (!$tableExists) {
+            $pdo->exec("CREATE TABLE api_calls (
+                id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                credits_used INT NOT NULL,
+                scraper_model VARCHAR(50) NOT NULL,
+                url VARCHAR(2048) NOT NULL,
+                input_params JSON,
+                status VARCHAR(50),
+                error_message TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_user_date (user_id, created_at)
+            )");
+            error_log("Created api_calls table successfully");
+        }
+    } catch (PDOException $e) {
+        error_log("Table creation error: " . $e->getMessage());
     }
-} catch (PDOException $e) {
-    error_log("Error checking/adding subscription_plan column: " . $e->getMessage());
-}
 
-try {
-    $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'shared_for_credits'");
-    if ($stmt->rowCount() == 0) {
-        $pdo->exec("ALTER TABLE users ADD COLUMN shared_for_credits TINYINT DEFAULT 0");
+    try {
+        $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'subscription_plan'");
+        if ($stmt->rowCount() == 0) {
+            $pdo->exec("ALTER TABLE users ADD COLUMN subscription_plan VARCHAR(50) DEFAULT 'none'");
+            error_log("Added subscription_plan column successfully");
+        }
+    } catch (PDOException $e) {
+        error_log("Error checking/adding subscription_plan column: " . $e->getMessage());
     }
-} catch (PDOException $e) {
-    error_log("Error checking/adding shared_for_credits column: " . $e->getMessage());
+
+    try {
+        $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'shared_for_credits'");
+        if ($stmt->rowCount() == 0) {
+            $pdo->exec("ALTER TABLE users ADD COLUMN shared_for_credits TINYINT DEFAULT 0");
+        }
+    } catch (PDOException $e) {
+        error_log("Error checking/adding shared_for_credits column: " . $e->getMessage());
+    }
+
+    @file_put_contents($dashSchemaFlag, '1');
 }
 
 if (!isLoggedIn()) {

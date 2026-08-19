@@ -299,13 +299,13 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
   <div class="wrap grid">
     <div class="mobhook" aria-hidden="true">
       <span class="eyebrow"><svg class="ic"><use href="#i-bolt"/></svg> 100 leads included</span>
-      <div class="mh-title" id="mh1">100 local business leads — <span class="hl">pulled live from Google Maps.</span></div>
+      <div class="mh-title" id="mh1">100 local business leads for free — <span class="hl">pulled from Google Maps.</span></div>
       <div class="mh-proof"><span class="mh-q" id="mhq">🔍 Dentists in Austin, TX</span><b>Hill Country Dental Co.</b> · (512)&nbsp;448‑7290 · <span class="mh-ok">✓ email ✓ social</span> · <span class="mh-rt">★4.8</span> <span class="mh-more">+341 more found</span></div>
       <div class="mh-note">100 leads included · no credit card · no catch</div>
     </div>
     <div class="copy">
       <span class="eyebrow"><svg class="ic"><use href="#i-bolt"/></svg> For businesses of all types, agencies &amp; closers</span>
-      <h1 id="h1">100 local business leads — <span class="hl">pulled live from Google Maps.</span></h1>
+      <h1 id="h1">100 local business leads for free — <span class="hl">pulled from Google Maps.</span></h1>
       <p class="lede">Included when you create your account — no credit card. Stop paying for stale, resold lists: type a niche and a city and instantly get business names, <strong>real phone numbers, emails and social profiles</strong>.</p>
       <ul class="checks">
         <li><svg class="ic"><use href="#i-check-circle"/></svg> Live phone numbers + one-click AI email enrichment (included)</li>
