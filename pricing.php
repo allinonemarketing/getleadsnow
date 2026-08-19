@@ -176,19 +176,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
 </head>
 <body>
     <div class="page-wrapper">
-        <header>
-            <div class="container">
-                <nav>
-                    <a href="index.php" class="logo"><img src="<?php echo APP_LOGO; ?>" alt="<?php echo APP_NAME; ?>"></a>
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <span style="font-size:13px;color:var(--text-secondary);">Credits: <strong style="color:var(--text-primary);"><?php echo number_format($userCredits); ?></strong></span>
-                        <a href="dashboard.php" class="nav-btn nav-btn-ghost">Dashboard</a>
-                    </div>
-                </nav>
-            </div>
-        </header>
-
-        <section style="padding-top:140px;">
+        <section style="padding-top:40px;">
             <div class="container">
                 <div style="text-align:center;max-width:700px;margin:0 auto;">
                     <div class="badge badge-plan">Simple Pricing</div>
