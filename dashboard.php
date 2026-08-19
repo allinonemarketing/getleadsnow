@@ -426,7 +426,7 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             .menu-toggle { display: block; }
             .sidebar { transform: translateX(-100%); }
             .sidebar.active { transform: translateX(0); }
-            .main-content { margin-left: 0; width: 100%; }
+            .main-content { margin-left: 0; width: 100%; padding-top: 60px; box-sizing: border-box; }
             .plan-badge { display: none; }
         }
 
@@ -585,8 +585,10 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
                         document.getElementById(sectionId).classList.add('active');
                         
                         window.history.pushState({}, '', `?section=${sectionId}`);
-                        
+
                         loadContent(sectionId);
+
+                        sidebar.classList.remove('active');   // close the mobile menu after picking an item
                     });
                 }
             });
@@ -611,6 +613,15 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             async function loadContent(sectionId) {
                 try {
                     loading.style.display = 'flex';
+                    // Tear down every other section's iframe so a hidden tab (e.g. a
+                    // playing video on the 1¢ page) stops instead of running in the
+                    // background. Each section reloads fresh when revisited.
+                    document.querySelectorAll('.content-section').forEach(sec => {
+                        if (sec.id !== sectionId) {
+                            const inner = sec.querySelector(`#${sec.id}-content`);
+                            if (inner) inner.innerHTML = '';
+                        }
+                    });
                     const contentDiv = document.getElementById(`${sectionId}-content`);
                     if (contentDiv) {
                         contentDiv.innerHTML = `<iframe src="${urls[sectionId]}"></iframe>`;

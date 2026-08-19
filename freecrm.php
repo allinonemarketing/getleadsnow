@@ -23,8 +23,9 @@ if (!isLoggedIn()) { header('Location: login.php'); exit(); }
   h1{font-size:clamp(2rem,4.4vw,3rem);font-weight:900;letter-spacing:-.025em;line-height:1.08;text-wrap:balance}
   h1 .hl{color:var(--green)}
   .lede{font-size:17px;color:var(--muted);max-width:62ch;margin:16px auto 0}
-  .hero-save{display:inline-flex;align-items:center;gap:10px;background:var(--green-soft);color:var(--green-d);font-weight:900;font-size:clamp(15px,2.4vw,19px);letter-spacing:-.01em;border-radius:999px;padding:12px 22px;margin:16px auto 4px;line-height:1.2}
-  .hero-save s{color:var(--faint);font-weight:700;text-decoration-color:var(--accent)}
+  .hero-save{display:inline-block;background:var(--green-soft);color:var(--green-d);font-weight:900;font-size:clamp(14px,2.2vw,19px);letter-spacing:-.01em;border-radius:16px;padding:11px 20px;margin:16px auto 4px;line-height:1.45;text-align:center;max-width:100%}
+  .hero-save i{margin-right:8px}
+  .hero-save s{color:var(--faint);font-weight:700;text-decoration-color:var(--accent);white-space:nowrap}
   .hero-int{display:inline-flex;align-items:flex-start;gap:10px;background:#eef4ff;border:1px solid #d3e0fb;color:#1e3a8a;font-weight:600;font-size:14.5px;border-radius:14px;padding:13px 18px;margin:18px auto 0;max-width:60ch;line-height:1.5;text-align:left}
   .hero-int i{color:#2563eb;flex:none;margin-top:2px;font-size:16px}
   .hero-int b{font-weight:800;color:#1e40af}

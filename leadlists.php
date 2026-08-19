@@ -2656,6 +2656,15 @@ if (isset($_GET['action'])) {
             margin-bottom: 24px;
         }
 
+        /* Mobile: the toolbar has many buttons — wrap them instead of forcing a
+           horizontal scroll of the whole page. */
+        @media (max-width: 768px) {
+            .detail-header { flex-wrap: wrap; gap: 10px; }
+            .detail-title { flex: 1 1 auto; min-width: 0; }
+            .detail-title h1 { overflow-wrap: anywhere; }
+            .detail-header > div:last-child { flex-wrap: wrap; width: 100%; }
+        }
+
         .back-btn {
             width: 40px;
             height: 40px;
