@@ -481,6 +481,13 @@ function importLeadCsvRows($pdo, $userId, $listId, $headers, $rows) {
 // API Endpoints
 if (isset($_GET['action'])) {
     header('Content-Type: application/json');
+    // Payment-failed lockout: refuse to serve any lead data until the card is
+    // updated (the dashboard shows the wall; this stops iframe/API bypass).
+    if (paymentFailedLockout()) {
+        http_response_code(402);
+        echo json_encode(['success' => false, 'error' => 'payment_failed', 'message' => 'Your subscription payment failed. Please update your payment method to continue.']);
+        exit;
+    }
     // Release the session lock before any slow work (external enrichment/GHL
     // curls below run up to 30s). Holding it serializes every same-user request
     // behind this one, freezing navigation during a search. No API action writes

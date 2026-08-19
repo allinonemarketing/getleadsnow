@@ -11,6 +11,7 @@ if (!file_exists('includes/auth.php')) {
 }
 
 require_once 'includes/auth.php';
+require_once 'config/stripe_config.php';   // STRIPE_BILLING_PORTAL_URL for the payment-failed wall
 
 try {
     $pdo->query('SELECT 1');
@@ -76,19 +77,29 @@ if (!isLoggedIn()) {
 $userName = $_SESSION['user_name'] ?? 'User';
 
 try {
-    $stmt = $pdo->prepare("SELECT credits, subscription_plan, shared_for_credits, is_admin FROM users WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT credits, subscription_plan, subscription_status, shared_for_credits, is_admin FROM users WHERE id = ?");
     $stmt->execute([$_SESSION['user_id']]);
     $userData = $stmt->fetch(PDO::FETCH_ASSOC);
     $userCredits = $userData['credits'] ?? 0;
     $userPlan = $userData['subscription_plan'] ?? 'none';
     $hasShared = $userData['shared_for_credits'] ?? 0;
     $isAdmin = !empty($userData['is_admin']);
+    $subStatus = $userData['subscription_status'] ?? '';
 } catch (PDOException $e) {
     error_log("Database error: " . $e->getMessage());
     $userCredits = 0;
     $userPlan = 'none';
     $hasShared = 0;
 }
+
+// Payment-failed lockout. When Stripe can't collect a renewal the subscription
+// goes past_due (retrying) or unpaid (retries exhausted). The webhook stores that
+// status verbatim. Such users are blocked from the app until they update their
+// card — a full-screen wall with a link to the Stripe billing portal. Admins (and
+// an admin impersonating a user) are exempt so support can still get in.
+$paymentFailed = in_array($subStatus ?? '', ['past_due', 'unpaid'], true)
+    && empty($isAdmin)
+    && empty($_SESSION['admin_original_id']);
 
 $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
 
@@ -514,6 +525,24 @@ session_write_close();
     </style>
 </head>
 <body>
+<?php if (!empty($paymentFailed)): ?>
+<!-- PAYMENT FAILED LOCKOUT: blocks the whole app until the card is updated -->
+<div id="payWall" style="position:fixed;inset:0;z-index:2147483000;background:rgba(12,15,18,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;">
+  <div style="background:#fff;border-radius:20px;max-width:480px;width:100%;padding:36px 30px 26px;text-align:center;box-shadow:0 30px 80px rgba(10,15,25,.45);">
+    <div style="width:64px;height:64px;border-radius:18px;background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
+      <i class="fas fa-credit-card" style="font-size:26px;color:#b91c1c;"></i>
+    </div>
+    <h2 style="font-size:22px;font-weight:900;letter-spacing:-.02em;color:#141517;line-height:1.2;margin:0 0 10px;">Your payment didn&rsquo;t go through</h2>
+    <p style="font-size:14.5px;color:#5b6066;line-height:1.6;margin:0 0 8px;">We couldn&rsquo;t charge the card on file for your subscription, so your account is paused. Update your payment method to restore access right away &mdash; your lists and leads are safe and waiting.</p>
+    <p style="font-size:12.5px;color:#98a0a8;line-height:1.5;margin:0 0 22px;">Need help? Email <a href="mailto:sales@allinonemarketing.com" style="color:#c85719;font-weight:700;text-decoration:none;">sales@allinonemarketing.com</a></p>
+    <a href="<?php echo htmlspecialchars(defined('STRIPE_BILLING_PORTAL_URL') && STRIPE_BILLING_PORTAL_URL ? STRIPE_BILLING_PORTAL_URL : 'mailto:sales@allinonemarketing.com'); ?>" target="_blank" rel="noopener" style="display:block;width:100%;background:#c85719;color:#fff;font-weight:800;font-size:16px;text-decoration:none;border-radius:12px;padding:15px;box-sizing:border-box;box-shadow:0 10px 26px rgba(200,87,25,.32);"><i class="fas fa-credit-card"></i> Update Payment Method</a>
+    <div style="display:flex;gap:14px;justify-content:center;margin-top:14px;">
+      <a href="#" onclick="location.reload();return false;" style="font-size:13px;color:#5b6066;font-weight:700;text-decoration:none;"><i class="fas fa-rotate-right"></i> I&rsquo;ve updated it &mdash; refresh</a>
+      <a href="logout.php" style="font-size:13px;color:#98a0a8;font-weight:600;text-decoration:none;">Sign out</a>
+    </div>
+  </div>
+</div>
+<?php endif; ?>
     <?php if (isset($_SESSION['admin_original_id'])): ?>
     <div id="adminBanner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(135deg,#FF3B30,#FF2D55);color:#fff;padding:8px 20px;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:12px;font-family:'Inter',sans-serif;">
         <i class="fas fa-user-secret"></i> Viewing as <?php echo htmlspecialchars($_SESSION['user_name']); ?>

@@ -76,3 +76,25 @@ if (isset($_GET['check_session'])) {
     ]);
     exit;
 }
+
+/**
+ * True when the logged-in user's subscription payment has failed (Stripe status
+ * past_due = still retrying, unpaid = retries exhausted). The dashboard shows a
+ * blocking "update your card" wall and the lead APIs refuse to serve data until
+ * it's resolved. Admins and an admin impersonating a user are never locked out.
+ * Fails OPEN on DB error so a transient problem can't lock paying users out.
+ */
+function paymentFailedLockout(): bool {
+    if (!isLoggedIn()) return false;
+    if (!empty($_SESSION['admin_original_id'])) return false;
+    try {
+        global $pdo;
+        $s = $pdo->prepare("SELECT is_admin, subscription_status FROM users WHERE id = ?");
+        $s->execute([$_SESSION['user_id']]);
+        $u = $s->fetch(PDO::FETCH_ASSOC);
+        if (!$u || !empty($u['is_admin'])) return false;
+        return in_array($u['subscription_status'] ?? '', ['past_due', 'unpaid'], true);
+    } catch (Exception $e) {
+        return false;
+    }
+}
