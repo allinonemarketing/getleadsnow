@@ -3,6 +3,19 @@ session_start();
 require_once 'includes/auth.php';
 if (!isLoggedIn()) { header('Location: login.php'); exit(); }
 session_write_close();  // release the per-user session lock; these pages only read the session
+
+// The Free CRM is a paid-plan perk: only active subscribers can claim it.
+// Free-plan users see an upgrade popup instead of the signup link.
+$fcPlan = 'none';
+try {
+    $fcStmt = $pdo->prepare("SELECT subscription_plan FROM users WHERE id = ?");
+    $fcStmt->execute([$_SESSION['user_id']]);
+    $fcPlan = $fcStmt->fetchColumn() ?: 'none';
+} catch (Exception $e) { $fcPlan = 'none'; }
+$fcPaid = in_array($fcPlan, ['business', 'agency', 'enterprise']);
+$fcCtaAttrs = $fcPaid
+    ? 'href="https://free.allinonemarketing.com/getleadsnowfreeaccount" target="_blank" rel="noopener"'
+    : 'href="#" onclick="fcShowGate();return false;"';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -96,7 +109,7 @@ session_write_close();  // release the per-user session lock; these pages only r
     <p class="lede">As a paid lead-generation customer, you get the entire all-in-one marketing &amp; CRM platform <strong>free</strong> &mdash; no monthly software fee. You only pay for the marketing usage you actually use (texts, calls, emails), billed as-you-go. Replace 20+ tools and run your whole business from one dashboard.</p>
     <div class="hero-int"><i class="fas fa-bolt"></i> <span>Plugs right into your leads software &mdash; <b>one-click export</b> sends your new leads straight into the CRM so you can email them immediately.</span></div>
     <div class="cta">
-      <a class="btn btn-primary" href="https://free.allinonemarketing.com/getleadsnowfreeaccount" target="_blank" rel="noopener"><i class="fas fa-rocket"></i> Claim Your Free Account</a>
+      <a class="btn btn-primary" <?php echo $fcCtaAttrs; ?>><i class="fas fa-rocket"></i> Claim Your Free Account</a>
     </div>
 
     <div class="stats">
@@ -217,11 +230,33 @@ session_write_close();  // release the per-user session lock; these pages only r
     <div class="final">
       <h2>Ready to Claim Your Free Account?</h2>
       <p>Get the entire platform free &mdash; you only pay for the usage you use. Takes less than 2 minutes to set up.</p>
-      <a class="btn" style="background:#fff;color:var(--navy)" href="https://free.allinonemarketing.com/getleadsnowfreeaccount" target="_blank" rel="noopener"><i class="fas fa-rocket"></i> Claim Your Free Account</a>
+      <a class="btn" style="background:#fff;color:var(--navy)" <?php echo $fcCtaAttrs; ?>><i class="fas fa-rocket"></i> Claim Your Free Account</a>
       <div class="fine">Normally $97/month &mdash; free for you.</div>
     </div>
   </div>
 </section>
+
+<?php if (!$fcPaid): ?>
+<!-- PAID-PLAN GATE: free-plan users must upgrade before claiming the Free CRM -->
+<div id="fcGate" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(12,15,18,.55);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:20px;max-width:430px;width:100%;padding:34px 28px 24px;text-align:center;box-shadow:0 30px 80px rgba(10,15,25,.4);position:relative;">
+    <button type="button" onclick="fcHideGate()" aria-label="Close" style="position:absolute;top:12px;right:14px;border:none;background:transparent;font-size:26px;line-height:1;color:#98a0a8;cursor:pointer;padding:4px;">&times;</button>
+    <div style="width:60px;height:60px;border-radius:16px;background:var(--green-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <i class="fas fa-lock" style="font-size:24px;color:var(--green-d);"></i>
+    </div>
+    <h3 style="font-size:21px;font-weight:900;letter-spacing:-.02em;color:var(--ink);line-height:1.2;margin:0 0 8px;">The Free CRM comes with a paid plan</h3>
+    <p style="font-size:14.5px;color:var(--muted);line-height:1.6;margin:0 0 22px;">To claim your free CRM account (normally <strong>$97/month</strong>), you need an <strong>active paid lead-generation plan</strong>. Upgrade first &mdash; then the CRM is yours, free.</p>
+    <button type="button" onclick="(window.top||window).location.href='dashboard.php?section=section5'" style="display:block;width:100%;background:var(--green);color:#fff;font-weight:800;font-size:15.5px;border:none;border-radius:12px;padding:14px;cursor:pointer;font-family:inherit;box-shadow:0 8px 24px rgba(22,163,74,.28);">View Paid Plans &rarr;</button>
+    <button type="button" onclick="fcHideGate()" style="display:block;width:100%;background:transparent;color:#7a8088;font-weight:700;font-size:13px;border:none;padding:12px 0 2px;cursor:pointer;font-family:inherit;">Maybe later</button>
+  </div>
+</div>
+<script>
+  function fcShowGate(){ document.getElementById('fcGate').style.display='flex'; }
+  function fcHideGate(){ document.getElementById('fcGate').style.display='none'; }
+  document.getElementById('fcGate').addEventListener('click', function(e){ if(e.target===this) fcHideGate(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') fcHideGate(); });
+</script>
+<?php endif; ?>
 
 </body>
 </html>
