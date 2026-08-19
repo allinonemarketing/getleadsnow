@@ -28,6 +28,7 @@ if ($priceId === '' || !isset($PLAN_CREDITS[$priceId])) {
 // is created by the Stripe webhook (checkout.session.completed) after payment,
 // and they receive a set-password email. Logged-in users upgrade in place.
 $loggedIn = isLoggedIn();
+session_write_close();  // only reads session after this; frees the lock before the Stripe API call
 $metadata = [
     'price_id'   => $priceId,
     'credits'    => $PLAN_CREDITS[$priceId],

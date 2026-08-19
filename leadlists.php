@@ -37,7 +37,9 @@ function currentCredits($pdo, $userId) {
 }
 // -----------------------------------------------------------------------------
 
-try { $pdo->prepare("UPDATE users SET last_active_at = NOW() WHERE id = ?")->execute([$userId]); } catch (Exception $e) {}
+// Throttled to at most once per 60s so high-frequency enrichment polling doesn't
+// turn every read-only API call into a write (redo/binlog churn on the same row).
+try { $pdo->prepare("UPDATE users SET last_active_at = NOW() WHERE id = ? AND (last_active_at IS NULL OR last_active_at < NOW() - INTERVAL 60 SECOND)")->execute([$userId]); } catch (Exception $e) {}
 
 // Auto-create tables / run migrations.
 // Gated behind a schema-version flag so these ~18 preflight queries run only once
@@ -481,16 +483,17 @@ if (isset($_GET['action'])) {
                             SUM(pipeline_stage = 'engaged') as engaged_count,
                             SUM(pipeline_stage = 'client') as client_count,
                             SUM(pipeline_stage = 'no_response') as stage_no_response
-                        FROM lead_list_items GROUP BY list_id
+                        FROM lead_list_items WHERE user_id = ? GROUP BY list_id
                     ) li ON li.list_id = l.id
                     LEFT JOIN (
                         SELECT list_id, COUNT(DISTINCT CONCAT(COALESCE(city,''), COALESCE(state_name,''))) as cities_searched
-                        FROM lead_list_searches GROUP BY list_id
+                        FROM lead_list_searches WHERE user_id = ? GROUP BY list_id
                     ) ls ON ls.list_id = l.id
                     $claimsJoin
                     WHERE l.user_id = ? ORDER BY l.updated_at DESC
                 ");
-                $stmt->execute([$userId]);
+                // Bind order matches the ?s in source: li subquery, ls subquery, outer WHERE.
+                $stmt->execute([$userId, $userId, $userId]);
                 echo json_encode(['success' => true, 'lists' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
             } catch (Exception $e) {
                 echo json_encode(['success' => false, 'error' => $e->getMessage()]);

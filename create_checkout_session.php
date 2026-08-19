@@ -8,6 +8,7 @@ if (!isLoggedIn()) {
     echo json_encode(['error' => 'Unauthorized']);
     exit();
 }
+session_write_close();  // frees the session lock before the Stripe checkout create call
 
 $data = json_decode(file_get_contents('php://input'), true);
 $credits = $data['credits'];

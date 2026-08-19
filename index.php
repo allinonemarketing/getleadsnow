@@ -19,6 +19,9 @@ session_start();
 require_once 'includes/auth.php';
 require_once 'config/stripe_config.php';
 require_once 'config/subscription_config.php';
+// This page only reads the session (which still works after close). Release the
+// lock so the Stripe-return retrieve and the polled get_credits branch don't hold it.
+session_write_close();
 
 if (isset($_GET['action']) && $_GET['action'] === 'get_credits' && isLoggedIn()) {
     header('Content-Type: application/json');

@@ -10,6 +10,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 session_start();
 require_once 'includes/auth.php';
+// This proxy authenticates by Bearer API key, not the session — and it does a
+// curl_exec with a very long timeout. Release the session lock immediately so it
+// never serializes other same-user requests.
+session_write_close();
 
 $requestPath = $_SERVER['REQUEST_URI'];
 $pathParts = explode('/', trim(parse_url($requestPath, PHP_URL_PATH), '/'));

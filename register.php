@@ -65,6 +65,13 @@ try {
     $_SESSION['user_id'] = $userId;
     $_SESSION['user_name'] = $name;
 
+    // CRITICAL: release the session lock before the blocking signup side-effects
+    // below (2 SMTP sends + external curls to Sheets/Facebook/GHL — up to ~50s
+    // combined). The browser redirects to dashboard.php immediately after signup,
+    // and dashboard.php's session_start() would otherwise block on THIS lock until
+    // every curl finishes. No $_SESSION write happens after this point.
+    session_write_close();
+
     sendAdminNotification(['name' => $name, 'email' => $email, 'wants_ownership' => $wantsOwnership]);
     sendWelcomeEmail(['name' => $name, 'email' => $email]);
     sendSignupToSheet([

@@ -55,7 +55,11 @@ $ch = curl_init($url);
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_HTTPHEADER => $headers,
-    CURLOPT_TIMEOUT => 30
+    // Bound how long one worker is pinned on the upstream API. Without a connect
+    // timeout a black-holed RapidAPI endpoint would hold a worker for the full 30s;
+    // at hundreds of concurrent searches that exhausts the FPM pool.
+    CURLOPT_CONNECTTIMEOUT => 5,
+    CURLOPT_TIMEOUT => 15
 ]);
 $result = curl_exec($ch);
 curl_close($ch);

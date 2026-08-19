@@ -8,6 +8,8 @@ if (!isset($_SESSION['user_id'])) {
     echo json_encode(['success' => false, 'error' => 'Unauthorized']);
     exit;
 }
+$__uid = $_SESSION['user_id'];
+session_write_close();  // fired many times per search — don't serialize same-user calls on the lock
 
 $data = json_decode(file_get_contents('php://input'), true) ?: [];
 
