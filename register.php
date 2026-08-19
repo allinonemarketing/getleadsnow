@@ -30,9 +30,9 @@ $timezone    = trim($_POST['timezone'] ?? '');
 $referrer    = trim($_POST['referrer'] ?? '');
 // Which landing page / channel the signup came from — tagged into the Google Sheet
 // and GHL "source" field. Whitelisted so the client can't inject arbitrary values.
-// /start (FB ads) => free_signup (default); /leads => email_referral.
+// /start (FB ads) => free_signup (default); /leads => email_referral; /1cent (FB "1 cent leads" ads) => fb_1cent.
 $signupSource = $_POST['signup_source'] ?? 'free_signup';
-if (!in_array($signupSource, ['free_signup', 'email_referral'], true)) { $signupSource = 'free_signup'; }
+if (!in_array($signupSource, ['free_signup', 'email_referral', 'fb_1cent'], true)) { $signupSource = 'free_signup'; }
 $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? ($_SERVER['REMOTE_ADDR'] ?? '');
 if (strpos($ip, ',') !== false) { $ip = trim(explode(',', $ip)[0]); } // first hop in a proxy chain
 $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
