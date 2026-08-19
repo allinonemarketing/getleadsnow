@@ -412,7 +412,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
     <div><div class="n"><svg class="ic"><use href="#i-building"/></svg>Any U.S. city</div><div class="l">Search any niche in any market</div></div>
     <div><div class="n"><svg class="ic"><use href="#i-bolt"/></svg>$0 to start</div><div class="l">100 leads included — no card required</div></div>
   </div>
-  <div class="wrap worksrow">Works with your stack — export straight to GoHighLevel, Close, Instantly, or any CRM via CSV.</div>
+  <div class="wrap worksrow">Works with your stack — export straight to your Free CRM, Close, Instantly, or any CRM via CSV.</div>
 </div>
 
 <!-- HOW IT WORKS -->

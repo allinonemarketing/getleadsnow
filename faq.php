@@ -82,7 +82,7 @@ if (!isLoggedIn()) { header('Location: login.php'); exit(); }
 
   <details class="faq">
     <summary>Can I export my leads?</summary>
-    <div class="body">Yes. Use the <b>Export</b> menu to download a CSV, or push your leads straight into <b>GoHighLevel</b>. You can also import your own leads from a CSV.</div>
+    <div class="body">Yes. Use the <b>Export</b> menu to download a CSV, or push your leads straight into <b>your Free CRM</b>. You can also import your own leads from a CSV.</div>
   </details>
 
   <details class="faq">
