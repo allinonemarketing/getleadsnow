@@ -2318,6 +2318,14 @@ if (isset($_GET['action'])) {
             margin-top: 4px;
         }
 
+        /* Mobile: let the header wrap and give "New List" its own full-width row
+           so the button isn't squished next to the title + credits. */
+        @media (max-width: 768px) {
+            .page-header { flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+            .page-header > div:last-child { width: 100%; flex-wrap: wrap; }
+            .page-header > div:last-child .btn-primary { flex: 1 1 100%; justify-content: center; }
+        }
+
         .btn {
             display: inline-flex;
             align-items: center;

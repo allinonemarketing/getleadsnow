@@ -90,6 +90,12 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+      /* Never render the dashboard inside a frame — a stray in-app link to
+         dashboard.php from a section page would otherwise nest the whole app
+         (duplicate header/nav). Break out to the top window instead. */
+      if (window.top !== window.self) { window.top.location.replace(window.location.href); }
+    </script>
     <title><?php echo APP_NAME; ?> - Dashboard</title>
     <link rel="icon" type="image/jpeg" href="<?php echo APP_LOGO; ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -445,6 +451,11 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             .mobile-topbar .mt-burger:active { background: rgba(0,0,0,0.06); }
             .mobile-topbar .mt-logo { display: flex; align-items: center; }
             .mobile-topbar .mt-logo img { height: 26px; }
+            .mobile-topbar .mt-profile {
+                margin-left: auto; background: none; border: none; color: var(--text-main);
+                font-size: 25px; cursor: pointer; padding: 4px; display: flex; align-items: center;
+            }
+            .mobile-topbar .mt-profile:active { opacity: .6; }
 
             .sidebar-backdrop {
                 display: block; position: fixed; inset: 0; z-index: 1001;
@@ -472,12 +483,12 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
                 padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
             }
             .mb-item {
-                flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
-                background: none; border: none; cursor: pointer; padding: 5px 2px;
-                color: var(--text-secondary); font-family: inherit; font-size: 10.5px; font-weight: 600;
+                flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px;
+                background: none; border: none; cursor: pointer; padding: 5px 1px;
+                color: var(--text-secondary); font-family: inherit; font-size: 9.5px; font-weight: 600;
                 white-space: nowrap;
             }
-            .mb-item i { font-size: 18px; }
+            .mb-item i { font-size: 17px; }
             .mb-item span { line-height: 1; }
             .mb-item.active { color: var(--accent); }
             .mb-item.mb-penny, .mb-item.mb-penny.active { color: #dc2626; }
@@ -520,6 +531,7 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
     <div class="mobile-topbar">
         <button class="mt-burger" type="button" aria-label="Open menu"><i class="fas fa-bars"></i></button>
         <a class="mt-logo" href="?section=lead_lists" data-section="lead_lists"><img src="<?php echo APP_LOGO; ?>" alt="<?php echo APP_NAME; ?>"></a>
+        <button class="mt-profile" type="button" data-section="account" aria-label="My account"><i class="fas fa-circle-user"></i></button>
     </div>
     <div class="sidebar-backdrop"></div>
 
@@ -574,6 +586,12 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
                 </a>
             </li>
             <li class="nav-item">
+                <a href="?section=account" class="nav-link <?php echo $current_section === 'account' ? 'active' : ''; ?>" data-section="account">
+                    <i class="fas fa-user-gear"></i>
+                    My Account
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="?section=support" class="nav-link <?php echo $current_section === 'support' ? 'active' : ''; ?>" data-section="support">
                     <i class="fas fa-life-ring"></i>
                     Support
@@ -597,6 +615,7 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
         <button class="mb-item <?php echo $current_section === 'lead_lists' ? 'active' : ''; ?>" type="button" data-section="lead_lists"><i class="fas fa-folder-open"></i><span>Leads</span></button>
         <button class="mb-item mb-penny <?php echo $current_section === 'penny' ? 'active' : ''; ?>" type="button" data-section="penny"><i class="fas fa-bolt"></i><span>&lt;1&cent; Leads</span></button>
         <button class="mb-item <?php echo $current_section === 'freecrm' ? 'active' : ''; ?>" type="button" data-section="freecrm"><i class="fas fa-gift"></i><span>Free CRM</span></button>
+        <button class="mb-item <?php echo $current_section === 'aibot' ? 'active' : ''; ?>" type="button" data-section="aibot"><i class="fas fa-robot"></i><span>AI Bot</span></button>
         <button class="mb-item <?php echo $current_section === 'support' ? 'active' : ''; ?>" type="button" data-section="support"><i class="fas fa-life-ring"></i><span>Support</span></button>
     </nav>
 
@@ -618,6 +637,9 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
         </div>
         <div id="faqs" class="content-section <?php echo $current_section === 'faqs' ? 'active' : ''; ?>">
             <div id="faqs-content"></div>
+        </div>
+        <div id="account" class="content-section <?php echo $current_section === 'account' ? 'active' : ''; ?>">
+            <div id="account-content"></div>
         </div>
         <div id="support" class="content-section <?php echo $current_section === 'support' ? 'active' : ''; ?>">
             <div id="support-content"></div>
@@ -645,6 +667,11 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             if (mtBurger) mtBurger.addEventListener('click', openMenu);
             if (sidebarClose) sidebarClose.addEventListener('click', closeMenu);
             if (backdrop) backdrop.addEventListener('click', closeMenu);
+            const mtProfile = document.querySelector('.mt-profile');
+            if (mtProfile) mtProfile.addEventListener('click', () => {
+                const link = document.querySelector('.nav-link[data-section="account"]');
+                if (link) link.click();
+            });
 
             // Mobile bottom nav — reuse the sidebar nav-link logic by proxying the click.
             function setBottomActive(sectionId) {
@@ -666,6 +693,7 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
                 'aibot': 'aibot.php',
                 'penny': 'resell.php',
                 'faqs': 'faq.php',
+                'account': 'account.php',
                 'support': 'support.php'
             };
 
