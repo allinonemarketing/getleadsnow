@@ -244,6 +244,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
         .mobhook .eyebrow{display:none}
         .mh-note{display:none}
         .copy .eyebrow{display:none}
+        .copy h1{display:none}               /* headline already shown in .mobhook above the form */
         .hero .copy .preview{display:none}   /* desktop preview hidden; compact mh-proof shows instead */
         .steps,.feats,.compare,.reviews{grid-template-columns:1fr}
         .incl-grid{grid-template-columns:1fr 1fr;gap:11px 16px;font-size:13.5px}
