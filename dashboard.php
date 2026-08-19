@@ -675,9 +675,8 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
                                 document.querySelectorAll('.credits-pill').forEach(el => {
                                     el.textContent = new Intl.NumberFormat().format(credits);
                                 });
-                                if (credits === 0 && window.location.search.indexOf('section=section5') === -1) {
-                                    window.location.href = '?section=section5';
-                                }
+                                // Note: at 0 credits we keep full access to lists; the
+                                // upgrade prompt only appears when trying to pull more leads.
                             }
                         }
                     })
@@ -691,9 +690,6 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
                         document.querySelectorAll('.credits-pill').forEach(el => {
                             el.textContent = new Intl.NumberFormat().format(credits);
                         });
-                        if (credits === 0 && window.location.search.indexOf('section=section5') === -1) {
-                            window.location.href = '?section=section5';
-                        }
                     }
                 }
             });

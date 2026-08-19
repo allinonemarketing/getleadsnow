@@ -90,7 +90,7 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '/assets/logo.svg';
   <div class="cta">
     <h2>Want the full breakdown?</h2>
     <p>Watch the video above, then reach out and we&rsquo;ll walk you through getting set up.</p>
-    <a href="mailto:sales@allinonemarketing.com?subject=Owner%20%26%20Reseller%20Program"><i class="fas fa-envelope"></i> Email sales@allinonemarketing.com</a>
+    <a href="sms:+13479211788?&body=Software"><i class="fas fa-comment-dots"></i> Text &ldquo;Software&rdquo; to 347-921-1788</a>
   </div>
 </div>
 </body>

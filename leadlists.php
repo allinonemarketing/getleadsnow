@@ -8664,11 +8664,8 @@ document.addEventListener('click', (e) => {
      target:function(){return vis(qs('#startScrapeBtn'))?qs('#startScrapeBtn'):qs('#addLeadsModal');},
      advance:function(){var p=qs('#scrapeProgress');return vis(p);}},
     {title:'Work your leads',
-     text:'Done! Your leads land in the list. <b>Enrich</b> them with emails &amp; socials for free, or <b>Export</b> to CSV anytime.',
-     target:function(){return null;},next:true},
-    {title:'Get leads even cheaper &mdash; less than 1&cent;!',
-     text:'Want leads for a fraction of a penny each? Own the software, pull leads at cost and even resell it for profit. Check out the <b>Get Leads For Less Than 1&cent;</b> tab in the menu.',
-     target:function(){return null;},last:true,cta:{label:'Show me how &rarr;',href:'dashboard.php?section=penny'}}
+     text:'Your leads land right here in your list. <b>Enrich</b> them with emails &amp; socials for free anytime. When the search finishes, close this window to see them all.',
+     target:function(){return null;},next:true,last:true}
   ];
 
   var SVGNS='http://www.w3.org/2000/svg';
@@ -8698,20 +8695,13 @@ document.addEventListener('click', (e) => {
   function render(){
     var s=steps[i]; if(!s){ finish(); return; }
     var actions='';
-    if(i>0 && !s.last) actions+='<button class="lt-btn lt-back" data-a="back">Back</button>';
-    if(s.next||s.last){ var nlabel=s.last?(s.cta?s.cta.label:'Got it'):'Next'; actions+='<button class="lt-btn lt-next" data-a="next">'+nlabel+'</button>'; }
-    // On the final step, drop the Skip/Back escape so the only way out is the CTA.
-    var leftHtml = s.last ? '<span></span>' : '<button class="lt-skip" data-a="skip">Skip tour</button>';
+    if(i>0) actions+='<button class="lt-btn lt-back" data-a="back">Back</button>';
+    if(s.next||s.last) actions+='<button class="lt-btn lt-next" data-a="next">'+(s.last?'Got it':'Next')+'</button>';
     tip.innerHTML='<div class="lt-badge">Step '+(i+1)+' of '+steps.length+'</div><h4>'+s.title+'</h4><p>'+(s.text||'')+'</p>'+
-      '<div class="lt-row">'+leftHtml+'<div class="lt-actions">'+actions+'</div></div>';
+      '<div class="lt-row"><button class="lt-skip" data-a="skip">Skip tour</button><div class="lt-actions">'+actions+'</div></div>';
     Array.prototype.forEach.call(tip.querySelectorAll('[data-a]'),function(b){
       b.addEventListener('click',function(){var a=b.getAttribute('data-a');
-        if(a==='skip'){finish();}
-        else if(a==='back'){go(i-1);}
-        else if(a==='next'){
-          if(s.last){ if(s.cta){ try{ (window.top||window).location.href=s.cta.href; }catch(e){ try{ location.href=s.cta.href; }catch(_){} } } finish(); }
-          else { go(i+1); }
-        }});
+        if(a==='skip'){finish();} else if(a==='back'){go(i-1);} else if(a==='next'){ if(s.last){finish();}else{go(i+1);} }});
     });
     tip.style.display='block';
     scrollToTarget();
@@ -8795,16 +8785,47 @@ document.addEventListener('click', (e) => {
     et.querySelector('[data-a="ok"]').addEventListener('click',function(){
       clearInterval(iv); if(et.parentNode)et.remove(); if(em.parentNode)em.remove();
       try{ localStorage.setItem(EKEY,'1'); }catch(e){}
+      var sc=null; try{ sc=localStorage.getItem(CKEY); }catch(e){}
+      if(!sc){ cheaperTip(); }   // then nudge them toward cheaper leads
     });
   }
+
+  // Final upsell nudge (shown once, after the export tip): forces them to the
+  // "Get Leads For Less Than 1c" page.
+  var CKEY='aiom_cheaptip_v1';
+  function cheaperTip(){
+    var cm=document.createElementNS(SVGNS,'svg'); cm.setAttribute('class','lt-mask'); document.body.appendChild(cm);
+    var ct=mk('lt-tip'); document.body.appendChild(ct);
+    ct.innerHTML='<div class="lt-badge">One more thing</div><h4>Get leads even cheaper &mdash; less than 1&cent;!</h4>'+
+      '<p>Want leads for a fraction of a penny each? Own the software, pull leads at cost and even resell it for profit. See how in the <b>Get Leads For Less Than 1&cent;</b> tab.</p>'+
+      '<div class="lt-row"><span></span><div class="lt-actions"><button class="lt-btn lt-next" data-a="go">Show me how &rarr;</button></div></div>';
+    function place(){
+      var W=window.innerWidth, H=window.innerHeight;
+      cm.setAttribute('width',W); cm.setAttribute('height',H); cm.setAttribute('viewBox','0 0 '+W+' '+H);
+      cm.innerHTML='<rect width="'+W+'" height="'+H+'" fill="rgba(12,15,18,0.55)"/>';
+      var tw=ct.offsetWidth||330, th=ct.offsetHeight||190;
+      ct.style.left=Math.max(8,(W-tw)/2)+'px'; ct.style.top=Math.max(8,(H-th)/2)+'px';
+    }
+    place(); ct.style.display='block'; cm.style.display='block';
+    var iv=setInterval(place,300);
+    ct.querySelector('[data-a="go"]').addEventListener('click',function(){
+      clearInterval(iv); try{ localStorage.setItem(CKEY,'1'); }catch(e){}
+      try{ (window.top||window).location.href='dashboard.php?section=penny'; }catch(e){ try{ location.href='dashboard.php?section=penny'; }catch(_){} }
+    });
+  }
+
   function watchExport(){
-    var shown=null; try{ shown=localStorage.getItem(EKEY); }catch(e){}
-    if(shown){ return; }
+    var e=null,c=null; try{ e=localStorage.getItem(EKEY); c=localStorage.getItem(CKEY); }catch(_){}
+    if(e && c){ return; }
     var iv=setInterval(function(){
-      if(tip && tip.style.display!=='none'){ return; }
+      if(tip && tip.style.display!=='none'){ return; }                                   // main tour still open
+      var am=qs('#addLeadsModal'); if(am && am.classList.contains('active')){ return; }   // wait until the search window is closed
       var body=qs('#leadsBody');
-      var hasLeads=!!(body && body.querySelector('tr'));
-      if(hasLeads && firstVisible('#exportMenuBtn')){ clearInterval(iv); exportTip(); }
+      if(body && body.querySelector('tr') && firstVisible('#exportMenuBtn')){
+        clearInterval(iv);
+        var e2=null,c2=null; try{ e2=localStorage.getItem(EKEY); c2=localStorage.getItem(CKEY); }catch(_){}
+        if(!e2){ exportTip(); } else if(!c2){ cheaperTip(); }
+      }
     },800);
   }
 
