@@ -66,7 +66,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
         radial-gradient(900px 500px at -5% 0%, #eef4ff 0%, rgba(238,244,255,0) 55%),
         var(--bg)}
       .hero .grid{display:grid;grid-template-columns:1.08fr .92fr;gap:56px;align-items:start;padding-top:56px;padding-bottom:68px}
-      h1{font-size:clamp(2.15rem,4.4vw,3.55rem);line-height:1.05;letter-spacing:-.03em;font-weight:900;text-wrap:balance}
+      h1{font-size:clamp(1.9rem,3.7vw,2.95rem);line-height:1.06;letter-spacing:-.03em;font-weight:900;text-wrap:balance}
       h1 .hl{color:var(--accent)}
       .lede{font-size:clamp(1.05rem,1.5vw,1.22rem);color:var(--muted);margin-top:18px;max-width:40ch}
       .lede strong{color:var(--ink)}
