@@ -15,8 +15,10 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT="$DIR/search_worker.php"
 LOG="/tmp/getleadsnow_worker.log"
 
-# How many workers are currently running?
-RUNNING=$(pgrep -fc "search_worker.php" 2>/dev/null || echo 0)
+# How many workers are currently running? (pgrep -c prints "0" and exits non-zero
+# when none match, so take its stdout directly and only default to 0 if empty.)
+RUNNING=$(pgrep -fc "search_worker.php" 2>/dev/null)
+[ -z "$RUNNING" ] && RUNNING=0
 NEED=$(( TARGET - RUNNING ))
 [ "$NEED" -lt 0 ] && NEED=0
 
