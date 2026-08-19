@@ -22,6 +22,10 @@ RUNNING=$(pgrep -fc "search_worker.php" 2>/dev/null)
 NEED=$(( TARGET - RUNNING ))
 [ "$NEED" -lt 0 ] && NEED=0
 
+# Heartbeat so we can confirm the cron is firing this and see the environment it
+# runs in (empty php=/pgrep=/setsid= means that tool isn't on the cron user's PATH).
+echo "$(date '+%F %T') watchdog running=$RUNNING need=$NEED php=$(command -v php) pgrep=$(command -v pgrep) setsid=$(command -v setsid)" >> "$LOG"
+
 for (( i=0; i<NEED; i++ )); do
     # setsid fully detaches the worker into its own session so it survives after
     # the cron shell exits; fall back to nohup if setsid isn't available.
