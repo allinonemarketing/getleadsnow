@@ -13,7 +13,18 @@ TARGET=5
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT="$DIR/search_worker.php"
-LOG="/tmp/getleadsnow_worker.log"
+
+# Per-user log file. The Cloudways cron runs as the APP user while SSH is the
+# MASTER user — a shared /tmp log created by one is not appendable by the other,
+# and a failed redirection in bash aborts the command itself (so the cron's
+# worker-spawn lines silently did nothing). Prefer the app's private logs dir;
+# fall back to a per-user /tmp file; last resort /dev/null so spawning never fails.
+if [ -d "$DIR/../logs" ] && [ -w "$DIR/../logs" ]; then
+    LOG="$DIR/../logs/search_worker.log"
+else
+    LOG="/tmp/getleadsnow_worker_$(id -un).log"
+fi
+touch "$LOG" 2>/dev/null || LOG="/dev/null"
 
 # How many workers are currently running? (pgrep -c prints "0" and exits non-zero
 # when none match, so take its stdout directly and only default to 0 if empty.)
