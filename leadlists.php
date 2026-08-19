@@ -8878,5 +8878,55 @@ document.addEventListener('click', (e) => {
   else { setTimeout(init,400); }
 })();
 </script>
+
+<?php
+// --- "Get Leads For Less Than 1¢" login promo -------------------------------
+// Show once per login session, but never on the user's very first login (that
+// session gets the guided tour instead). Snapshot tour_seen at the first full
+// page render of the session: 0 => first-ever login (skip), 1 => returning login.
+// This runs only on a real page render — API calls (?action=) exit long before
+// here, so they never consume the once-per-session flag.
+if (!isset($_SESSION['tour_seen_at_login'])) { $_SESSION['tour_seen_at_login'] = $tourSeen; }
+$showPennyPromo = (!empty($_SESSION['tour_seen_at_login']) && empty($_SESSION['penny_promo_shown']));
+if ($showPennyPromo) { $_SESSION['penny_promo_shown'] = 1; }
+?>
+<?php if ($showPennyPromo): ?>
+<div id="pennyPromo" class="pp-ov" role="dialog" aria-modal="true" aria-labelledby="ppTitle">
+  <div class="pp-card">
+    <button class="pp-x" type="button" aria-label="Close">&times;</button>
+    <div class="pp-badge"><i class="fas fa-bolt"></i> Insider offer</div>
+    <h3 id="ppTitle">Get leads for <span>less than 1&cent;</span> each</h3>
+    <p>Own this exact software, pull leads at cost, and even resell it to your own clients for profit &mdash; a whole new revenue stream.</p>
+    <button class="pp-cta" type="button" id="ppGo">Show me how &rarr;</button>
+    <button class="pp-later" type="button" id="ppLater">Maybe later</button>
+  </div>
+</div>
+<style>
+  .pp-ov{position:fixed;inset:0;z-index:100000;background:rgba(12,15,18,.55);display:flex;align-items:center;justify-content:center;padding:20px;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+  .pp-card{background:#fff;border-radius:20px;max-width:420px;width:100%;padding:32px 28px 24px;text-align:center;box-shadow:0 30px 80px rgba(10,15,25,.4);position:relative;animation:ppin .22s ease}
+  @keyframes ppin{from{transform:translateY(12px) scale(.98);opacity:0}to{transform:none;opacity:1}}
+  .pp-x{position:absolute;top:12px;right:14px;border:none;background:transparent;font-size:26px;line-height:1;color:#98a0a8;cursor:pointer;padding:4px}
+  .pp-x:hover{color:#5b6066}
+  .pp-badge{display:inline-flex;align-items:center;gap:7px;background:#fee2e2;color:#b91c1c;font-weight:800;font-size:12px;letter-spacing:.03em;text-transform:uppercase;padding:7px 14px;border-radius:999px;margin-bottom:14px}
+  .pp-card h3{font-size:24px;font-weight:900;letter-spacing:-.02em;color:#141517;line-height:1.15}
+  .pp-card h3 span{color:#dc2626}
+  .pp-card p{font-size:14.5px;color:#5b6066;line-height:1.6;margin:12px auto 22px;max-width:34ch}
+  .pp-cta{display:block;width:100%;background:#dc2626;color:#fff;font-weight:800;font-size:16px;border:none;border-radius:12px;padding:15px;cursor:pointer;box-shadow:0 10px 26px rgba(220,38,38,.32);font-family:inherit}
+  .pp-cta:hover{background:#b91c1c}
+  .pp-later{display:block;width:100%;background:transparent;color:#7a8088;font-weight:700;font-size:13px;border:none;padding:12px 0 2px;cursor:pointer;font-family:inherit}
+  .pp-later:hover{color:#5b6066}
+</style>
+<script>
+(function(){
+  var ov=document.getElementById('pennyPromo'); if(!ov) return;
+  function close(){ ov.style.display='none'; }
+  ov.querySelector('.pp-x').addEventListener('click',close);
+  document.getElementById('ppLater').addEventListener('click',close);
+  document.getElementById('ppGo').addEventListener('click',function(){ (window.top||window).location.href='dashboard.php?section=penny'; });
+  ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+})();
+</script>
+<?php endif; ?>
 </body>
 </html>
