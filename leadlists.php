@@ -6806,7 +6806,7 @@ class LeadListsApp {
         const batchId = enq.batch_id;
         _logActivity(`Queued ${total} ${total === 1 ? 'city' : 'cities'} — searching in the background...`);
 
-        let finalFound = 0, finalInserted = 0, finalNoCredit = 0, lastLoaded = -1;
+        let finalFound = 0, finalInserted = 0, finalNoCredit = 0, lastLoaded = -1, lastGridReload = 0;
         await new Promise((resolve) => {
             const poll = setInterval(async () => {
                 if (!this.scraping) {   // user cancelled — drop any still-pending jobs
@@ -6824,7 +6824,11 @@ class LeadListsApp {
                 document.getElementById('scrapeProgressText').textContent = `${done} of ${total} cities (${pct}%)`;
                 document.getElementById('scrapeProgressCount').textContent = `${(p.found || 0).toLocaleString()} found · ${(p.inserted || 0).toLocaleString()} saved`;
                 if (typeof p.credits !== 'undefined') { this.credits = p.credits; this.updateCreditsDisplay(); }
-                if ((p.inserted || 0) !== lastLoaded && this.currentList) { lastLoaded = p.inserted || 0; this.loadLeads(); }
+                // Refresh the grid only when new leads landed AND at most every 5s —
+                // reloading the full lead query every poll tick was hammering the DB/CPU.
+                if ((p.inserted || 0) !== lastLoaded && this.currentList && (Date.now() - lastGridReload) > 5000) {
+                    lastLoaded = p.inserted || 0; lastGridReload = Date.now(); this.loadLeads();
+                }
                 finalFound = p.found || 0; finalInserted = p.inserted || 0; finalNoCredit = p.skipped_no_credit || 0;
                 if (p.complete) { clearInterval(poll); resolve(); }
             }, 1500);
@@ -6857,7 +6861,7 @@ class LeadListsApp {
     async fireAllScrapes() {
         if (!this.currentList) return;
         const listId = this.currentList.id;
-        let totalSent = 0, totalWebsites = 0;
+        let totalSent = 0, totalWebsites = 0, passes = 0;
         while (true) {
             const res = await this.api('fireAllScrapes', { list_id: listId, batch_size: 100 }, 'POST');
             if (!res.success) return;
@@ -6871,7 +6875,12 @@ class LeadListsApp {
                 break;
             }
             if (fired === 0) break;
-            await new Promise(r => setTimeout(r, 300));
+            // Backoff between passes (was a flat 300ms — under an upstream
+            // rate-limit that became a nonstop retry storm pegging the server).
+            // Cap the passes; the live poll loop below picks up whatever remains.
+            passes++;
+            if (passes >= 20) break;
+            await new Promise(r => setTimeout(r, Math.min(5000, 300 * passes)));
         }
         this.enrichmentPollId = listId;
         this._recoveryAttempts = 0;
@@ -6894,7 +6903,10 @@ class LeadListsApp {
             this.updateAdminEnrichPanel(prog);
         }
 
-        if (this.currentList && this.currentList.id == listId) {
+        // Throttle grid refreshes to every ~6s — this loop ticks every 2-3s and a
+        // full lead reload per tick was a constant CPU/DB drain during enrichment.
+        if (this.currentList && this.currentList.id == listId && (Date.now() - (this._lastEnrichReload || 0)) > 6000) {
+            this._lastEnrichReload = Date.now();
             this.loadLeads();
         }
 

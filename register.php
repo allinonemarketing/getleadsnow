@@ -40,11 +40,15 @@ if (empty($name) || empty($email) || empty($password)) {
 try {
     global $pdo;
 
-    // Make sure the signup columns exist.
-    try { $pdo->query("SELECT wants_ownership FROM users LIMIT 1"); }
-    catch (Exception $e) { $pdo->exec("ALTER TABLE users ADD COLUMN wants_ownership VARCHAR(3) DEFAULT NULL"); }
-    try { $pdo->query("SELECT phone FROM users LIMIT 1"); }
-    catch (Exception $e) { $pdo->exec("ALTER TABLE users ADD COLUMN phone VARCHAR(40) DEFAULT NULL"); }
+    // Make sure the signup columns exist — once per deploy, not on every signup.
+    $regSchemaFlag = sys_get_temp_dir() . '/getleadsnow_register_schema_v1.ok';
+    if (!@is_file($regSchemaFlag)) {
+        try { $pdo->query("SELECT wants_ownership FROM users LIMIT 1"); }
+        catch (Exception $e) { $pdo->exec("ALTER TABLE users ADD COLUMN wants_ownership VARCHAR(3) DEFAULT NULL"); }
+        try { $pdo->query("SELECT phone FROM users LIMIT 1"); }
+        catch (Exception $e) { $pdo->exec("ALTER TABLE users ADD COLUMN phone VARCHAR(40) DEFAULT NULL"); }
+        @file_put_contents($regSchemaFlag, '1');
+    }
 
     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->execute([$email]);
@@ -71,6 +75,19 @@ try {
     // and dashboard.php's session_start() would otherwise block on THIS lock until
     // every curl finishes. No $_SESSION write happens after this point.
     session_write_close();
+
+    // Respond to the browser NOW — the account is fully created. The marketing
+    // side-effects below (2 SMTP sends + Sheets/Facebook/GHL curls, up to ~50s
+    // worst case) continue AFTER the response is flushed, so the user lands on
+    // the dashboard instantly instead of waiting on our emails and integrations.
+    ignore_user_abort(true);
+    echo json_encode(['success' => true, 'message' => 'Registration successful! Welcome aboard.']);
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    } else {
+        while (ob_get_level() > 0) { @ob_end_flush(); }
+        @flush();
+    }
 
     sendAdminNotification(['name' => $name, 'email' => $email, 'wants_ownership' => $wantsOwnership]);
     sendWelcomeEmail(['name' => $name, 'email' => $email]);
@@ -103,9 +120,10 @@ try {
         'fbadsetid' => $fbAdsetId, 'fbadid' => $fbAdId,
         'timezone' => $timezone, 'referrer' => $referrer, 'ip' => $ip, 'user_agent' => $userAgent,
     ]);
-
-    echo json_encode(['success' => true, 'message' => 'Registration successful! Welcome aboard.']);
+    // (Success JSON was already sent before the side-effects above.)
 } catch (PDOException $e) {
     error_log("Registration error: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'An error occurred during registration. Please try again.']);
+    if (!headers_sent()) {
+        echo json_encode(['success' => false, 'message' => 'An error occurred during registration. Please try again.']);
+    }
 }
