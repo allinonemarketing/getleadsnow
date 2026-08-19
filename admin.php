@@ -10,6 +10,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['CONTENT_TYPE']) &&
     $data = [];
 }
 
+// SECURITY: every admin action below requires an authenticated ADMIN. This guard
+// must run BEFORE the action handlers — previously they executed ahead of the
+// page's admin check, so any logged-in user could POST toggle_admin/add_credits/
+// change_plan directly and escalate themselves.
+$__isAdminReq = false;
+if (isLoggedIn()) {
+    try {
+        $__s = $pdo->prepare("SELECT is_admin FROM users WHERE id = ?");
+        $__s->execute([$_SESSION['user_id']]);
+        $__isAdminReq = (bool)$__s->fetchColumn();
+    } catch (Exception $e) { $__isAdminReq = false; }
+}
+if (!$__isAdminReq) {
+    // Exception: an admin currently impersonating a user (session user_id is the
+    // target's) must still be able to return — admin_original_id proves the session.
+    $__returning = isset($data['action']) && $data['action'] === 'return_to_admin' && isset($_SESSION['admin_original_id']);
+    if (!$__returning) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['action'])) {
+            header('Content-Type: application/json');
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Forbidden']);
+            exit;
+        }
+        header('Location: /dashboard');
+        exit;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['action']) && $data['action'] === 'toggle_admin') {
     header('Content-Type: application/json');
     try {
@@ -23,7 +51,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['action']) && $data['ac
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['action']) && $data['action'] === 'change_plan') {
     header('Content-Type: application/json');
     try {
+        $allowedPlans = ['none', 'business', 'agency', 'enterprise'];
+        if (!in_array($data['plan'] ?? '', $allowedPlans, true)) { echo json_encode(['success' => false, 'error' => 'Invalid plan']); exit; }
         $pdo->prepare("UPDATE users SET subscription_plan = ? WHERE id = ?")->execute([$data['plan'], $data['user_id']]);
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) { echo json_encode(['success' => false, 'error' => 'Database error']); }
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['action']) && $data['action'] === 'delete_user') {
+    header('Content-Type: application/json');
+    try {
+        $uid = (int)($data['user_id'] ?? 0);
+        if ($uid === 1) { echo json_encode(['success' => false, 'error' => 'Cannot delete the master admin']); exit; }
+        if ($uid === (int)$_SESSION['user_id']) { echo json_encode(['success' => false, 'error' => 'You cannot delete your own account']); exit; }
+        $chk = $pdo->prepare("SELECT is_admin, email FROM users WHERE id = ?");
+        $chk->execute([$uid]);
+        $target = $chk->fetch(PDO::FETCH_ASSOC);
+        if (!$target) { echo json_encode(['success' => false, 'error' => 'User not found']); exit; }
+        if (!empty($target['is_admin'])) { echo json_encode(['success' => false, 'error' => 'Remove admin rights first, then delete']); exit; }
+
+        // Remove the user and everything they own. Some tables may not exist on
+        // older installs — ignore per-table failures, always delete the user row last.
+        foreach ([
+            "DELETE FROM lead_list_items WHERE user_id = ?",
+            "DELETE FROM lead_list_searches WHERE user_id = ?",
+            "DELETE FROM lead_lists WHERE user_id = ?",
+            "DELETE FROM search_jobs WHERE user_id = ?",
+            "DELETE FROM ghl_import_items WHERE user_id = ?",
+            "DELETE FROM ghl_import_logs WHERE user_id = ?",
+            "DELETE FROM ghl_connections WHERE user_id = ?",
+            "DELETE FROM api_calls WHERE user_id = ?",
+            "DELETE FROM credit_transactions WHERE user_id = ?",
+        ] as $sql) {
+            try { $pdo->prepare($sql)->execute([$uid]); } catch (Exception $e) {}
+        }
+        try { $pdo->prepare("DELETE FROM password_resets WHERE email = ?")->execute([$target['email']]); } catch (Exception $e) {}
+        $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$uid]);
         echo json_encode(['success' => true]);
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => 'Database error']); }
     exit;
@@ -398,7 +462,7 @@ tr{cursor:pointer;}
                         </div>
                     </td>
                     <td><span class="online-dot <?php echo $isOnline ? 'on' : 'off'; ?>"></span><?php echo $isOnline ? 'Online' : 'Offline'; ?></td>
-                    <td><span class="badge <?php echo $planBadge; ?>"><?php echo ucfirst($u['subscription_plan'] ?? 'none'); ?></span></td>
+                    <td><span class="badge <?php echo $planBadge; ?>"><?php $plMap = ['none' => 'Free', 'business' => 'Starter', 'agency' => 'Growth', 'enterprise' => 'Pro']; echo $plMap[$u['subscription_plan'] ?? 'none'] ?? ucfirst($u['subscription_plan']); ?></span></td>
                     <td><?php echo number_format($u['credits']); ?></td>
                     <td><?php echo $u['list_count']; ?></td>
                     <td><?php echo number_format($u['lead_count']); ?></td>
@@ -601,6 +665,7 @@ async function openUser(id) {
             <button class="btn btn-primary btn-sm" onclick="openEmailModal('${esc(u.email)}','${esc(u.name)}')"><i class="fas fa-envelope"></i> Email</button>
             <button class="btn btn-secondary btn-sm" onclick="openCreditsModal(${u.id})"><i class="fas fa-coins"></i> Add Credits</button>
             <button class="btn btn-secondary btn-sm" onclick="loginAsUser(${u.id},'${esc(u.name)}')"><i class="fas fa-right-to-bracket"></i> Login As</button>
+            <button class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;" onclick="deleteUser(${u.id},'${esc(u.name)}')"><i class="fas fa-trash"></i> Delete</button>
         </div>
         <div class="slide-section"><h3>Account</h3>
             <div class="info-row"><span class="label">User ID</span><span class="value">#${u.id}</span></div>
@@ -608,7 +673,7 @@ async function openUser(id) {
                 <option value="none" ${(u.subscription_plan||'none')==='none'?'selected':''}>Free</option>
                 <option value="business" ${u.subscription_plan==='business'?'selected':''}>Starter</option>
                 <option value="agency" ${u.subscription_plan==='agency'?'selected':''}>Growth</option>
-                <option value="enterprise" ${u.subscription_plan==='enterprise'?'selected':''}>Enterprise</option>
+                <option value="enterprise" ${u.subscription_plan==='enterprise'?'selected':''}>Pro</option>
             </select></span></div>
             <div class="info-row"><span class="label">Credits</span><span class="value" id="slideCredits">${Number(u.credits).toLocaleString()}</span></div>
             <div class="info-row"><span class="label">Joined</span><span class="value">${new Date(u.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span></div>
@@ -682,6 +747,14 @@ function esc(s) { const d = document.createElement('div'); d.textContent = s || 
 async function toggleAdmin(userId, isAdmin) {
     if (!confirm(isAdmin ? 'Make this user an admin?' : 'Remove admin privileges?')) { location.reload(); return; }
     await fetch('admin.php', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'toggle_admin',user_id:userId,is_admin:isAdmin}) });
+}
+
+async function deleteUser(userId, userName) {
+    if (!confirm('Delete "' + userName + '" and ALL their data (lists, leads, transactions)? This cannot be undone.')) return;
+    if (!confirm('Are you absolutely sure? This permanently deletes the account.')) return;
+    const res = await fetch('admin.php', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'delete_user',user_id:userId}) });
+    const d = await res.json();
+    if (d.success) { location.reload(); } else { alert(d.error || 'Delete failed'); }
 }
 
 async function changePlan(userId, plan) {
