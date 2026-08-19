@@ -10,6 +10,13 @@ if (!isLoggedIn()) {
     exit;
 }
 
+// Release the session lock now that we've authenticated. PHP holds an exclusive
+// lock on the session file for the whole request; without this, the up-to-30s
+// external API curl below would block every other request from the same user
+// (page navigation, other searches) until it finishes — making the whole app
+// feel frozen during a search. We don't touch $_SESSION past this point.
+session_write_close();
+
 header('Content-Type: application/json');
 
 $type = $_GET['type'] ?? 'search';

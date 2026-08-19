@@ -428,6 +428,11 @@ function importLeadCsvRows($pdo, $userId, $listId, $headers, $rows) {
 // API Endpoints
 if (isset($_GET['action'])) {
     header('Content-Type: application/json');
+    // Release the session lock before any slow work (external enrichment/GHL
+    // curls below run up to 30s). Holding it serializes every same-user request
+    // behind this one, freezing navigation during a search. No API action writes
+    // to $_SESSION (only the page-render path does), so this is safe.
+    session_write_close();
     $input = json_decode(file_get_contents('php://input'), true);
 
     switch ($_GET['action']) {
