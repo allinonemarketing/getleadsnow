@@ -2,6 +2,7 @@
 session_start();
 require_once 'includes/auth.php';
 if (!isLoggedIn()) { header('Location: login.php'); exit(); }
+session_write_close();  // release the per-user session lock; these pages only read the session
 $appLogo = defined('APP_LOGO') ? APP_LOGO : '/assets/logo.svg';
 ?>
 <!DOCTYPE html>

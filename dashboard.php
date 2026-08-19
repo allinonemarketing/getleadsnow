@@ -83,6 +83,11 @@ try {
 }
 
 $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
+
+// Release the per-user session lock before rendering. $_SESSION stays readable
+// afterward (we only lose the ability to WRITE it, which this page doesn't do),
+// so the large render below no longer blocks other same-user requests/tabs.
+session_write_close();
 ?>
 
 <!DOCTYPE html>

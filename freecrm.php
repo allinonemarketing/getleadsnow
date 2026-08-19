@@ -2,6 +2,7 @@
 session_start();
 require_once 'includes/auth.php';
 if (!isLoggedIn()) { header('Location: login.php'); exit(); }
+session_write_close();  // release the per-user session lock; these pages only read the session
 ?>
 <!DOCTYPE html>
 <html lang="en">

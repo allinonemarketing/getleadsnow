@@ -300,6 +300,21 @@ try {
     $tourSeen = (int)$tsStmt->fetchColumn();
 } catch (Exception $e) { $tourSeen = 0; }
 
+// For the PAGE-RENDER path (not API calls): compute the login-promo flags now and
+// RELEASE THE SESSION LOCK before the large HTML render below. PHP holds an
+// exclusive per-user session lock for the whole request; the heavy render here
+// was keeping it, so when several tabs/iframes load for the same user they
+// serialize and each blocked request ties up a PHP-FPM worker — under load that
+// exhausts the worker pool and the whole site times out. (API requests skip this;
+// the action dispatch closes its own session.)
+$showPennyPromo = false;
+if (!isset($_GET['action'])) {
+    if (!isset($_SESSION['tour_seen_at_login'])) { $_SESSION['tour_seen_at_login'] = $tourSeen; }
+    $showPennyPromo = (!empty($_SESSION['tour_seen_at_login']) && empty($_SESSION['penny_promo_shown']));
+    if ($showPennyPromo) { $_SESSION['penny_promo_shown'] = 1; }
+    session_write_close();
+}
+
 $ghlConnsStmt = $pdo->prepare("SELECT * FROM ghl_connections WHERE user_id = ? ORDER BY created_at ASC");
 $ghlConnsStmt->execute([$userId]);
 $ghlConnections = $ghlConnsStmt->fetchAll(PDO::FETCH_ASSOC);
@@ -8955,17 +8970,7 @@ document.addEventListener('click', (e) => {
 })();
 </script>
 
-<?php
-// --- "Get Leads For Less Than 1¢" login promo -------------------------------
-// Show once per login session, but never on the user's very first login (that
-// session gets the guided tour instead). Snapshot tour_seen at the first full
-// page render of the session: 0 => first-ever login (skip), 1 => returning login.
-// This runs only on a real page render — API calls (?action=) exit long before
-// here, so they never consume the once-per-session flag.
-if (!isset($_SESSION['tour_seen_at_login'])) { $_SESSION['tour_seen_at_login'] = $tourSeen; }
-$showPennyPromo = (!empty($_SESSION['tour_seen_at_login']) && empty($_SESSION['penny_promo_shown']));
-if ($showPennyPromo) { $_SESSION['penny_promo_shown'] = 1; }
-?>
+<?php // $showPennyPromo was computed near the top (page-render path) before the session lock was released. ?>
 <?php if ($showPennyPromo): ?>
 <div id="pennyPromo" class="pp-ov" role="dialog" aria-modal="true" aria-labelledby="ppTitle">
   <div class="pp-card">
