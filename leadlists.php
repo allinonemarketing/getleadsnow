@@ -42,7 +42,7 @@ try { $pdo->prepare("UPDATE users SET last_active_at = NOW() WHERE id = ?")->exe
 // Gated behind a schema-version flag so these ~18 preflight queries run only once
 // per deploy instead of on every request (they were adding remote-DB latency to
 // every list load). Bump $schemaVersion whenever a migration is added below.
-$schemaVersion = 'v1-2026-07';
+$schemaVersion = 'v2-2026-08';
 $schemaFlagFile = sys_get_temp_dir() . '/getleadsnow_leadlists_schema_' . md5($schemaVersion) . '.ok';
 if (!@is_file($schemaFlagFile)) {
 try {
@@ -281,11 +281,23 @@ try {
     )");
 }
 
+    // Per-account walkthrough state, so the guided tour follows the account
+    // across browsers/devices instead of a browser-local localStorage flag.
+    try { $pdo->exec("ALTER TABLE users ADD COLUMN tour_seen TINYINT(1) NOT NULL DEFAULT 0"); } catch (Exception $e) {}
+
     // All migrations above completed without throwing — record the flag so
     // subsequent requests skip the entire preflight block. If any migration
     // above had thrown a fatal, we'd never reach here and the block retries.
     @file_put_contents($schemaFlagFile, $schemaVersion);
 }
+
+// Has this account seen the guided walkthrough yet? (drives auto-start below)
+$tourSeen = 0;
+try {
+    $tsStmt = $pdo->prepare("SELECT tour_seen FROM users WHERE id = ?");
+    $tsStmt->execute([$userId]);
+    $tourSeen = (int)$tsStmt->fetchColumn();
+} catch (Exception $e) { $tourSeen = 0; }
 
 $ghlConnsStmt = $pdo->prepare("SELECT * FROM ghl_connections WHERE user_id = ? ORDER BY created_at ASC");
 $ghlConnsStmt->execute([$userId]);
@@ -470,6 +482,11 @@ if (isset($_GET['action'])) {
             $stmt = $pdo->prepare("INSERT INTO lead_lists (user_id, name, description) VALUES (?, ?, ?)");
             $stmt->execute([$userId, $name, $input['description'] ?? '']);
             echo json_encode(['success' => true, 'id' => $pdo->lastInsertId()]);
+            exit;
+
+        case 'markTourSeen':
+            try { $pdo->prepare("UPDATE users SET tour_seen = 1 WHERE id = ?")->execute([$userId]); } catch (Exception $e) {}
+            echo json_encode(['success' => true]);
             exit;
 
         case 'updateList':
@@ -8625,6 +8642,10 @@ document.addEventListener('click', (e) => {
 <script>
 (function(){
   var KEY='aiom_leadtour_v1_<?php echo (int)$userId; ?>';
+  // Server-side, per-account "has seen the tour" flag — the source of truth so the
+  // walkthrough follows the account across browsers/devices, not just this browser.
+  var SERVER_SEEN=<?php echo $tourSeen ? 'true' : 'false'; ?>;
+  function persistSeen(){ try{ fetch('leadlists.php?action=markTourSeen',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}); }catch(e){} }
   function qs(s){ try{ return document.querySelector(s); }catch(e){ return null; } }
   function vis(el){ if(!el) return false; var r=el.getClientRects(); if(!r.length) return false; var cs=window.getComputedStyle(el); return cs.visibility!=='hidden' && cs.display!=='none' && r[0].width>0 && r[0].height>0; }
   function firstVisible(sel){ var e=document.querySelectorAll(sel); for(var k=0;k<e.length;k++){ if(vis(e[k])) return e[k]; } return null; }
@@ -8744,7 +8765,7 @@ document.addEventListener('click', (e) => {
   }
 
   function start(){ if(!mask){ build(); } i=0; render(); if(timer){ clearInterval(timer); } timer=setInterval(loop,300); }
-  function finish(){ if(timer){ clearInterval(timer); timer=null; } if(tip){ tip.style.display='none'; } if(mask){ mask.style.display='none'; } try{ localStorage.setItem(KEY,'1'); }catch(e){} }
+  function finish(){ if(timer){ clearInterval(timer); timer=null; } if(tip){ tip.style.display='none'; } if(mask){ mask.style.display='none'; } try{ localStorage.setItem(KEY,'1'); }catch(e){} persistSeen(); }
 
   // Restart the whole walkthrough: close any modal, return to the lists grid so
   // step 1 makes sense, then start from the top.
@@ -8838,6 +8859,9 @@ document.addEventListener('click', (e) => {
   function init(){
     addHelp();
     watchExport();
+    // Source of truth is the per-account server flag (follows the account across
+    // browsers/devices). localStorage is only a same-session fallback cache.
+    if(SERVER_SEEN){ return; }
     var seen=null; try{ seen=localStorage.getItem(KEY); }catch(e){}
     if(seen){ return; }
     // Auto-start for first-time users. Prefer starting once the "New List" entry
