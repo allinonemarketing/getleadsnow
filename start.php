@@ -184,6 +184,15 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
       .feat h4{font-size:16px;font-weight:800;margin-bottom:4px}
       .feat p{color:var(--muted);font-size:13.5px}
 
+      /* included-free marketing suite + CRM */
+      .incl-save{display:inline-flex;align-items:center;gap:9px;background:#e7f6ed;color:#17813f;font-weight:800;font-size:15px;border-radius:999px;padding:10px 18px;margin-bottom:18px}
+      .incl-save s{color:var(--faint);font-weight:700;text-decoration-color:var(--accent)}
+      .incl-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:760px;margin:0 auto 26px}
+      .incl-chips span{font-size:12.5px;font-weight:600;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 13px;text-decoration:line-through;text-decoration-color:rgba(200,87,25,.55)}
+      .incl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px 26px;max-width:900px;margin:0 auto;text-align:left}
+      .incl-grid .it{display:flex;gap:10px;align-items:flex-start;font-size:14px;font-weight:600;color:var(--ink)}
+      .incl-grid .it .ic{color:var(--green);font-size:16px;margin-top:1px;flex:none}
+
       /* customer reviews (real, attributed) */
       .reviews{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
       .review{border:1px solid var(--line);border-radius:16px;background:#fff;padding:22px;box-shadow:var(--shadow);display:flex;flex-direction:column}
@@ -235,6 +244,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
         .copy .eyebrow{display:none}
         .hero .copy .preview{display:none}   /* desktop preview hidden; compact mh-proof shows instead */
         .steps,.feats,.compare,.reviews{grid-template-columns:1fr}
+        .incl-grid{grid-template-columns:1fr 1fr;gap:11px 16px;font-size:13.5px}
         .metrics .row{grid-template-columns:1fr;gap:16px;padding-top:20px;padding-bottom:20px}
         section.blk{padding:52px 0}
         .cta{padding:42px 22px}
@@ -451,6 +461,48 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
       <div class="feat"><svg class="ic"><use href="#i-list"/></svg><div><h4>Built-in lead CRM</h4><p>Organize lists, tag statuses, and track who you’ve contacted — no extra tools.</p></div></div>
       <div class="feat"><svg class="ic"><use href="#i-file"/></svg><div><h4>One-click CSV export</h4><p>Send leads straight to your dialer, GHL, or cold-email platform in seconds.</p></div></div>
       <div class="feat"><svg class="ic"><use href="#i-infinity"/></svg><div><h4>Scale when ready</h4><p>Start with your 100 included, then unlock thousands of leads a month when it’s paying off.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- INCLUDED FREE: FULL MARKETING SUITE + CRM -->
+<section class="blk" style="background:#f4fbf7;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap" style="text-align:center">
+    <div class="incl-save"><svg class="ic" style="font-size:17px"><use href="#i-gift"/></svg> Normally $97/month &mdash; included 100% free. You save $1,164/year.</div>
+    <div class="h2c" style="margin-bottom:26px">
+      <h2>Plus a complete AI marketing suite &amp; CRM &mdash; <span class="hl">included free</span></h2>
+      <p>Your account comes with the entire all-in-one marketing platform &amp; CRM at no cost &mdash; the software other companies charge $97/month for. One-click export your new leads straight into it and start closing. You only ever pay for the marketing usage you actually send (texts, calls, emails).</p>
+    </div>
+
+    <div class="incl-chips">
+      <span>HubSpot</span><span>Mailchimp</span><span>Calendly</span><span>ClickFunnels</span><span>Hootsuite</span><span>Typeform</span><span>CallRail</span><span>ActiveCampaign</span><span>Podium</span><span>Kajabi</span><span>Keap</span><span>Monday.com</span>
+    </div>
+
+    <div class="incl-grid">
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Full CRM &amp; contact management</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Two-way SMS &amp; email marketing</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> AI voice &amp; conversation agents</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Visual workflow &amp; automation builder</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Website &amp; landing page builder</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Sales funnel builder with A/B testing</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Calendar &amp; appointment booking</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Pipeline &amp; opportunity management</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Reputation &amp; review management</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Social media planner &amp; scheduler</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Membership sites &amp; online courses</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Forms, surveys &amp; quizzes</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Live chat &amp; website chat widget</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Call tracking &amp; recording</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Invoicing, payments &amp; orders</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Video hosting &amp; course delivery</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Email campaign builder</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Advanced analytics &amp; reporting</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Affiliate manager</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Communities &amp; group builder</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Mobile app &mdash; iOS &amp; Android</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Unlimited users &amp; sub-accounts</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> Ad reporting &amp; attribution</div>
+      <div class="it"><svg class="ic"><use href="#i-check-circle"/></svg> No monthly software fee, ever</div>
     </div>
   </div>
 </section>
