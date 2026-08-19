@@ -21,7 +21,13 @@ NEED=$(( TARGET - RUNNING ))
 [ "$NEED" -lt 0 ] && NEED=0
 
 for (( i=0; i<NEED; i++ )); do
-    nohup php "$SCRIPT" >>"$LOG" 2>&1 &
+    # setsid fully detaches the worker into its own session so it survives after
+    # the cron shell exits; fall back to nohup if setsid isn't available.
+    if command -v setsid >/dev/null 2>&1; then
+        setsid php "$SCRIPT" >>"$LOG" 2>&1 < /dev/null &
+    else
+        nohup php "$SCRIPT" >>"$LOG" 2>&1 < /dev/null &
+    fi
 done
 
 exit 0
