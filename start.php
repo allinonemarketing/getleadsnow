@@ -305,7 +305,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
       <ul class="checks">
         <li><svg class="ic"><use href="#i-check-circle"/></svg> Live phone numbers + one-click AI email enrichment (included)</li>
         <li><svg class="ic"><use href="#i-check-circle"/></svg> 100 leads included when you sign up — no credit card, no catch</li>
-        <li><svg class="ic"><use href="#i-gift"/></svg> <strong>Plus a full marketing suite, AI software &amp; CRM — included free</strong> <span style="color:var(--faint);font-weight:600">(normally $97/mo)</span></li>
+        <li><svg class="ic"><use href="#i-gift"/></svg> <span><strong>Plus a full marketing suite, AI software &amp; CRM — included free</strong> <span style="color:var(--faint);font-weight:600">(normally $97/mo)</span></span></li>
       </ul>
 
       <!-- Honest product preview: a representation of what a search returns -->
