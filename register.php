@@ -28,6 +28,11 @@ $fbAdsetId    = trim($_POST['fbadsetid'] ?? '');
 $fbAdId       = trim($_POST['fbadid'] ?? '');
 $timezone    = trim($_POST['timezone'] ?? '');
 $referrer    = trim($_POST['referrer'] ?? '');
+// Which landing page / channel the signup came from — tagged into the Google Sheet
+// and GHL "source" field. Whitelisted so the client can't inject arbitrary values.
+// /start (FB ads) => free_signup (default); /leads => email_referral.
+$signupSource = $_POST['signup_source'] ?? 'free_signup';
+if (!in_array($signupSource, ['free_signup', 'email_referral'], true)) { $signupSource = 'free_signup'; }
 $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? ($_SERVER['REMOTE_ADDR'] ?? '');
 if (strpos($ip, ',') !== false) { $ip = trim(explode(',', $ip)[0]); } // first hop in a proxy chain
 $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
@@ -94,7 +99,7 @@ try {
     sendSignupToSheet([
         'name' => $name, 'email' => $email, 'phone' => $phone,
         'dnd' => isTexasNumber($phone) ? 'Yes (SMS)' : 'No',
-        'wants_ownership' => $wantsOwnership, 'source' => 'free_signup',
+        'wants_ownership' => $wantsOwnership, 'source' => $signupSource,
         'utm_source' => $utmSource, 'utm_medium' => $utmMedium, 'utm_campaign' => $utmCampaign,
         'fbcampaignid' => $fbCampaignId, 'fbplacement' => $fbPlacement,
         'fbadsetid' => $fbAdsetId, 'fbadid' => $fbAdId,
@@ -114,7 +119,7 @@ try {
     sendSignupToGHL([
         'name' => $name, 'email' => $email, 'phone' => $phone,
         'entry_date' => date('Y-m-d H:i:s'),
-        'wants_ownership' => $wantsOwnership, 'source' => 'free_signup',
+        'wants_ownership' => $wantsOwnership, 'source' => $signupSource,
         'utm_source' => $utmSource, 'utm_medium' => $utmMedium, 'utm_campaign' => $utmCampaign,
         'fbcampaignid' => $fbCampaignId, 'fbplacement' => $fbPlacement,
         'fbadsetid' => $fbAdsetId, 'fbadid' => $fbAdId,

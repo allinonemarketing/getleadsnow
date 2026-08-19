@@ -735,6 +735,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
     fd.append('wants_ownership',own.value);
     Object.keys(track).forEach(k=>fd.append(k,track[k]));
     fd.append('event_id',leadEventId); fd.append('event_source_url',location.href);
+    fd.append('signup_source','email_referral');   // /leads = email-referral signups (tagged in the sheet + CRM)
     fd.append('fbp',cookie('_fbp')); fd.append('fbc',cookie('_fbc'));
 
     fetch('register.php',{method:'POST',body:fd}).then(r=>r.json()).then(data=>{
