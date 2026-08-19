@@ -23,6 +23,11 @@ if (!isLoggedIn()) { header('Location: login.php'); exit(); }
   h1{font-size:clamp(2rem,4.4vw,3rem);font-weight:900;letter-spacing:-.025em;line-height:1.08;text-wrap:balance}
   h1 .hl{color:var(--green)}
   .lede{font-size:17px;color:var(--muted);max-width:62ch;margin:16px auto 0}
+  .hero-save{display:inline-flex;align-items:center;gap:10px;background:var(--green-soft);color:var(--green-d);font-weight:900;font-size:clamp(15px,2.4vw,19px);letter-spacing:-.01em;border-radius:999px;padding:12px 22px;margin:16px auto 4px;line-height:1.2}
+  .hero-save s{color:var(--faint);font-weight:700;text-decoration-color:var(--accent)}
+  .hero-int{display:inline-flex;align-items:flex-start;gap:10px;background:#eef4ff;border:1px solid #d3e0fb;color:#1e3a8a;font-weight:600;font-size:14.5px;border-radius:14px;padding:13px 18px;margin:18px auto 0;max-width:60ch;line-height:1.5;text-align:left}
+  .hero-int i{color:#2563eb;flex:none;margin-top:2px;font-size:16px}
+  .hero-int b{font-weight:800;color:#1e40af}
   .btn{display:inline-flex;align-items:center;gap:9px;font-weight:800;font-size:15px;text-decoration:none;padding:14px 26px;border-radius:12px;cursor:pointer;border:none;font-family:inherit}
   .btn-primary{background:var(--green);color:#fff;box-shadow:0 8px 24px rgba(22,163,74,.28)}
   .btn-primary:hover{background:var(--green-d)}
@@ -84,7 +89,9 @@ if (!isLoggedIn()) { header('Location: login.php'); exit(); }
   <div class="wrap">
     <span class="eyebrow"><i class="fas fa-gift"></i> The Complete Platform — Free</span>
     <h1 style="margin:16px 0 0">The Last Marketing &amp; CRM Tool<br><span class="hl">You&rsquo;ll Ever Need — Free.</span></h1>
+    <div class="hero-save"><i class="fas fa-sack-dollar"></i> Normally <s>$97/month</s> &mdash; yours <span style="color:var(--green)">FREE</span>. Save $1,164 a year.</div>
     <p class="lede">We give you the entire all-in-one marketing &amp; CRM platform <strong>free</strong> &mdash; no monthly software fee. You only pay for the marketing usage you actually use (texts, calls, emails), billed as-you-go. Replace 20+ tools and run your whole business from one dashboard.</p>
+    <div class="hero-int"><i class="fas fa-bolt"></i> <span>Plugs right into your leads software &mdash; <b>one-click export</b> sends your new leads straight into the CRM so you can email them immediately.</span></div>
     <div class="cta">
       <a class="btn btn-primary" href="https://free.allinonemarketing.com/getleadsnowfreeaccount" target="_blank" rel="noopener"><i class="fas fa-rocket"></i> Claim Your Free Account</a>
     </div>
