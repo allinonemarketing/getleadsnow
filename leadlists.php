@@ -4467,7 +4467,8 @@ if (isset($_GET['action'])) {
                 <?php if ($pl['featured']): ?><div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#c85719;color:#fff;font-size:9px;font-weight:800;letter-spacing:.04em;padding:2px 9px;border-radius:999px;">POPULAR</div><?php endif; ?>
                 <div style="font-weight:700;font-size:14px;margin-bottom:2px;"><?php echo $pl['name']; ?></div>
                 <div style="font-size:24px;font-weight:800;line-height:1.1;">$<?php echo $pl['price']; ?><span style="font-size:12px;color:#98918a;font-weight:500;">/mo</span></div>
-                <div style="font-size:12.5px;color:#6e6e73;margin:6px 0 14px;"><?php echo number_format($pl['leads']); ?> leads/mo</div>
+                <div style="font-size:12.5px;color:#6e6e73;margin:6px 0 3px;"><?php echo number_format($pl['leads']); ?> leads/mo</div>
+                <div style="font-size:11px;color:#98918a;font-weight:600;margin:0 0 14px;"><?php echo number_format($pl['price'] / $pl['leads'] * 100, 1); ?>&cent; per lead</div>
                 <button onclick="app.upgradeTo('<?php echo htmlspecialchars($pl['id']); ?>', this)" style="width:100%;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:13px;font-family:inherit;background:<?php echo $pl['featured'] ? '#c85719' : '#f1efec'; ?>;color:<?php echo $pl['featured'] ? '#fff' : '#1d1d1f'; ?>;">Upgrade</button>
             </div>
             <?php endforeach; ?>
@@ -8747,7 +8748,10 @@ document.addEventListener('click', (e) => {
 
   // Restart the whole walkthrough: close any modal, return to the lists grid so
   // step 1 makes sense, then start from the top.
+  function outOfCredits(){ return !!(window.app && typeof app.credits!=='undefined' && app.credits < 1); }
   function restartTour(){
+    // Out of credits: show the upgrade prompt instead of a tour they can't act on.
+    if(outOfCredits()){ if(window.app && typeof app.showUpgradePrompt==='function'){ app.showUpgradePrompt(1); } return; }
     try{
       var cm=qs('#createModal'); if(cm){ cm.classList.remove('active'); }
       var am=qs('#addLeadsModal'); if(am){ am.classList.remove('active'); }
@@ -8841,6 +8845,7 @@ document.addEventListener('click', (e) => {
     // snap onto the button as soon as it renders (never leaves new users hanging).
     var tries=0, wait=setInterval(function(){
       tries++;
+      if(outOfCredits()){ clearInterval(wait); return; }   // out of credits — don't auto-run the tour
       if(firstVisible('[onclick*="openCreateModal"]')){ clearInterval(wait); start(); }
       else if(tries>=20){ clearInterval(wait); start(); }
     },300);
