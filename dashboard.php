@@ -544,7 +544,7 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             <li class="nav-item">
                 <a href="?section=penny" class="nav-link nav-penny <?php echo $current_section === 'penny' ? 'active' : ''; ?>" data-section="penny">
                     <i class="fas fa-bolt"></i>
-                    Get Leads For Less Than 1&cent;
+                    Get Leads Less Than 1&cent;
                 </a>
             </li>
             <li class="nav-item">
