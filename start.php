@@ -153,7 +153,8 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
       .btn-ghost{display:inline-flex;align-items:center;justify-content:center;background:transparent;color:var(--muted);font-weight:700;font-size:15px;border:1.5px solid #e0e2e6;border-radius:13px;padding:14px 18px;cursor:pointer;font-family:inherit;transition:background .12s}
       .btn-ghost:hover{background:var(--panel)}
       .whyfree{font-size:11.5px;color:var(--faint);text-align:center;margin:10px 0 2px;line-height:1.5}
-      .microtrust{text-align:center;font-size:12px;color:var(--faint);margin-top:11px;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;line-height:1.7}
+      .microtrust{text-align:center;font-size:12px;color:var(--faint);margin-top:11px;line-height:1.7}
+      .microtrust .ic{margin-right:5px;vertical-align:-.15em}
       .tcpa{font-size:6px;color:var(--faint);line-height:1.4;margin-top:12px;text-align:left;opacity:.85}
       .tcpa a{color:var(--muted);text-decoration:underline;font-weight:700}
       .err{display:none;background:#fdeaea;color:var(--red);font-size:13px;font-weight:600;padding:10px 12px;border-radius:10px;margin-bottom:12px}
