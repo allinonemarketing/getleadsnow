@@ -86,8 +86,7 @@ if (!isLoggedIn()) { header('Location: login.php'); exit(); }
     <h1 style="margin:16px 0 0">The Last Marketing &amp; CRM Tool<br><span class="hl">You&rsquo;ll Ever Need — Free.</span></h1>
     <p class="lede">We give you the entire all-in-one marketing &amp; CRM platform <strong>free</strong> &mdash; no monthly software fee. You only pay for the marketing usage you actually use (texts, calls, emails), billed as-you-go. Replace 20+ tools and run your whole business from one dashboard.</p>
     <div class="cta">
-      <a class="btn btn-primary" href="sms:+13479211788?&body=CRM"><i class="fas fa-comment-dots"></i> Text &ldquo;CRM&rdquo; to 347-921-1788</a>
-      <a class="btn btn-ghost" href="mailto:sales@allinonemarketing.com?subject=Free%20CRM"><i class="fas fa-envelope"></i> Email us</a>
+      <a class="btn btn-primary" href="https://free.allinonemarketing.com/getleadsnowfreeaccount" target="_blank" rel="noopener"><i class="fas fa-rocket"></i> Claim Your Free Account</a>
     </div>
 
     <div class="stats">
@@ -198,8 +197,8 @@ if (!isLoggedIn()) { header('Location: login.php'); exit(); }
     <div class="final">
       <h2>Ready to Claim Your Free Account?</h2>
       <p>Get the entire platform free &mdash; you only pay for the usage you use. Takes less than 2 minutes to set up.</p>
-      <a class="btn" style="background:#fff;color:var(--navy)" href="sms:+13479211788?&body=CRM"><i class="fas fa-comment-dots"></i> Text &ldquo;CRM&rdquo; to 347-921-1788</a>
-      <div class="fine">Or email <a href="mailto:sales@allinonemarketing.com?subject=Free%20CRM" style="color:#fff;font-weight:700">sales@allinonemarketing.com</a> &mdash; normally $97/month, free for you.</div>
+      <a class="btn" style="background:#fff;color:var(--navy)" href="https://free.allinonemarketing.com/getleadsnowfreeaccount" target="_blank" rel="noopener"><i class="fas fa-rocket"></i> Claim Your Free Account</a>
+      <div class="fine">Normally $97/month &mdash; free for you.</div>
     </div>
   </div>
 </section>
