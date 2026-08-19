@@ -1337,7 +1337,11 @@ if (isset($_GET['action'])) {
             $listId = $input['list_id'] ?? 0;
             // Capped low on purpose: stays under Replicate's burst-of-50 limit AND under the
             // ~60-connection ceiling where firing 100 at once returned http=0 (dropped connections).
-            $batchSize = min(25, max(1, intval($input['batch_size'] ?? 25)));
+            // Cap enrichment fan-out at 10 per pass. Each completed prediction POSTs
+            // a webhook back with up to ~4MB of scraped content; 25 near-simultaneous
+            // multi-MB inbound POSTs (all WAF-inspected by Imunify) buried the server.
+            // Smaller waves keep the inbound webhook burst survivable.
+            $batchSize = min(10, max(1, intval($input['batch_size'] ?? 10)));
 
             // Writes a plain-text log you can download over FTP at:  <your app>/enrichment_debug.log
             // Delete the file (or this block) once you're done debugging.
