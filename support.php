@@ -32,7 +32,6 @@ if (!isLoggedIn()) { header('Location: login.php'); exit(); }
     <h1>Need help or have questions?</h1>
     <p>Email <strong>sales@allinonemarketing.com</strong> for assistance and our team will get back to you.</p>
     <a class="btn" href="mailto:sales@allinonemarketing.com?subject=Support"><i class="fas fa-envelope"></i> Email us</a>
-    <div class="email">Or reach us directly at <a href="mailto:sales@allinonemarketing.com">sales@allinonemarketing.com</a></div>
   </div>
 </body>
 </html>
