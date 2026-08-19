@@ -586,15 +586,15 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
                 </a>
             </li>
             <li class="nav-item">
-                <a href="?section=account" class="nav-link <?php echo $current_section === 'account' ? 'active' : ''; ?>" data-section="account">
-                    <i class="fas fa-user-gear"></i>
-                    My Account
-                </a>
-            </li>
-            <li class="nav-item">
                 <a href="?section=support" class="nav-link <?php echo $current_section === 'support' ? 'active' : ''; ?>" data-section="support">
                     <i class="fas fa-life-ring"></i>
                     Support
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="?section=account" class="nav-link <?php echo $current_section === 'account' ? 'active' : ''; ?>" data-section="account">
+                    <i class="fas fa-user-gear"></i>
+                    My Account
                 </a>
             </li>
             <li class="nav-item">
