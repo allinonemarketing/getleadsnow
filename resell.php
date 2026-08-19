@@ -47,7 +47,7 @@ $appLogo = defined('APP_LOGO') ? APP_LOGO : '/assets/logo.svg';
 <body>
 <div class="wrap">
   <span class="eyebrow"><i class="fas fa-bolt"></i> Owner &amp; Reseller Program</span>
-  <h1>Get leads for <span class="hl">less than 1 penny</span> each &mdash; and resell this tool for profit.</h1>
+  <h1>Get leads for <span class="hl">less than 1 penny</span> each &mdash; and Get Your Own Version Of This Software And Resell It For Profit.</h1>
   <p class="lede">Right now each lead costs 1 credit. When you own the software, you plug in your own data source and pull leads at raw cost &mdash; fractions of a penny each &mdash; then sell the exact same tool to your clients as a recurring revenue stream.</p>
 
   <!-- Vidalytics video embed -->
