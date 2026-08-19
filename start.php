@@ -304,8 +304,8 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
       <p class="lede">Included when you create your account — no credit card. Stop paying for stale, resold lists: type a niche and a city and instantly get business names, <strong>real phone numbers, emails and social profiles</strong>.</p>
       <ul class="checks">
         <li><svg class="ic"><use href="#i-check-circle"/></svg> Live phone numbers + one-click AI email enrichment (included)</li>
-        <li><svg class="ic"><use href="#i-check-circle"/></svg> Export to CSV or work them in the built-in CRM</li>
         <li><svg class="ic"><use href="#i-check-circle"/></svg> 100 leads included when you sign up — no credit card, no catch</li>
+        <li><svg class="ic"><use href="#i-gift"/></svg> <strong>Plus a full marketing suite, AI software &amp; CRM — included free</strong> <span style="color:var(--faint);font-weight:600">(normally $97/mo)</span></li>
       </ul>
 
       <!-- Honest product preview: a representation of what a search returns -->
@@ -392,10 +392,10 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
             <button type="button" class="btn-ghost backBtn">← Back</button>
             <button type="submit" class="btn form-btn" id="submitBtn"><span class="spin" aria-hidden="true"></span><span class="btn-label">Get My 100 Leads →</span></button>
           </div>
+          <div class="tcpa">By clicking “Get My 100 Leads”, I consent to receive calls, texts, and emails from All In One Marketing.com via automated calling and prerecorded voice; consent not required to purchase - opt out anytime at info@allinonemarketing.com. I agree to the <a href="https://allinonemarketing.com/terms-conditions/" target="_blank" rel="noopener">Terms &amp; Conditions</a> &amp; <a href="https://allinonemarketing.com/privacy-policy" target="_blank" rel="noopener">Privacy Policy</a> (incl. arbitration). Msg &amp; data rates may apply.</div>
         </div>
 
         <div class="microtrust"><svg class="ic"><use href="#i-lock"/></svg> No card · Your first list on screen in ~20s · Delete anytime</div>
-        <div class="tcpa">By clicking “Get My 100 Leads”, I consent to receive calls, texts, and emails from All In One Marketing.com via automated calling and prerecorded voice; consent not required to purchase - opt out anytime at info@allinonemarketing.com. I agree to the <a href="https://allinonemarketing.com/terms-conditions/" target="_blank" rel="noopener">Terms &amp; Conditions</a> &amp; <a href="https://allinonemarketing.com/privacy-policy" target="_blank" rel="noopener">Privacy Policy</a> (incl. arbitration). Msg &amp; data rates may apply.</div>
       </form>
     </div>
   </div>
