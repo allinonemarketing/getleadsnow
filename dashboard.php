@@ -202,7 +202,7 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
         .nav-links::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
 
         .nav-item {
-            margin-bottom: 2px;
+            margin-bottom: 8px;
         }
 
         .nav-link {
@@ -232,14 +232,14 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             color: #ffffff;
         }
 
-        /* Navy promo item (stays navy even when not the active tab) */
+        /* Red promo item (stays red even when not the active tab) */
         .nav-link.nav-penny,
         .nav-link.nav-penny.active {
-            background: #14315c;
+            background: #dc2626;
             color: #ffffff;
         }
         .nav-link.nav-penny:hover {
-            background: #0f2647;
+            background: #b91c1c;
             color: #ffffff;
         }
         .nav-link.nav-penny i,
