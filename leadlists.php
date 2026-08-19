@@ -8624,7 +8624,7 @@ document.addEventListener('click', (e) => {
 </style>
 <script>
 (function(){
-  var KEY='aiom_leadtour_v1';
+  var KEY='aiom_leadtour_v1_<?php echo (int)$userId; ?>';
   function qs(s){ try{ return document.querySelector(s); }catch(e){ return null; } }
   function vis(el){ if(!el) return false; var r=el.getClientRects(); if(!r.length) return false; var cs=window.getComputedStyle(el); return cs.visibility!=='hidden' && cs.display!=='none' && r[0].width>0 && r[0].height>0; }
   function firstVisible(sel){ var e=document.querySelectorAll(sel); for(var k=0;k<e.length;k++){ if(vis(e[k])) return e[k]; } return null; }
@@ -8767,7 +8767,7 @@ document.addEventListener('click', (e) => {
   function addHelp(){ var h=mk('lt-help'); h.innerHTML='<i class="fas fa-circle-question"></i> How to pull leads'; h.addEventListener('click',restartTour); document.body.appendChild(h); }
 
   // One-off follow-up tip on the Export button, shown once leads have populated.
-  var EKEY='aiom_exporttip_v1';
+  var EKEY='aiom_exporttip_v1_<?php echo (int)$userId; ?>';
   function exportTip(){
     var btn=firstVisible('#exportMenuBtn'); if(!btn) return;
     var em=document.createElementNS(SVGNS,'svg'); em.setAttribute('class','lt-mask'); document.body.appendChild(em);
@@ -8798,7 +8798,7 @@ document.addEventListener('click', (e) => {
 
   // Final upsell nudge (shown once, after the export tip): forces them to the
   // "Get Leads For Less Than 1c" page.
-  var CKEY='aiom_cheaptip_v1';
+  var CKEY='aiom_cheaptip_v1_<?php echo (int)$userId; ?>';
   function cheaperTip(){
     var cm=document.createElementNS(SVGNS,'svg'); cm.setAttribute('class','lt-mask'); document.body.appendChild(cm);
     var ct=mk('lt-tip'); document.body.appendChild(ct);
