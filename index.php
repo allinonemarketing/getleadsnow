@@ -93,6 +93,14 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
         error_log("Error processing success payment: " . $e->getMessage());
     }
 }
+
+// Logged-in users go straight to the dashboard — the marketing homepage is for
+// visitors. Placed AFTER the Stripe checkout-return block above so payment
+// credits are still granted first (that path issues its own redirect on success).
+if (isLoggedIn()) {
+    header('Location: dashboard.php');
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
