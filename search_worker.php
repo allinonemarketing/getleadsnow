@@ -132,10 +132,19 @@ $pdo = db_connect();
 $idleTicks = 0;
 $startedAt = time();
 $jobsDone = 0;
+$scriptMtime = @filemtime(__FILE__);
 
 while (true) {
     if ((time() - $startedAt) >= MAX_RUNTIME_S || $jobsDone >= MAX_JOBS) {
         fwrite(STDERR, "[search_worker] $workerId recycling after $jobsDone job(s)\n");
+        exit(0);
+    }
+    // Hot-swap on deploy: if this script file changed on disk, exit — the cron
+    // watchdog respawns us on the new code within a minute. (SSH users can't
+    // pkill the cron-owned workers, so deploys must recycle them automatically.)
+    clearstatcache(true, __FILE__);
+    if ($scriptMtime && @filemtime(__FILE__) !== $scriptMtime) {
+        fwrite(STDERR, "[search_worker] $workerId exiting — new code deployed\n");
         exit(0);
     }
     try {
