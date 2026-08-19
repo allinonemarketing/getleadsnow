@@ -161,7 +161,7 @@ function sendPasswordResetEmail($email, $name, $token) {
         $mail->isHTML(true);
         $mail->Subject = "Password Reset - " . APP_NAME;
         $appName = APP_NAME;
-        $resetUrl = APP_URL . "/reset_password.php?token=" . urlencode($token);
+        $resetUrl = APP_URL . "/reset_password?token=" . urlencode($token);
         $mail->Body = "
         <html><body>
             <h2>Password Reset Request</h2>
@@ -187,7 +187,7 @@ function sendSetPasswordEmail($email, $name, $token, $planLabel = '') {
         $mail->isHTML(true);
         $mail->Subject = "Set your password - " . APP_NAME;
         $appName = APP_NAME;
-        $setUrl = APP_URL . "/reset_password.php?token=" . urlencode($token);
+        $setUrl = APP_URL . "/reset_password?token=" . urlencode($token);
         $planLine = $planLabel ? "<p>Your <strong>{$planLabel}</strong> plan is active and your credits have been added.</p>" : "";
         $mail->Body = "
         <html><body>

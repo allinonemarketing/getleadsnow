@@ -187,7 +187,7 @@ $appLogo = htmlspecialchars(APP_LOGO);
 
         <?php if (!empty($error) && !$validToken): ?>
             <div class="error-msg"><?= htmlspecialchars($error) ?></div>
-            <a href="forgot_password.php" class="btn" style="display:block;text-align:center;text-decoration:none;">Request a New Reset Link</a>
+            <a href="/forgot_password" class="btn" style="display:block;text-align:center;text-decoration:none;">Request a New Reset Link</a>
         <?php elseif ($validToken): ?>
             <?php if (!empty($error)): ?>
                 <div class="error-msg"><?= htmlspecialchars($error) ?></div>
@@ -204,7 +204,7 @@ $appLogo = htmlspecialchars(APP_LOGO);
                 </div>
                 <button type="submit" class="btn">Reset Password</button>
             </form>
-            <a href="login.php" class="back-link">Back to Login</a>
+            <a href="/login" class="back-link">Back to Login</a>
         <?php endif; ?>
     </div>
 </body>

@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/auth.php';
-if (isLoggedIn()) { header('Location: dashboard.php'); exit; }
+if (isLoggedIn()) { header('Location: /dashboard'); exit; }
 $appName = defined('APP_NAME') ? APP_NAME : 'All In One Leads Tool';
 $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
 ?>
@@ -741,7 +741,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
       if(settled) return; settled=true; clearTimeout(hangTimer);
       if(data.success){
         try{ if(window.fbq){ fbq('track','Lead',{},{eventID:leadEventId}); fbq('track','CompleteRegistration',{},{eventID:leadEventId}); } }catch(e){}
-        window.location.href='dashboard.php';
+        window.location.href='/dashboard';
       } else if(/already exists/i.test(data.message||'')){
         // Build the login link via the DOM so no server string is injected as HTML.
         fail('An account with this email already exists. ');

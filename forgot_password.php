@@ -161,7 +161,7 @@ $appLogo = htmlspecialchars(APP_LOGO);
             <div class="success-msg">
                 If an account exists with that email, we've sent a password reset link. Please check your inbox.
             </div>
-            <a href="login.php" class="btn" style="display:block;text-align:center;text-decoration:none;">Back to Login</a>
+            <a href="/login" class="btn" style="display:block;text-align:center;text-decoration:none;">Back to Login</a>
         <?php else: ?>
             <form method="POST">
                 <div class="form-group">
@@ -170,7 +170,7 @@ $appLogo = htmlspecialchars(APP_LOGO);
                 </div>
                 <button type="submit" class="btn">Send Reset Link</button>
             </form>
-            <a href="login.php" class="back-link">Back to Login</a>
+            <a href="/login" class="back-link">Back to Login</a>
         <?php endif; ?>
     </div>
 </body>

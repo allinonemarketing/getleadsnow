@@ -246,7 +246,7 @@ $fcCtaAttrs = $fcPaid
     </div>
     <h3 style="font-size:21px;font-weight:900;letter-spacing:-.02em;color:var(--ink);line-height:1.2;margin:0 0 8px;">The Free CRM comes with a paid plan</h3>
     <p style="font-size:14.5px;color:var(--muted);line-height:1.6;margin:0 0 22px;">To claim your free CRM account (normally <strong>$97/month</strong>), you need an <strong>active paid lead-generation plan</strong>. Upgrade first &mdash; then the CRM is yours, free.</p>
-    <button type="button" onclick="(window.top||window).location.href='dashboard.php?section=section5'" style="display:block;width:100%;background:var(--green);color:#fff;font-weight:800;font-size:15.5px;border:none;border-radius:12px;padding:14px;cursor:pointer;font-family:inherit;box-shadow:0 8px 24px rgba(22,163,74,.28);">View Paid Plans &rarr;</button>
+    <button type="button" onclick="(window.top||window).location.href='/dashboard?section=section5'" style="display:block;width:100%;background:var(--green);color:#fff;font-weight:800;font-size:15.5px;border:none;border-radius:12px;padding:14px;cursor:pointer;font-family:inherit;box-shadow:0 8px 24px rgba(22,163,74,.28);">View Paid Plans &rarr;</button>
     <button type="button" onclick="fcHideGate()" style="display:block;width:100%;background:transparent;color:#7a8088;font-weight:700;font-size:13px;border:none;padding:12px 0 2px;cursor:pointer;font-family:inherit;">Maybe later</button>
   </div>
 </div>

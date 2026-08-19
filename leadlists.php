@@ -5265,7 +5265,7 @@ class LeadListsApp {
     gotoPenny() {
         // Top-plan users are promoted to the 1¢ page instead of an upgrade.
         this.closeUpgradeModal();
-        (window.top || window).location.href = 'dashboard.php?section=penny';
+        (window.top || window).location.href = '/dashboard?section=penny';
     }
     async upgradeTo(priceId, btnEl) {
         if (!priceId) { this.toast('This plan is not available yet.'); return; }
@@ -7671,7 +7671,7 @@ class LeadListsApp {
     ghlGateNo() {
         // No Free CRM yet — send them to claim it first.
         this.closeGHLExport();
-        (window.top || window).location.href = 'dashboard.php?section=freecrm';
+        (window.top || window).location.href = '/dashboard?section=freecrm';
     }
 
     updateGHLBadge(connected) {
@@ -8950,7 +8950,7 @@ document.addEventListener('click', (e) => {
     var iv=setInterval(place,300);
     ct.querySelector('[data-a="go"]').addEventListener('click',function(){
       clearInterval(iv); try{ localStorage.setItem(CKEY,'1'); }catch(e){}
-      try{ (window.top||window).location.href='dashboard.php?section=penny'; }catch(e){ try{ location.href='dashboard.php?section=penny'; }catch(_){} }
+      try{ (window.top||window).location.href='/dashboard?section=penny'; }catch(e){ try{ location.href='/dashboard?section=penny'; }catch(_){} }
     });
   }
 
@@ -9025,7 +9025,7 @@ document.addEventListener('click', (e) => {
   function close(){ ov.style.display='none'; }
   ov.querySelector('.pp-x').addEventListener('click',close);
   document.getElementById('ppLater').addEventListener('click',close);
-  document.getElementById('ppGo').addEventListener('click',function(){ (window.top||window).location.href='dashboard.php?section=penny'; });
+  document.getElementById('ppGo').addEventListener('click',function(){ (window.top||window).location.href='/dashboard?section=penny'; });
   ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
 })();

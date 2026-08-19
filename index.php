@@ -98,7 +98,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
 // visitors. Placed AFTER the Stripe checkout-return block above so payment
 // credits are still granted first (that path issues its own redirect on success).
 if (isLoggedIn()) {
-    header('Location: dashboard.php');
+    header('Location: /dashboard');
     exit();
 }
 ?>
@@ -268,7 +268,7 @@ if (isLoggedIn()) {
                 <div style="display:flex;align-items:center;gap:8px;">
                     <?php if (isLoggedIn()): ?>
                         <span class="nav-btn nav-btn-ghost">Hi, <?php echo htmlspecialchars($userName); ?></span>
-                        <a href="dashboard.php" class="nav-btn nav-btn-primary">Dashboard</a>
+                        <a href="/dashboard" class="nav-btn nav-btn-primary">Dashboard</a>
                     <?php else: ?>
                         <a href="#" onclick="openAuthModal(); if (authMode === 'signup') toggleAuthMode(); return false;" class="nav-btn nav-btn-ghost">Sign In</a>
                         <a href="#" onclick="openSignup(); return false;" class="nav-btn nav-btn-primary">Get Started</a>
@@ -284,7 +284,7 @@ if (isLoggedIn()) {
             <p class="sub">Enter any keyword and city — get business names, phone numbers, emails, and social profiles instantly. Build lead lists, track outreach, and close deals faster.</p>
             <div class="hero-actions">
                 <?php if (isLoggedIn()): ?>
-                    <a href="dashboard.php" class="hero-btn hero-btn-primary"><i class="fas fa-rocket"></i> Go to Dashboard</a>
+                    <a href="/dashboard" class="hero-btn hero-btn-primary"><i class="fas fa-rocket"></i> Go to Dashboard</a>
                 <?php else: ?>
                     <a href="#" onclick="openSignup(); return false;" class="hero-btn hero-btn-primary"><i class="fas fa-rocket"></i> Start Free</a>
                 <?php endif; ?>
@@ -369,7 +369,7 @@ if (isLoggedIn()) {
             </div>
             <div style="text-align:center;margin-top:32px;">
                 <?php if (isLoggedIn()): ?>
-                    <a href="dashboard.php" class="hero-btn hero-btn-primary">Open Dashboard</a>
+                    <a href="/dashboard" class="hero-btn hero-btn-primary">Open Dashboard</a>
                 <?php else: ?>
                     <a href="#" onclick="openSignup(); return false;" class="hero-btn hero-btn-primary">Start Free</a>
                 <?php endif; ?>
@@ -383,7 +383,7 @@ if (isLoggedIn()) {
                 <h2>Start Free — 100 Leads on Us</h2>
                 <p class="sub" style="margin:14px auto 28px;">Create your free account and pull your first 100 leads right away. No credit card required — upgrade only when you need more.</p>
                 <?php if (isLoggedIn()): ?>
-                    <a href="dashboard.php" class="hero-btn hero-btn-primary" style="text-decoration:none;"><i class="fas fa-rocket"></i> Go to Dashboard</a>
+                    <a href="/dashboard" class="hero-btn hero-btn-primary" style="text-decoration:none;"><i class="fas fa-rocket"></i> Go to Dashboard</a>
                 <?php else: ?>
                     <a href="#" onclick="openSignup(); return false;" class="hero-btn hero-btn-primary" style="text-decoration:none;"><i class="fas fa-rocket"></i> Get Started — 100 Free Leads</a>
                 <?php endif; ?>
@@ -459,7 +459,7 @@ if (isLoggedIn()) {
                     <a href="#" id="authToggle" onclick="handleAuthToggle(); return false;" style="font-size:13px;color:var(--accent);text-decoration:none;font-weight:500;">Already have an account? Sign in</a>
                 </div>
                 <div id="authForgot" style="text-align:center;margin-top:10px;display:none;">
-                    <a href="forgot_password.php" style="font-size:13px;color:var(--text-tertiary);text-decoration:underline;font-weight:500;">Forgot password?</a>
+                    <a href="/forgot_password" style="font-size:13px;color:var(--text-tertiary);text-decoration:underline;font-weight:500;">Forgot password?</a>
                 </div>
             </div>
         </div>
@@ -575,7 +575,7 @@ if (isLoggedIn()) {
                 .then(data => {
                     if (data.success) {
                         if (selectedPlanId) proceedToCheckout(selectedPlanId);
-                        else window.location.href = 'dashboard.php';
+                        else window.location.href = "/dashboard";
                     } else {
                         errEl.textContent = data.message || 'Invalid email or password';
                         errEl.style.display = 'block';
@@ -614,7 +614,7 @@ if (isLoggedIn()) {
                     if (data.success) {
                         try { if (window.fbq) fbq('track', 'Lead', {}, { eventID: leadEventId }); } catch (e) {}
                         if (selectedPlanId) proceedToCheckout(selectedPlanId);
-                        else window.location.href = 'dashboard.php';
+                        else window.location.href = "/dashboard";
                     } else {
                         errEl.textContent = data.message || 'Registration failed';
                         errEl.style.display = 'block';

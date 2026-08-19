@@ -48,7 +48,7 @@ if (isset($_GET['logout'])) {
 }
 
 if (isLoggedIn()) {
-    header('Location: dashboard.php');
+    header('Location: /dashboard');
     exit;
 }
 
@@ -198,7 +198,7 @@ $appLogo = htmlspecialchars(APP_LOGO);
         <?php if (isset($_GET['checkout']) && $_GET['checkout'] === 'success'): ?>
             <div style="background:#f0faf0;color:#1a7a1a;font-size:14px;padding:14px 16px;border-radius:12px;margin-bottom:20px;line-height:1.5;">
                 Payment received — thank you! We've emailed you a link to set your password. Once it's set, sign in below to access your account.
-                <div style="margin-top:8px;font-size:13px;">Didn't get it? Check spam, or <a href="forgot_password.php" style="color:var(--accent);font-weight:600;">resend the link</a>.</div>
+                <div style="margin-top:8px;font-size:13px;">Didn't get it? Check spam, or <a href="/forgot_password" style="color:var(--accent);font-weight:600;">resend the link</a>.</div>
             </div>
         <?php elseif (isset($_GET['reset']) && $_GET['reset'] === 'success'): ?>
             <div style="background:#f0faf0;color:#1a7a1a;font-size:14px;padding:14px 16px;border-radius:12px;margin-bottom:20px;line-height:1.5;">
@@ -209,7 +209,7 @@ $appLogo = htmlspecialchars(APP_LOGO);
         <div id="welcome" style="display:none;" class="welcome-msg">
             <h2>Welcome back!</h2>
             <p id="welcomeName"></p>
-            <a href="dashboard.php" class="btn" style="display:inline-block;text-decoration:none;text-align:center;">Go to Dashboard</a>
+            <a href="/dashboard" class="btn" style="display:inline-block;text-decoration:none;text-align:center;">Go to Dashboard</a>
         </div>
 
         <form id="loginForm">
@@ -224,7 +224,7 @@ $appLogo = htmlspecialchars(APP_LOGO);
             </div>
             <button type="submit" class="btn" id="loginBtn">Login</button>
             <div class="links">
-                <a href="forgot_password.php">Forgot password?</a>
+                <a href="/forgot_password">Forgot password?</a>
                 <a href="./">Back to Home</a>
             </div>
         </form>
@@ -259,7 +259,7 @@ $appLogo = htmlspecialchars(APP_LOGO);
                 const res = await fetch('login.php', { method: 'POST', body: fd });
                 const data = await res.json();
                 if (data.success) {
-                    window.location.href = 'dashboard.php';
+                    window.location.href = "/dashboard";
                 } else {
                     errorMsg.textContent = data.message;
                     errorMsg.style.display = 'block';
