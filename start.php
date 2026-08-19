@@ -325,7 +325,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
     <div class="card" id="signup">
       <div class="kicker"><svg class="ic"><use href="#i-gift"/></svg> Create your account · search in ~20 seconds</div>
       <h2>Claim your 100 leads</h2>
-      <div class="sub">Create your account and search your first city right away.</div>
+      <div class="sub">Create your account and get leads immediately.</div>
       <div class="anchor"><svg class="ic"><use href="#i-tag"/></svg><span>Most lead tools charge <s>$99+/mo</s>. Your <b class="big">100 leads are included</b> when you create your account — phone, email &amp; socials on each.</span></div>
       <div class="err" id="err" role="alert" aria-live="assertive"></div>
       <form id="leadForm" novalidate>
