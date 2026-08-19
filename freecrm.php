@@ -88,10 +88,11 @@ if (!isLoggedIn()) { header('Location: login.php'); exit(); }
 <!-- HERO -->
 <section class="hero">
   <div class="wrap">
-    <span class="eyebrow"><i class="fas fa-gift"></i> The Complete Platform — Free</span>
+    <span class="eyebrow"><i class="fas fa-gift"></i> Free With Any Paid Lead-Gen Plan</span>
     <h1 style="margin:16px 0 0">The Last Marketing &amp; CRM Tool<br><span class="hl">You&rsquo;ll Ever Need — Free.</span></h1>
     <div class="hero-save"><i class="fas fa-sack-dollar"></i> Normally <s>$97/month</s> &mdash; yours <span style="color:var(--green)">FREE</span>. Save $1,164 a year.</div>
-    <p class="lede">We give you the entire all-in-one marketing &amp; CRM platform <strong>free</strong> &mdash; no monthly software fee. You only pay for the marketing usage you actually use (texts, calls, emails), billed as-you-go. Replace 20+ tools and run your whole business from one dashboard.</p>
+    <div style="font-size:14px;color:var(--muted);font-weight:600;margin:10px auto 0;max-width:54ch;line-height:1.5">Included <strong style="color:var(--green-d)">free with any paid lead-generation plan</strong> &mdash; you just cover the marketing usage you actually use.</div>
+    <p class="lede">As a paid lead-generation customer, you get the entire all-in-one marketing &amp; CRM platform <strong>free</strong> &mdash; no monthly software fee. You only pay for the marketing usage you actually use (texts, calls, emails), billed as-you-go. Replace 20+ tools and run your whole business from one dashboard.</p>
     <div class="hero-int"><i class="fas fa-bolt"></i> <span>Plugs right into your leads software &mdash; <b>one-click export</b> sends your new leads straight into the CRM so you can email them immediately.</span></div>
     <div class="cta">
       <a class="btn btn-primary" href="https://free.allinonemarketing.com/getleadsnowfreeaccount" target="_blank" rel="noopener"><i class="fas fa-rocket"></i> Claim Your Free Account</a>
