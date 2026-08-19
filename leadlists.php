@@ -3,6 +3,7 @@ session_start();
 require_once 'includes/auth.php';
 require_once 'config/rapidapi.php';
 require_once 'config/subscription_config.php';
+require_once __DIR__ . '/includes/search_lib.php';
 
 if (!isLoggedIn()) {
     header('Location: login.php');
@@ -45,7 +46,7 @@ try { $pdo->prepare("UPDATE users SET last_active_at = NOW() WHERE id = ? AND (l
 // Gated behind a schema-version flag so these ~18 preflight queries run only once
 // per deploy instead of on every request (they were adding remote-DB latency to
 // every list load). Bump $schemaVersion whenever a migration is added below.
-$schemaVersion = 'v2-2026-08';
+$schemaVersion = 'v3-2026-08';
 $schemaFlagFile = sys_get_temp_dir() . '/getleadsnow_leadlists_schema_' . md5($schemaVersion) . '.ok';
 if (!@is_file($schemaFlagFile)) {
 try {
@@ -287,6 +288,36 @@ try {
     // Per-account walkthrough state, so the guided tour follows the account
     // across browsers/devices instead of a browser-local localStorage flag.
     try { $pdo->exec("ALTER TABLE users ADD COLUMN tour_seen TINYINT(1) NOT NULL DEFAULT 0"); } catch (Exception $e) {}
+
+    // Background search queue — one row per (search, city). Workers claim pending
+    // rows, call RapidAPI, ingest leads, and mark done. Lets the web request return
+    // instantly instead of holding a worker for the RapidAPI round-trip.
+    try {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS search_jobs (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            batch_id VARCHAR(40) NOT NULL,
+            user_id INT NOT NULL,
+            list_id INT NOT NULL,
+            query VARCHAR(255) NOT NULL,
+            city VARCHAR(120) NOT NULL,
+            state_name VARCHAR(120) NOT NULL,
+            per_city INT NOT NULL DEFAULT 20,
+            status ENUM('pending','processing','done','failed') NOT NULL DEFAULT 'pending',
+            attempts INT NOT NULL DEFAULT 0,
+            locked_by VARCHAR(80) NULL,
+            results_found INT NOT NULL DEFAULT 0,
+            inserted INT NOT NULL DEFAULT 0,
+            skipped INT NOT NULL DEFAULT 0,
+            skipped_no_credit INT NOT NULL DEFAULT 0,
+            error VARCHAR(255) NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            started_at TIMESTAMP NULL,
+            finished_at TIMESTAMP NULL,
+            INDEX idx_claim (status, id),
+            INDEX idx_batch (batch_id),
+            INDEX idx_user_created (user_id, created_at)
+        )");
+    } catch (Exception $e) {}
 
     // All migrations above completed without throwing — record the flag so
     // subsequent requests skip the entire preflight block. If any migration
@@ -715,118 +746,76 @@ if (isset($_GET['action'])) {
                 exit;
             }
 
-            $existingIds = [];
-            $chk = $pdo->prepare("SELECT business_id FROM lead_list_items WHERE list_id = ? AND user_id = ? AND business_id IS NOT NULL");
-            $chk->execute([$listId, $userId]);
-            while ($row = $chk->fetch(PDO::FETCH_ASSOC)) {
-                $existingIds[$row['business_id']] = true;
-            }
-
-            $inserted = 0;
-            $skipped = 0;
-            $skippedNoCredit = 0;
-
-            // --- Dedup pass: collect the leads we'd insert, in order. ------------
-            $toInsert = [];
-            foreach ($leads as $lead) {
-                $bid = $lead['business_id'] ?? null;
-                if ($bid && isset($existingIds[$bid])) { $skipped++; continue; }
-                if ($bid) $existingIds[$bid] = true;
-                $toInsert[] = $lead;
-            }
-            $n = count($toInsert);
-
-            // --- Reserve credits in ONE atomic, row-locked step (1 credit/lead). --
-            // Billing is unchanged: we still charge exactly 1 credit per lead that
-            // actually gets inserted, and hold back the rest as "no credit". The
-            // SELECT ... FOR UPDATE prevents concurrent double-spend across the
-            // parallel per-city addLeads calls; the lock is released (COMMIT) before
-            // the inserts so those calls don't serialize on it.
-            $charge = 0;
-            if ($n > 0) {
-                try {
-                    $pdo->beginTransaction();
-                    $bs = $pdo->prepare("SELECT credits FROM users WHERE id = ? FOR UPDATE");
-                    $bs->execute([$userId]);
-                    $bal = (int)$bs->fetchColumn();
-                    $charge = min($n, $bal);
-                    if ($charge > 0) {
-                        $pdo->prepare("UPDATE users SET credits = credits - ? WHERE id = ?")->execute([$charge, $userId]);
-                    }
-                    $pdo->commit();
-                } catch (Exception $e) {
-                    if ($pdo->inTransaction()) $pdo->rollBack();
-                    error_log("addLeads: credit reserve failed: " . $e->getMessage());
-                    $charge = 0;
-                }
-            }
-            $skippedNoCredit = $n - $charge;
-
-            // --- Batched multi-row insert of the first $charge leads. ------------
-            $chargedLeads = array_slice($toInsert, 0, $charge);
-            $colCount = 22;
-            $rowPh = '(' . rtrim(str_repeat('?,', $colCount), ',') . ')';
-            $insCols = "(list_id, user_id, business_id, business_name, address, city, state, phone, website,
-                 rating, review_count, types, latitude, longitude, emails, social_media_links, raw_data,
-                 has_email, has_socials, has_phone, has_website, has_notes)";
-            $rowVals = function($lead) use ($listId, $userId) {
-                $leadEmails = $lead['emails'] ?? [];
-                $leadSocials = $lead['social_media_links'] ?? [];
-                $leadPhone = $lead['phone_number'] ?? $lead['phone'] ?? '';
-                $leadWebsite = $lead['website'] ?? '';
-                return [
-                    $listId, $userId,
-                    $lead['business_id'] ?? null,
-                    $lead['name'] ?? $lead['business_name'] ?? '',
-                    $lead['full_address'] ?? $lead['address'] ?? '',
-                    $lead['city'] ?? '',
-                    $lead['state'] ?? '',
-                    $leadPhone,
-                    $leadWebsite,
-                    $lead['rating'] ?? null,
-                    $lead['review_count'] ?? 0,
-                    is_array($lead['types'] ?? null) ? implode(', ', $lead['types']) : ($lead['types'] ?? ''),
-                    $lead['latitude'] ?? null,
-                    $lead['longitude'] ?? null,
-                    json_encode($leadEmails),
-                    json_encode($leadSocials),
-                    json_encode($lead),
-                    !empty($leadEmails) ? 1 : 0,
-                    !empty($leadSocials) ? 1 : 0,
-                    ($leadPhone !== '') ? 1 : 0,
-                    ($leadWebsite !== '') ? 1 : 0,
-                    0
-                ];
-            };
-            $stmtOne = $pdo->prepare("INSERT INTO lead_list_items $insCols VALUES $rowPh");
-            foreach (array_chunk($chargedLeads, 100) as $chunk) {
-                $params = [];
-                foreach ($chunk as $lead) { foreach ($rowVals($lead) as $v) { $params[] = $v; } }
-                $sqlValues = rtrim(str_repeat($rowPh . ',', count($chunk)), ',');
-                try {
-                    $pdo->prepare("INSERT INTO lead_list_items $insCols VALUES $sqlValues")->execute($params);
-                    $inserted += count($chunk);
-                } catch (Exception $e) {
-                    // One bad row shouldn't drop the whole chunk — retry row-by-row.
-                    error_log("addLeads: batch insert failed, retrying row-by-row: " . $e->getMessage());
-                    foreach ($chunk as $lead) {
-                        try { $stmtOne->execute($rowVals($lead)); $inserted++; }
-                        catch (Exception $e2) { error_log("addLeads: row insert failed: " . $e2->getMessage()); }
-                    }
-                }
-            }
-
-            // Refund credits for any charged leads that ultimately failed to insert.
-            if ($charge > $inserted) {
-                try { $pdo->prepare("UPDATE users SET credits = credits + ? WHERE id = ?")->execute([$charge - $inserted, $userId]); } catch (Exception $e) {}
-            }
+            // Shared with the background search worker — one billing implementation.
+            $res = ingestLeads($pdo, (int)$userId, (int)$listId, $leads);
 
             $pdo->prepare("UPDATE lead_lists SET updated_at = NOW() WHERE id = ? AND user_id = ?")->execute([$listId, $userId]);
             echo json_encode([
                 'success' => true,
-                'inserted' => $inserted,
-                'skipped' => $skipped,
-                'skipped_no_credit' => $skippedNoCredit,
+                'inserted' => $res['inserted'],
+                'skipped' => $res['skipped'],
+                'skipped_no_credit' => $res['skipped_no_credit'],
+                'credits' => currentCredits($pdo, $userId)
+            ]);
+            exit;
+
+        case 'enqueueSearch':
+            $listId = (int)($input['list_id'] ?? 0);
+            $query = trim($input['query'] ?? '');
+            $perCity = max(1, min(500, (int)($input['per_city'] ?? 20)));
+            $cities = $input['cities'] ?? [];   // [{city, state_name}, ...]
+            if (!$listId || $query === '' || empty($cities)) {
+                echo json_encode(['success' => false, 'error' => 'Missing data']); exit;
+            }
+            $own = $pdo->prepare("SELECT id FROM lead_lists WHERE id = ? AND user_id = ?");
+            $own->execute([$listId, $userId]);
+            if (!$own->fetchColumn()) { echo json_encode(['success' => false, 'error' => 'List not found']); exit; }
+            if (currentCredits($pdo, $userId) < 1) { echo json_encode(['success' => false, 'out_of_credits' => true, 'error' => 'out_of_credits']); exit; }
+
+            $batchId = bin2hex(random_bytes(12));
+            $rows = [];
+            $vals = [];
+            foreach ($cities as $c) {
+                $cityName = trim($c['city'] ?? '');
+                $stateName = trim($c['state_name'] ?? '');
+                if ($cityName === '') continue;
+                $rows[] = '(?,?,?,?,?,?,?)';
+                array_push($vals, $batchId, $userId, $listId, $query, $cityName, $stateName, $perCity);
+            }
+            if (empty($rows)) { echo json_encode(['success' => false, 'error' => 'No valid cities']); exit; }
+            $pdo->prepare("INSERT INTO search_jobs (batch_id, user_id, list_id, query, city, state_name, per_city) VALUES " . implode(',', $rows))->execute($vals);
+            echo json_encode(['success' => true, 'batch_id' => $batchId, 'total' => count($rows)]);
+            exit;
+
+        case 'searchProgress':
+            $batchId = $input['batch_id'] ?? ($_GET['batch_id'] ?? '');
+            if (!$batchId) { echo json_encode(['success' => false, 'error' => 'Missing batch_id']); exit; }
+            $st = $pdo->prepare("
+                SELECT COUNT(*) as total,
+                    SUM(status='pending') as pending,
+                    SUM(status='processing') as processing,
+                    SUM(status='done') as done,
+                    SUM(status='failed') as failed,
+                    COALESCE(SUM(results_found),0) as found,
+                    COALESCE(SUM(inserted),0) as inserted,
+                    COALESCE(SUM(skipped_no_credit),0) as skipped_no_credit
+                FROM search_jobs WHERE batch_id = ? AND user_id = ?
+            ");
+            $st->execute([$batchId, $userId]);
+            $p = $st->fetch(PDO::FETCH_ASSOC) ?: [];
+            $total = (int)($p['total'] ?? 0);
+            $finished = (int)($p['done'] ?? 0) + (int)($p['failed'] ?? 0);
+            echo json_encode([
+                'success' => true,
+                'total' => $total,
+                'pending' => (int)($p['pending'] ?? 0),
+                'processing' => (int)($p['processing'] ?? 0),
+                'done' => (int)($p['done'] ?? 0),
+                'failed' => (int)($p['failed'] ?? 0),
+                'found' => (int)($p['found'] ?? 0),
+                'inserted' => (int)($p['inserted'] ?? 0),
+                'skipped_no_credit' => (int)($p['skipped_no_credit'] ?? 0),
+                'complete' => ($total > 0 && $finished >= $total),
                 'credits' => currentCredits($pdo, $userId)
             ]);
             exit;
