@@ -191,11 +191,12 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <?php endif; ?>
                         <h3>Starter</h3>
                         <div class="price">$<?php echo PLAN_STARTER_PRICE; ?><span>/mo</span></div>
+                        <div style="margin:-14px 0 18px;font-size:13px;font-weight:600;color:var(--text-tertiary);"><?php echo number_format(PLAN_STARTER_PRICE / PLAN_STARTER_CREDITS * 100, 1); ?>&cent; per lead</div>
                         <ul class="features-list">
                             <li><i class="fas fa-check"></i> 1,000 Leads / month</li>
                             <li><i class="fas fa-check"></i> Free AI Email Enrichment</li>
                             <li><i class="fas fa-check"></i> CSV Export</li>
-                            <li><i class="fas fa-check"></i> Lead List CRM</li>
+                            <li><i class="fas fa-check"></i> CRM Integration</li>
                         </ul>
                         <button class="select-btn <?php echo $userPlan === 'business' ? 'btn-secondary' : 'btn-primary'; ?>"
                                 data-price-id="<?php echo STRIPE_PRICE_STARTER; ?>">
@@ -209,12 +210,12 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <?php endif; ?>
                         <h3>Growth</h3>
                         <div class="price">$<?php echo PLAN_GROWTH_PRICE; ?><span>/mo</span></div>
+                        <div style="margin:-14px 0 18px;font-size:13px;font-weight:600;color:var(--text-tertiary);"><?php echo number_format(PLAN_GROWTH_PRICE / PLAN_GROWTH_CREDITS * 100, 1); ?>&cent; per lead</div>
                         <ul class="features-list">
                             <li><i class="fas fa-check"></i> <strong>6,000 Leads / month</strong></li>
                             <li><i class="fas fa-check"></i> Free AI Email Enrichment</li>
-                            <li><i class="fas fa-check"></i> Priority Support</li>
-                            <li><i class="fas fa-check"></i> Public Share Links</li>
-                            <li><i class="fas fa-check"></i> GHL Integration</li>
+                            <li><i class="fas fa-check"></i> CSV Export</li>
+                            <li><i class="fas fa-check"></i> CRM Integration</li>
                         </ul>
                         <button class="select-btn <?php echo $userPlan === 'agency' ? 'btn-secondary' : 'btn-primary'; ?>"
                                 data-price-id="<?php echo STRIPE_PRICE_GROWTH; ?>">
@@ -228,11 +229,12 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
                         <?php endif; ?>
                         <h3>Pro</h3>
                         <div class="price">$<?php echo PLAN_ENTERPRISE_PRICE; ?><span>/mo</span></div>
+                        <div style="margin:-14px 0 18px;font-size:13px;font-weight:600;color:var(--text-tertiary);"><?php echo number_format(PLAN_ENTERPRISE_PRICE / PLAN_ENTERPRISE_CREDITS * 100, 1); ?>&cent; per lead</div>
                         <ul class="features-list">
                             <li><i class="fas fa-check"></i> <strong>17,000 Leads / month</strong></li>
                             <li><i class="fas fa-check"></i> Free AI Email Enrichment</li>
-                            <li><i class="fas fa-check"></i> Priority Support</li>
-                            <li><i class="fas fa-check"></i> GHL Integration</li>
+                            <li><i class="fas fa-check"></i> CSV Export</li>
+                            <li><i class="fas fa-check"></i> CRM Integration</li>
                         </ul>
                         <button class="select-btn <?php echo $userPlan === 'enterprise' ? 'btn-secondary' : 'btn-primary'; ?>"
                                 data-price-id="<?php echo STRIPE_PRICE_ENTERPRISE; ?>">
@@ -244,7 +246,7 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
             </div>
         </section>
 
-        <section style="padding-top:0;background:var(--bg-secondary);">
+        <section style="padding-top:56px;background:var(--bg-secondary);">
             <div class="container">
                 <div style="text-align:center;margin-bottom:40px;">
                     <h2>Frequently Asked Questions</h2>
@@ -266,30 +268,6 @@ if (isset($_GET['success']) && $_GET['success'] === 'true' && isset($_GET['sessi
             </div>
         </section>
 
-        <footer>
-            <div class="container">
-                <div class="footer-grid">
-                    <div>
-                        <a href="/" class="logo" style="margin-bottom:12px;"><img src="<?php echo APP_LOGO; ?>" alt="<?php echo APP_NAME; ?>"></a>
-                        <p style="font-size:13px;margin-bottom:0;color:var(--text-tertiary);">Automating the boring parts of sales.</p>
-                    </div>
-                    <div class="footer-links">
-                        <div>
-                            <h4 style="margin-bottom:16px;font-size:14px;">Product</h4>
-                            <a href="dashboard.php" target="_top">Dashboard</a>
-                        </div>
-                        <div>
-                            <h4 style="margin-bottom:16px;font-size:14px;">Legal</h4>
-                            <a href="https://allinonemarketing.com/terms-conditions/" target="_blank" rel="noopener">Terms</a>
-                            <a href="https://allinonemarketing.com/privacy-policy" target="_blank" rel="noopener">Privacy</a>
-                        </div>
-                    </div>
-                </div>
-                <div style="margin-top:36px;font-size:12px;color:var(--text-tertiary);text-align:center;">
-                    &copy; <?php echo date('Y'); ?> <?php echo APP_NAME; ?>. All rights reserved.
-                </div>
-            </div>
-        </footer>
     </div>
 
     <script>
