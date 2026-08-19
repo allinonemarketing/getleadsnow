@@ -725,57 +725,100 @@ if (isset($_GET['action'])) {
             $inserted = 0;
             $skipped = 0;
             $skippedNoCredit = 0;
-            $stmt = $pdo->prepare("
-                INSERT INTO lead_list_items
-                (list_id, user_id, business_id, business_name, address, city, state, phone, website,
-                 rating, review_count, types, latitude, longitude, emails, social_media_links, raw_data,
-                 has_email, has_socials, has_phone, has_website, has_notes)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ");
 
+            // --- Dedup pass: collect the leads we'd insert, in order. ------------
+            $toInsert = [];
             foreach ($leads as $lead) {
                 $bid = $lead['business_id'] ?? null;
                 if ($bid && isset($existingIds[$bid])) { $skipped++; continue; }
                 if ($bid) $existingIds[$bid] = true;
+                $toInsert[] = $lead;
+            }
+            $n = count($toInsert);
 
-                // Charge 1 credit per lead returned by the search. If the balance
-                // can't cover it, stop and report how many were held back so the
-                // UI can prompt to top up. (Enrichment is free.)
-                if (!reserveCredit($pdo, $userId)) { $skippedNoCredit++; continue; }
-
+            // --- Reserve credits in ONE atomic, row-locked step (1 credit/lead). --
+            // Billing is unchanged: we still charge exactly 1 credit per lead that
+            // actually gets inserted, and hold back the rest as "no credit". The
+            // SELECT ... FOR UPDATE prevents concurrent double-spend across the
+            // parallel per-city addLeads calls; the lock is released (COMMIT) before
+            // the inserts so those calls don't serialize on it.
+            $charge = 0;
+            if ($n > 0) {
                 try {
-                    $leadEmails = $lead['emails'] ?? [];
-                    $leadSocials = $lead['social_media_links'] ?? [];
-                    $leadPhone = $lead['phone_number'] ?? $lead['phone'] ?? '';
-                    $leadWebsite = $lead['website'] ?? '';
-                    $stmt->execute([
-                        $listId, $userId,
-                        $bid,
-                        $lead['name'] ?? $lead['business_name'] ?? '',
-                        $lead['full_address'] ?? $lead['address'] ?? '',
-                        $lead['city'] ?? '',
-                        $lead['state'] ?? '',
-                        $leadPhone,
-                        $leadWebsite,
-                        $lead['rating'] ?? null,
-                        $lead['review_count'] ?? 0,
-                        is_array($lead['types'] ?? null) ? implode(', ', $lead['types']) : ($lead['types'] ?? ''),
-                        $lead['latitude'] ?? null,
-                        $lead['longitude'] ?? null,
-                        json_encode($leadEmails),
-                        json_encode($leadSocials),
-                        json_encode($lead),
-                        !empty($leadEmails) ? 1 : 0,
-                        !empty($leadSocials) ? 1 : 0,
-                        ($leadPhone !== '') ? 1 : 0,
-                        ($leadWebsite !== '') ? 1 : 0,
-                        0
-                    ]);
-                    $inserted++;
+                    $pdo->beginTransaction();
+                    $bs = $pdo->prepare("SELECT credits FROM users WHERE id = ? FOR UPDATE");
+                    $bs->execute([$userId]);
+                    $bal = (int)$bs->fetchColumn();
+                    $charge = min($n, $bal);
+                    if ($charge > 0) {
+                        $pdo->prepare("UPDATE users SET credits = credits - ? WHERE id = ?")->execute([$charge, $userId]);
+                    }
+                    $pdo->commit();
                 } catch (Exception $e) {
-                    refundCredit($pdo, $userId);   // insert failed — give the credit back
-                    error_log("Error inserting lead: " . $e->getMessage());
+                    if ($pdo->inTransaction()) $pdo->rollBack();
+                    error_log("addLeads: credit reserve failed: " . $e->getMessage());
+                    $charge = 0;
                 }
+            }
+            $skippedNoCredit = $n - $charge;
+
+            // --- Batched multi-row insert of the first $charge leads. ------------
+            $chargedLeads = array_slice($toInsert, 0, $charge);
+            $colCount = 22;
+            $rowPh = '(' . rtrim(str_repeat('?,', $colCount), ',') . ')';
+            $insCols = "(list_id, user_id, business_id, business_name, address, city, state, phone, website,
+                 rating, review_count, types, latitude, longitude, emails, social_media_links, raw_data,
+                 has_email, has_socials, has_phone, has_website, has_notes)";
+            $rowVals = function($lead) use ($listId, $userId) {
+                $leadEmails = $lead['emails'] ?? [];
+                $leadSocials = $lead['social_media_links'] ?? [];
+                $leadPhone = $lead['phone_number'] ?? $lead['phone'] ?? '';
+                $leadWebsite = $lead['website'] ?? '';
+                return [
+                    $listId, $userId,
+                    $lead['business_id'] ?? null,
+                    $lead['name'] ?? $lead['business_name'] ?? '',
+                    $lead['full_address'] ?? $lead['address'] ?? '',
+                    $lead['city'] ?? '',
+                    $lead['state'] ?? '',
+                    $leadPhone,
+                    $leadWebsite,
+                    $lead['rating'] ?? null,
+                    $lead['review_count'] ?? 0,
+                    is_array($lead['types'] ?? null) ? implode(', ', $lead['types']) : ($lead['types'] ?? ''),
+                    $lead['latitude'] ?? null,
+                    $lead['longitude'] ?? null,
+                    json_encode($leadEmails),
+                    json_encode($leadSocials),
+                    json_encode($lead),
+                    !empty($leadEmails) ? 1 : 0,
+                    !empty($leadSocials) ? 1 : 0,
+                    ($leadPhone !== '') ? 1 : 0,
+                    ($leadWebsite !== '') ? 1 : 0,
+                    0
+                ];
+            };
+            $stmtOne = $pdo->prepare("INSERT INTO lead_list_items $insCols VALUES $rowPh");
+            foreach (array_chunk($chargedLeads, 100) as $chunk) {
+                $params = [];
+                foreach ($chunk as $lead) { foreach ($rowVals($lead) as $v) { $params[] = $v; } }
+                $sqlValues = rtrim(str_repeat($rowPh . ',', count($chunk)), ',');
+                try {
+                    $pdo->prepare("INSERT INTO lead_list_items $insCols VALUES $sqlValues")->execute($params);
+                    $inserted += count($chunk);
+                } catch (Exception $e) {
+                    // One bad row shouldn't drop the whole chunk — retry row-by-row.
+                    error_log("addLeads: batch insert failed, retrying row-by-row: " . $e->getMessage());
+                    foreach ($chunk as $lead) {
+                        try { $stmtOne->execute($rowVals($lead)); $inserted++; }
+                        catch (Exception $e2) { error_log("addLeads: row insert failed: " . $e2->getMessage()); }
+                    }
+                }
+            }
+
+            // Refund credits for any charged leads that ultimately failed to insert.
+            if ($charge > $inserted) {
+                try { $pdo->prepare("UPDATE users SET credits = credits + ? WHERE id = ?")->execute([$charge - $inserted, $userId]); } catch (Exception $e) {}
             }
 
             $pdo->prepare("UPDATE lead_lists SET updated_at = NOW() WHERE id = ? AND user_id = ?")->execute([$listId, $userId]);
