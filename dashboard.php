@@ -422,10 +422,11 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             color: #ffffff;
         }
 
-        /* Mobile chrome: fixed top bar + slide-in drawer + backdrop */
+        /* Mobile chrome: fixed top bar + slide-in drawer + backdrop + bottom nav */
         .mobile-topbar { display: none; }
         .sidebar-backdrop { display: none; }
         .sidebar-close { display: none; }
+        .mobile-bottombar { display: none; }
 
         @media (max-width: 768px) {
             .menu-toggle { display: none; }   /* replaced by the fixed top bar's burger */
@@ -462,8 +463,24 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
                 color: var(--text-main); font-size: 18px; cursor: pointer;
             }
 
-            .main-content { margin-left: 0; width: 100%; padding-top: 56px; box-sizing: border-box; }
+            .main-content { margin-left: 0; width: 100%; padding-top: 56px; padding-bottom: 60px; box-sizing: border-box; }
             .plan-badge { display: none; }
+
+            .mobile-bottombar {
+                display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 998;
+                background: #ffffff; border-top: 1px solid var(--sidebar-border);
+                padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+            }
+            .mb-item {
+                flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+                background: none; border: none; cursor: pointer; padding: 5px 2px;
+                color: var(--text-secondary); font-family: inherit; font-size: 10.5px; font-weight: 600;
+                white-space: nowrap;
+            }
+            .mb-item i { font-size: 18px; }
+            .mb-item span { line-height: 1; }
+            .mb-item.active { color: var(--accent); }
+            .mb-item.mb-penny, .mb-item.mb-penny.active { color: #dc2626; }
         }
 
         ::-webkit-scrollbar { width: 6px; }
@@ -569,6 +586,14 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
         </div>
     </div>
 
+    <!-- Fixed mobile bottom nav -->
+    <nav class="mobile-bottombar">
+        <button class="mb-item <?php echo $current_section === 'lead_lists' ? 'active' : ''; ?>" type="button" data-section="lead_lists"><i class="fas fa-folder-open"></i><span>Leads</span></button>
+        <button class="mb-item mb-penny <?php echo $current_section === 'penny' ? 'active' : ''; ?>" type="button" data-section="penny"><i class="fas fa-bolt"></i><span>&lt;1&cent; Leads</span></button>
+        <button class="mb-item <?php echo $current_section === 'freecrm' ? 'active' : ''; ?>" type="button" data-section="freecrm"><i class="fas fa-gift"></i><span>Free CRM</span></button>
+        <button class="mb-item <?php echo $current_section === 'support' ? 'active' : ''; ?>" type="button" data-section="support"><i class="fas fa-life-ring"></i><span>Support</span></button>
+    </nav>
+
     <div class="main-content">
         <div id="lead_lists" class="content-section <?php echo $current_section === 'lead_lists' ? 'active' : ''; ?>">
             <div id="lead_lists-content"></div>
@@ -611,6 +636,19 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             if (mtBurger) mtBurger.addEventListener('click', openMenu);
             if (sidebarClose) sidebarClose.addEventListener('click', closeMenu);
             if (backdrop) backdrop.addEventListener('click', closeMenu);
+
+            // Mobile bottom nav — reuse the sidebar nav-link logic by proxying the click.
+            function setBottomActive(sectionId) {
+                document.querySelectorAll('.mb-item').forEach(mi =>
+                    mi.classList.toggle('active', mi.getAttribute('data-section') === sectionId));
+            }
+            document.querySelectorAll('.mb-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const sec = item.getAttribute('data-section');
+                    const link = document.querySelector(`.nav-link[data-section="${sec}"]`);
+                    if (link) link.click();
+                });
+            });
             
             const urls = {
                 'lead_lists': 'leadlists.php',
@@ -679,6 +717,7 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
                     if (contentDiv) {
                         contentDiv.innerHTML = `<iframe src="${urls[sectionId]}"></iframe>`;
                     }
+                    setBottomActive(sectionId);
                 } catch (error) {
                     console.error('Error loading content:', error);
                     if (document.getElementById(`${sectionId}-content`)) {
