@@ -387,7 +387,6 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
             </div>
             <div class="fe" id="ownErr" style="display:none" aria-live="polite">Please pick Yes or No.</div>
           </fieldset>
-          <div class="cardprov"><svg class="ic"><use href="#i-shield"/></svg> Pulled live from Google’s public data — verify any lead yourself.</div>
           <div class="fnav">
             <button type="button" class="btn-ghost backBtn">← Back</button>
             <button type="submit" class="btn form-btn" id="submitBtn"><span class="spin" aria-hidden="true"></span><span class="btn-label">Get My 100 Leads →</span></button>
