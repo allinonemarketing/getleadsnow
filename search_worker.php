@@ -26,6 +26,10 @@ const IDLE_SLEEP_US  = 1000000;   // 1s when there's nothing to do
 const ERR_SLEEP_US   = 2000000;   // 2s after a hard loop error
 const RATELIMIT_SLEEP_US = 1500000; // cooldown after an upstream error/429
 const STALE_EVERY    = 30;        // reclaim stuck jobs every N idle ticks
+// Self-recycle so a long-running CLI process can't leak memory and so redeploys
+// are picked up. The cron watchdog (worker_launch.sh) restarts it within a minute.
+const MAX_RUNTIME_S  = 1800;      // exit after 30 min ...
+const MAX_JOBS       = 300;       // ... or after this many jobs, whichever first
 
 function db_connect(): PDO {
     $pdo = new PDO(
@@ -97,8 +101,14 @@ $workerId = substr(gethostname() ?: 'w', 0, 40) . '-' . getmypid();
 fwrite(STDERR, "[search_worker] $workerId started\n");
 $pdo = db_connect();
 $idleTicks = 0;
+$startedAt = time();
+$jobsDone = 0;
 
 while (true) {
+    if ((time() - $startedAt) >= MAX_RUNTIME_S || $jobsDone >= MAX_JOBS) {
+        fwrite(STDERR, "[search_worker] $workerId recycling after $jobsDone job(s)\n");
+        exit(0);
+    }
     try {
         try { $pdo->query('SELECT 1'); } catch (Throwable $e) { $pdo = db_connect(); }
 
@@ -110,6 +120,7 @@ while (true) {
         }
         $idleTicks = 0;
         process_job($pdo, $job);
+        $jobsDone++;
     } catch (Throwable $e) {
         fwrite(STDERR, "[search_worker] loop error: " . $e->getMessage() . "\n");
         usleep(ERR_SLEEP_US);
