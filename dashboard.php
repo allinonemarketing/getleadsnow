@@ -556,7 +556,7 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             <li class="nav-item">
                 <a href="?section=aibot" class="nav-link <?php echo $current_section === 'aibot' ? 'active' : ''; ?>" data-section="aibot">
                     <i class="fas fa-robot"></i>
-                    Get AI Calling Bot
+                    Get AI Bot
                 </a>
             </li>
             <li class="nav-item">
