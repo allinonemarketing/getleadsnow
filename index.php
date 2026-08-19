@@ -458,6 +458,9 @@ if (isLoggedIn()) {
                 <div style="text-align:center;margin-top:16px;">
                     <a href="#" id="authToggle" onclick="handleAuthToggle(); return false;" style="font-size:13px;color:var(--accent);text-decoration:none;font-weight:500;">Already have an account? Sign in</a>
                 </div>
+                <div id="authForgot" style="text-align:center;margin-top:10px;display:none;">
+                    <a href="forgot_password.php" style="font-size:13px;color:var(--text-tertiary);text-decoration:underline;font-weight:500;">Forgot password?</a>
+                </div>
             </div>
         </div>
     </div>
@@ -538,6 +541,7 @@ if (isLoggedIn()) {
                 subtitle.textContent = 'Sign in to access your leads and lists.';
                 btn.textContent = 'Sign In';
                 toggle.textContent = "Don't have an account? Sign up";
+                document.getElementById('authForgot').style.display = 'block';
             } else {
                 nameGroup.style.display = 'block';
                 phoneGroup.style.display = 'block';
@@ -546,6 +550,7 @@ if (isLoggedIn()) {
                 subtitle.textContent = 'Create an account or sign in to start finding leads instantly.';
                 btn.textContent = 'Create Account';
                 toggle.textContent = 'Already have an account? Sign in';
+                document.getElementById('authForgot').style.display = 'none';
             }
             document.getElementById('authError').style.display = 'none';
         }
