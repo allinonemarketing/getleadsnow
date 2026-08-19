@@ -8698,10 +8698,12 @@ document.addEventListener('click', (e) => {
   function render(){
     var s=steps[i]; if(!s){ finish(); return; }
     var actions='';
-    if(i>0) actions+='<button class="lt-btn lt-back" data-a="back">Back</button>';
+    if(i>0 && !s.last) actions+='<button class="lt-btn lt-back" data-a="back">Back</button>';
     if(s.next||s.last){ var nlabel=s.last?(s.cta?s.cta.label:'Got it'):'Next'; actions+='<button class="lt-btn lt-next" data-a="next">'+nlabel+'</button>'; }
+    // On the final step, drop the Skip/Back escape so the only way out is the CTA.
+    var leftHtml = s.last ? '<span></span>' : '<button class="lt-skip" data-a="skip">Skip tour</button>';
     tip.innerHTML='<div class="lt-badge">Step '+(i+1)+' of '+steps.length+'</div><h4>'+s.title+'</h4><p>'+(s.text||'')+'</p>'+
-      '<div class="lt-row"><button class="lt-skip" data-a="skip">Skip tour</button><div class="lt-actions">'+actions+'</div></div>';
+      '<div class="lt-row">'+leftHtml+'<div class="lt-actions">'+actions+'</div></div>';
     Array.prototype.forEach.call(tip.querySelectorAll('[data-a]'),function(b){
       b.addEventListener('click',function(){var a=b.getAttribute('data-a');
         if(a==='skip'){finish();}
