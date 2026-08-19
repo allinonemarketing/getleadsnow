@@ -59,36 +59,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['action']) && $data['ac
     exit;
 }
 
+// Delete one user and everything they own. Returns null on success or an error
+// string. Protections: master admin (#1), the acting admin, and other admins.
+function adminDeleteUser(PDO $pdo, int $uid, int $actingId): ?string {
+    if ($uid === 1) return 'Cannot delete the master admin';
+    if ($uid === $actingId) return 'You cannot delete your own account';
+    $chk = $pdo->prepare("SELECT is_admin, email FROM users WHERE id = ?");
+    $chk->execute([$uid]);
+    $target = $chk->fetch(PDO::FETCH_ASSOC);
+    if (!$target) return 'User not found';
+    if (!empty($target['is_admin'])) return 'Remove admin rights first, then delete';
+    // Some tables may not exist on older installs — ignore per-table failures,
+    // always delete the user row last.
+    foreach ([
+        "DELETE FROM lead_list_items WHERE user_id = ?",
+        "DELETE FROM lead_list_searches WHERE user_id = ?",
+        "DELETE FROM lead_lists WHERE user_id = ?",
+        "DELETE FROM search_jobs WHERE user_id = ?",
+        "DELETE FROM ghl_import_items WHERE user_id = ?",
+        "DELETE FROM ghl_import_logs WHERE user_id = ?",
+        "DELETE FROM ghl_connections WHERE user_id = ?",
+        "DELETE FROM api_calls WHERE user_id = ?",
+        "DELETE FROM credit_transactions WHERE user_id = ?",
+    ] as $sql) {
+        try { $pdo->prepare($sql)->execute([$uid]); } catch (Exception $e) {}
+    }
+    try { $pdo->prepare("DELETE FROM password_resets WHERE email = ?")->execute([$target['email']]); } catch (Exception $e) {}
+    $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$uid]);
+    return null;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['action']) && $data['action'] === 'delete_user') {
     header('Content-Type: application/json');
     try {
-        $uid = (int)($data['user_id'] ?? 0);
-        if ($uid === 1) { echo json_encode(['success' => false, 'error' => 'Cannot delete the master admin']); exit; }
-        if ($uid === (int)$_SESSION['user_id']) { echo json_encode(['success' => false, 'error' => 'You cannot delete your own account']); exit; }
-        $chk = $pdo->prepare("SELECT is_admin, email FROM users WHERE id = ?");
-        $chk->execute([$uid]);
-        $target = $chk->fetch(PDO::FETCH_ASSOC);
-        if (!$target) { echo json_encode(['success' => false, 'error' => 'User not found']); exit; }
-        if (!empty($target['is_admin'])) { echo json_encode(['success' => false, 'error' => 'Remove admin rights first, then delete']); exit; }
-
-        // Remove the user and everything they own. Some tables may not exist on
-        // older installs — ignore per-table failures, always delete the user row last.
-        foreach ([
-            "DELETE FROM lead_list_items WHERE user_id = ?",
-            "DELETE FROM lead_list_searches WHERE user_id = ?",
-            "DELETE FROM lead_lists WHERE user_id = ?",
-            "DELETE FROM search_jobs WHERE user_id = ?",
-            "DELETE FROM ghl_import_items WHERE user_id = ?",
-            "DELETE FROM ghl_import_logs WHERE user_id = ?",
-            "DELETE FROM ghl_connections WHERE user_id = ?",
-            "DELETE FROM api_calls WHERE user_id = ?",
-            "DELETE FROM credit_transactions WHERE user_id = ?",
-        ] as $sql) {
-            try { $pdo->prepare($sql)->execute([$uid]); } catch (Exception $e) {}
+        // Accepts a single user_id or a user_ids array (bulk).
+        $ids = [];
+        if (!empty($data['user_ids']) && is_array($data['user_ids'])) { $ids = array_map('intval', $data['user_ids']); }
+        elseif (!empty($data['user_id'])) { $ids = [(int)$data['user_id']]; }
+        $ids = array_values(array_unique(array_filter($ids)));
+        if (empty($ids)) { echo json_encode(['success' => false, 'error' => 'No users selected']); exit; }
+        $deleted = 0; $errors = [];
+        foreach ($ids as $uid) {
+            $err = adminDeleteUser($pdo, $uid, (int)$_SESSION['user_id']);
+            if ($err === null) $deleted++; else $errors[] = "#$uid: $err";
         }
-        try { $pdo->prepare("DELETE FROM password_resets WHERE email = ?")->execute([$target['email']]); } catch (Exception $e) {}
-        $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$uid]);
-        echo json_encode(['success' => true]);
+        echo json_encode(['success' => $deleted > 0 || empty($errors), 'deleted' => $deleted, 'errors' => $errors, 'error' => $deleted === 0 && $errors ? implode('; ', $errors) : null]);
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => 'Database error']); }
     exit;
 }
@@ -437,6 +452,11 @@ tr{cursor:pointer;}
 
 <div id="tab-users" class="tab-panel">
     <h1 style="font-size:24px;font-weight:800;margin-bottom:24px;">Users <span style="font-weight:400;font-size:14px;color:var(--text-tertiary);">(<?php echo $total_users; ?>)</span></h1>
+    <div id="bulkBar" style="display:none;align-items:center;gap:12px;background:#fee2e2;border:1px solid #fecaca;border-radius:10px;padding:10px 14px;margin-bottom:12px;">
+        <span style="font-weight:700;font-size:13px;color:#b91c1c;"><span id="bulkCount">0</span> selected</span>
+        <button class="btn btn-sm" style="background:#b91c1c;color:#fff;" onclick="bulkDeleteUsers()"><i class="fas fa-trash"></i> Delete selected</button>
+        <button class="btn btn-secondary btn-sm" onclick="clearUserSelection()">Clear</button>
+    </div>
     <div class="search-bar">
         <input type="text" id="userSearch" placeholder="Search users by name or email..." oninput="filterUsers()">
     </div>
@@ -444,7 +464,7 @@ tr{cursor:pointer;}
         <div class="tbl-wrap" style="max-height:calc(100vh - 200px);overflow-y:auto;">
             <table>
                 <thead><tr>
-                    <th>User</th><th>Status</th><th>Plan</th><th>Credits</th><th>Lists</th><th>Leads</th><th>Spent</th><th>Last Active</th>
+                    <th style="width:36px;"><input type="checkbox" id="selectAllUsers" onclick="toggleAllUsers(this)" title="Select all" style="accent-color:var(--accent);cursor:pointer;"></th><th>User</th><th>Status</th><th>Plan</th><th>Credits</th><th>Lists</th><th>Leads</th><th>Spent</th><th>Last Active</th>
                 </tr></thead>
                 <tbody id="usersBody">
                 <?php foreach ($users_json as $u):
@@ -452,6 +472,7 @@ tr{cursor:pointer;}
                     $planBadge = $u['subscription_plan'] === 'none' ? 'badge-gray' : ($u['subscription_plan'] === 'enterprise' ? 'badge-purple' : ($u['subscription_plan'] === 'agency' ? 'badge-blue' : 'badge-green'));
                 ?>
                 <tr onclick="openUser(<?php echo $u['id']; ?>)" data-search="<?php echo strtolower(htmlspecialchars($u['name'].' '.$u['email'])); ?>">
+                    <td onclick="event.stopPropagation();"><?php if (!$u['is_admin'] && (int)$u['id'] !== 1): ?><input type="checkbox" class="user-cb" value="<?php echo (int)$u['id']; ?>" onchange="updateBulkBar()" style="accent-color:var(--accent);cursor:pointer;"><?php endif; ?></td>
                     <td>
                         <div style="display:flex;align-items:center;gap:10px;">
                             <div class="user-avatar" style="width:32px;height:32px;border-radius:8px;font-size:13px;background:<?php echo '#'.substr(md5($u['email']),0,6); ?>;"><?php echo strtoupper(substr($u['name'],0,1)); ?></div>
@@ -747,6 +768,40 @@ function esc(s) { const d = document.createElement('div'); d.textContent = s || 
 async function toggleAdmin(userId, isAdmin) {
     if (!confirm(isAdmin ? 'Make this user an admin?' : 'Remove admin privileges?')) { location.reload(); return; }
     await fetch('admin.php', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'toggle_admin',user_id:userId,is_admin:isAdmin}) });
+}
+
+function selectedUserIds() {
+    return Array.from(document.querySelectorAll('.user-cb:checked')).map(cb => parseInt(cb.value, 10));
+}
+function updateBulkBar() {
+    const n = selectedUserIds().length;
+    document.getElementById('bulkBar').style.display = n ? 'flex' : 'none';
+    document.getElementById('bulkCount').textContent = n;
+    const all = document.querySelectorAll('.user-cb'), checked = document.querySelectorAll('.user-cb:checked');
+    const sa = document.getElementById('selectAllUsers');
+    if (sa) { sa.checked = all.length > 0 && checked.length === all.length; sa.indeterminate = checked.length > 0 && checked.length < all.length; }
+}
+function toggleAllUsers(master) {
+    // Only affect rows currently visible (respects the search filter).
+    document.querySelectorAll('#usersBody tr').forEach(tr => {
+        if (tr.style.display === 'none') return;
+        const cb = tr.querySelector('.user-cb'); if (cb) cb.checked = master.checked;
+    });
+    updateBulkBar();
+}
+function clearUserSelection() {
+    document.querySelectorAll('.user-cb').forEach(cb => cb.checked = false);
+    updateBulkBar();
+}
+async function bulkDeleteUsers() {
+    const ids = selectedUserIds();
+    if (!ids.length) return;
+    if (!confirm('Delete ' + ids.length + ' user' + (ids.length > 1 ? 's' : '') + ' and ALL their data (lists, leads, transactions)? This cannot be undone.')) return;
+    if (!confirm('Are you absolutely sure? This permanently deletes ' + ids.length + ' account' + (ids.length > 1 ? 's' : '') + '.')) return;
+    const res = await fetch('admin.php', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'delete_user', user_ids: ids}) });
+    const d = await res.json();
+    if (d.errors && d.errors.length) alert('Deleted ' + (d.deleted || 0) + '. Skipped:\n' + d.errors.join('\n'));
+    location.reload();
 }
 
 async function deleteUser(userId, userName) {
