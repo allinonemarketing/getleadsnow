@@ -20,6 +20,7 @@ date_default_timezone_set('UTC');
 require_once __DIR__ . '/config/env_loader.php';
 require_once __DIR__ . '/config/rapidapi.php';
 require_once __DIR__ . '/includes/search_lib.php';
+require_once __DIR__ . '/includes/enrich_lib.php';
 
 const MAX_ATTEMPTS   = 5;
 const IDLE_SLEEP_US  = 1000000;   // 1s when there's nothing to do
@@ -89,6 +90,34 @@ function process_job(PDO $pdo, array $job) {
     $pdo->prepare("UPDATE lead_lists SET updated_at = NOW() WHERE id = ? AND user_id = ?")->execute([(int)$job['list_id'], (int)$job['user_id']]);
 }
 
+// Poll Replicate for enrichment results (replaces inbound webhooks — outbound
+// GETs are never WAF-inspected). Claims up to 5 leads atomically via a token,
+// with a 30s per-lead cooldown so many workers never poll the same lead at once
+// and we stay far under Replicate's API rate limits.
+function sweep_enrichment(PDO $pdo, string $workerId): int {
+    $token = $workerId . '-' . bin2hex(random_bytes(4));
+    try {
+        $upd = $pdo->prepare("UPDATE lead_list_items SET enrich_poll_token = ?, enrich_poll_at = NOW()
+            WHERE enrichment_status = 'processing' AND replicate_id IS NOT NULL
+              AND (enrich_poll_at IS NULL OR enrich_poll_at < NOW() - INTERVAL 30 SECOND)
+            LIMIT 5");
+        $upd->execute([$token]);
+        if ($upd->rowCount() < 1) return 0;
+    } catch (Throwable $e) {
+        return 0;   // poll columns not migrated yet (load the dashboard once)
+    }
+    $sel = $pdo->prepare("SELECT id, list_id, replicate_id FROM lead_list_items WHERE enrich_poll_token = ? AND enrichment_status = 'processing'");
+    $sel->execute([$token]);
+    $done = 0;
+    foreach ($sel->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $pred = replicateFetchPrediction((string)$row['replicate_id']);
+        if (!$pred) continue;   // transient error / rate limit — cooldown retries in 30s
+        $res = processEnrichmentResult($pdo, (int)$row['id'], (int)$row['list_id'], $pred);
+        if ($res !== 'pending') $done++;
+    }
+    return $done;
+}
+
 // Return jobs left 'processing' by a crashed worker to the queue.
 function reclaim_stale(PDO $pdo) {
     try {
@@ -114,8 +143,10 @@ while (true) {
 
         $job = claim_job($pdo, $workerId);
         if (!$job) {
+            // Idle: use the time to poll enrichment results instead of sleeping.
+            $swept = sweep_enrichment($pdo, $workerId);
             if ((++$idleTicks % STALE_EVERY) === 0) { reclaim_stale($pdo); }
-            usleep(IDLE_SLEEP_US);
+            if ($swept === 0) usleep(IDLE_SLEEP_US);
             continue;
         }
         $idleTicks = 0;

@@ -46,7 +46,7 @@ try { $pdo->prepare("UPDATE users SET last_active_at = NOW() WHERE id = ? AND (l
 // Gated behind a schema-version flag so these ~18 preflight queries run only once
 // per deploy instead of on every request (they were adding remote-DB latency to
 // every list load). Bump $schemaVersion whenever a migration is added below.
-$schemaVersion = 'v3-2026-08';
+$schemaVersion = 'v4-2026-08';
 $schemaFlagFile = sys_get_temp_dir() . '/getleadsnow_leadlists_schema_' . md5($schemaVersion) . '.ok';
 if (!@is_file($schemaFlagFile)) {
 try {
@@ -318,6 +318,11 @@ try {
             INDEX idx_user_created (user_id, created_at)
         )");
     } catch (Exception $e) {}
+
+    // Worker-side enrichment polling (replaces inbound Replicate webhooks).
+    try { $pdo->exec("ALTER TABLE lead_list_items ADD COLUMN enrich_poll_token VARCHAR(80) NULL DEFAULT NULL"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE lead_list_items ADD COLUMN enrich_poll_at TIMESTAMP NULL DEFAULT NULL"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE lead_list_items ADD INDEX idx_enrich_poll (enrichment_status, enrich_poll_at)"); } catch (Exception $e) {}
 
     // All migrations above completed without throwing — record the flag so
     // subsequent requests skip the entire preflight block. If any migration
@@ -1429,8 +1434,10 @@ if (isset($_GET['action'])) {
                 // Enrichment is FREE — no credit charge. Fire for every lead.
                 $url = $lead['website'];
                 if (!preg_match('/^https?:\/\//', $url)) $url = 'https://' . $url;
-                $webhookUrl = $webhookBase . '?lead_id=' . $lead['id'] . '&list_id=' . $listId;
 
+                // NO webhook: results are POLLED by search_worker.php (outbound GETs).
+                // Inbound multi-MB webhook POSTs were WAF-inspected by Imunify and
+                // took the server down; polling sidesteps the WAF entirely.
                 $ch = curl_init('https://api.replicate.com/v1/predictions');
                 curl_setopt_array($ch, [
                     CURLOPT_RETURNTRANSFER => true,
@@ -1446,9 +1453,7 @@ if (isset($_GET['action'])) {
                             'max_pages' => 6,
                             'phone_region' => 'US',
                             'timeout_seconds' => 15
-                        ],
-                        'webhook' => $webhookUrl,
-                        'webhook_events_filter' => ['completed']
+                        ]
                     ]),
                     CURLOPT_CONNECTTIMEOUT => 15,
                     CURLOPT_TIMEOUT => 30
