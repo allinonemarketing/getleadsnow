@@ -224,22 +224,22 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
         }
 
         .nav-link.active {
-            background: rgba(0, 122, 255, 0.1);
-            color: var(--accent-primary);
+            background: #14315c;
+            color: #ffffff;
         }
 
         .nav-link.active i {
-            color: var(--accent-primary);
+            color: #ffffff;
         }
 
-        /* Always-red promo item (stays red even when not the active tab) */
+        /* Navy promo item (stays navy even when not the active tab) */
         .nav-link.nav-penny,
         .nav-link.nav-penny.active {
-            background: #dc2626;
+            background: #14315c;
             color: #ffffff;
         }
         .nav-link.nav-penny:hover {
-            background: #b91c1c;
+            background: #0f2647;
             color: #ffffff;
         }
         .nav-link.nav-penny i,
@@ -316,8 +316,8 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
         }
 
         .submenu-link.active {
-            color: var(--accent-primary);
-            background: rgba(0, 122, 255, 0.06);
+            color: #14315c;
+            background: rgba(20, 49, 92, 0.08);
         }
 
         .submenu-link i {
@@ -410,12 +410,16 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             align-items: center;
             gap: 4px;
             padding: 2px 8px;
-            background: rgba(0, 122, 255, 0.08);
-            color: var(--accent-primary);
+            background: rgba(20, 49, 92, 0.10);
+            color: #14315c;
             border-radius: 6px;
             font-size: 12px;
             font-weight: 600;
             margin-left: auto;
+        }
+        .nav-link.active .credits-pill {
+            background: rgba(255, 255, 255, 0.22);
+            color: #ffffff;
         }
 
         @media (max-width: 768px) {
@@ -491,6 +495,12 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
             </li>
             <?php endif; ?>
             <li class="nav-item">
+                <a href="?section=faqs" class="nav-link <?php echo $current_section === 'faqs' ? 'active' : ''; ?>" data-section="faqs">
+                    <i class="fas fa-circle-question"></i>
+                    FAQs
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="?section=support" class="nav-link <?php echo $current_section === 'support' ? 'active' : ''; ?>" data-section="support">
                     <i class="fas fa-life-ring"></i>
                     Support
@@ -519,6 +529,9 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
         <div id="penny" class="content-section <?php echo $current_section === 'penny' ? 'active' : ''; ?>">
             <div id="penny-content"></div>
         </div>
+        <div id="faqs" class="content-section <?php echo $current_section === 'faqs' ? 'active' : ''; ?>">
+            <div id="faqs-content"></div>
+        </div>
         <div id="support" class="content-section <?php echo $current_section === 'support' ? 'active' : ''; ?>">
             <div id="support-content"></div>
         </div>
@@ -541,6 +554,7 @@ $current_section = isset($_GET['section']) ? $_GET['section'] : 'lead_lists';
                 'lead_lists': 'leadlists.php',
                 'section5': 'pricing.php',
                 'penny': 'resell.php',
+                'faqs': 'faq.php',
                 'support': 'support.php'
             };
 
