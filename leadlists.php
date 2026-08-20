@@ -782,7 +782,18 @@ if (isset($_GET['action'])) {
             $own = $pdo->prepare("SELECT id FROM lead_lists WHERE id = ? AND user_id = ?");
             $own->execute([$listId, $userId]);
             if (!$own->fetchColumn()) { echo json_encode(['success' => false, 'error' => 'List not found']); exit; }
-            if (currentCredits($pdo, $userId) < 1) { echo json_encode(['success' => false, 'out_of_credits' => true, 'error' => 'out_of_credits']); exit; }
+            $bal = currentCredits($pdo, $userId);
+            if ($bal < 1) { echo json_encode(['success' => false, 'out_of_credits' => true, 'error' => 'out_of_credits']); exit; }
+
+            // Don't queue work the user can't pay for: each city job costs up to
+            // per_city credits AND one RapidAPI request. Cap jobs to what the
+            // balance can cover (+ a small buffer for dedup-heavy cities), and a
+            // hard ceiling so one select-all search can never flood the shared
+            // queue (a 36k-city search once buried every other user for hours).
+            $maxAffordable = max(1, (int)ceil($bal / $perCity) + 10);
+            $hardCap = 1000;
+            $cap = min(count($cities), $maxAffordable, $hardCap);
+            $cities = array_slice($cities, 0, $cap);
 
             $batchId = bin2hex(random_bytes(12));
             $rows = [];
@@ -808,6 +819,7 @@ if (isset($_GET['action'])) {
                     SUM(status='processing') as processing,
                     SUM(status='done') as done,
                     SUM(status='failed') as failed,
+                    SUM(status='failed' AND error='out_of_credits') as failed_no_credit,
                     COALESCE(SUM(results_found),0) as found,
                     COALESCE(SUM(inserted),0) as inserted,
                     COALESCE(SUM(skipped_no_credit),0) as skipped_no_credit
@@ -824,6 +836,7 @@ if (isset($_GET['action'])) {
                 'processing' => (int)($p['processing'] ?? 0),
                 'done' => (int)($p['done'] ?? 0),
                 'failed' => (int)($p['failed'] ?? 0),
+                'failed_no_credit' => (int)($p['failed_no_credit'] ?? 0),
                 'found' => (int)($p['found'] ?? 0),
                 'inserted' => (int)($p['inserted'] ?? 0),
                 'skipped_no_credit' => (int)($p['skipped_no_credit'] ?? 0),
@@ -6845,7 +6858,7 @@ class LeadListsApp {
                 if ((p.inserted || 0) !== lastLoaded && this.currentList && (Date.now() - lastGridReload) > 5000) {
                     lastLoaded = p.inserted || 0; lastGridReload = Date.now(); this.loadLeads();
                 }
-                finalFound = p.found || 0; finalInserted = p.inserted || 0; finalNoCredit = p.skipped_no_credit || 0;
+                finalFound = p.found || 0; finalInserted = p.inserted || 0; finalNoCredit = (p.skipped_no_credit || 0) + (p.failed_no_credit || 0);
                 if (p.complete) { clearInterval(poll); resolve(); }
             }, 1500);
         });

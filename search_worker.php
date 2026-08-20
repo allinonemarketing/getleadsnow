@@ -43,18 +43,42 @@ function db_connect(): PDO {
 }
 
 function claim_job(PDO $pdo, string $workerId) {
-    // Unique token per claim; the UPDATE atomically row-locks one pending job.
+    // FAIR claim: pick the oldest pending job of the user with the fewest jobs
+    // currently in flight, so one giant search can't monopolize all workers and
+    // bury everyone else (happened: a 36k-city search blocked the queue for hours).
+    // Optimistic two-step: select a candidate, then atomically claim it; retry on race.
     $token = $workerId . '-' . bin2hex(random_bytes(6));
-    $upd = $pdo->prepare("UPDATE search_jobs SET status='processing', locked_by=?, started_at=NOW(), attempts=attempts+1 WHERE status='pending' ORDER BY id ASC LIMIT 1");
-    $upd->execute([$token]);
-    if ($upd->rowCount() < 1) return null;
-    $sel = $pdo->prepare("SELECT * FROM search_jobs WHERE locked_by=? AND status='processing' ORDER BY started_at DESC LIMIT 1");
-    $sel->execute([$token]);
-    return $sel->fetch(PDO::FETCH_ASSOC) ?: null;
+    for ($try = 0; $try < 3; $try++) {
+        $sel = $pdo->query("SELECT s.id FROM search_jobs s WHERE s.status='pending'
+            ORDER BY (SELECT COUNT(*) FROM search_jobs p WHERE p.status='processing' AND p.user_id = s.user_id) ASC, s.id ASC
+            LIMIT 1");
+        $id = $sel ? $sel->fetchColumn() : null;
+        if (!$id) return null;
+        $upd = $pdo->prepare("UPDATE search_jobs SET status='processing', locked_by=?, started_at=NOW(), attempts=attempts+1 WHERE id=? AND status='pending'");
+        $upd->execute([$token, $id]);
+        if ($upd->rowCount() > 0) {
+            $s2 = $pdo->prepare("SELECT * FROM search_jobs WHERE id=?");
+            $s2->execute([$id]);
+            return $s2->fetch(PDO::FETCH_ASSOC) ?: null;
+        }
+        // Another worker won the race — pick a new candidate.
+    }
+    return null;
 }
 
 function process_job(PDO $pdo, array $job) {
     $id = (int)$job['id'];
+
+    // Out of credits => leads couldn't be saved anyway. Fail the job WITHOUT
+    // calling RapidAPI, so a broke account can't burn API quota (13k requests
+    // were once spent on a user who could afford about 100 leads).
+    $cs = $pdo->prepare("SELECT credits FROM users WHERE id = ?");
+    $cs->execute([(int)$job['user_id']]);
+    if ((int)$cs->fetchColumn() < 1) {
+        $pdo->prepare("UPDATE search_jobs SET status='failed', finished_at=NOW(), error='out_of_credits' WHERE id=?")->execute([$id]);
+        return;
+    }
+
     $query = $job['query'] . ' in ' . $job['city'] . ', ' . $job['state_name'];
     $r = rapidMapsSearch($query, (int)$job['per_city']);
 
