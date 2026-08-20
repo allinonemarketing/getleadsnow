@@ -4391,6 +4391,14 @@ if (isset($_GET['action'])) {
         </div>
     </div>
 
+    <!-- Live enrichment status: emails/socials are found in the background over a
+         few minutes; this banner tells the user that and disappears when done. -->
+    <div id="enrichBanner" style="display:none;align-items:center;gap:10px;background:#eef4ff;border:1px solid #d3e0fb;color:#1e40af;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:13.5px;font-weight:600;line-height:1.5;">
+        <i class="fas fa-wand-magic-sparkles"></i>
+        <span>Finding emails &amp; social profiles for your leads &mdash; this takes a few minutes and results appear automatically (no refresh needed). Emails aren&rsquo;t instant!</span>
+        <span id="enrichBannerPct" style="margin-left:auto;white-space:nowrap;font-weight:800;color:#2563eb;"></span>
+    </div>
+
     <div id="searchedStatesArea" class="hidden" style="margin-bottom:20px;">
         <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">Searched Areas</div>
         <div id="searchedStates" class="searched-summary"></div>
@@ -5814,6 +5822,8 @@ class LeadListsApp {
     }
 
     goBack() {
+        const eb = document.getElementById('enrichBanner');
+        if (eb) eb.style.display = 'none';
         this.enrichmentPollId = null;
         this._recoveryAttempts = 0;
         this._totalRecoveryAttempts = 0;
@@ -6941,6 +6951,19 @@ class LeadListsApp {
         }
 
         const { total, pending, processing, completed, failed, needs_enrichment } = prog;
+
+        // Live banner: visible while any lead is still being enriched.
+        const eb = document.getElementById('enrichBanner');
+        if (eb) {
+            const active = (pending || 0) + (processing || 0) + (needs_enrichment || 0);
+            if (active > 0) {
+                eb.style.display = 'flex';
+                const donePct = total > 0 ? Math.round(((completed || 0) + (failed || 0)) / total * 100) : 0;
+                document.getElementById('enrichBannerPct').textContent = donePct + '% done';
+            } else {
+                eb.style.display = 'none';
+            }
+        }
 
         if (document.getElementById('adminEnrichPanel')) {
             this.updateAdminEnrichPanel(prog);
