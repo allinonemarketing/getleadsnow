@@ -49,10 +49,16 @@ function claim_job(PDO $pdo, string $workerId) {
     // Optimistic two-step: select a candidate, then atomically claim it; retry on race.
     $token = $workerId . '-' . bin2hex(random_bytes(6));
     for ($try = 0; $try < 3; $try++) {
-        $sel = $pdo->query("SELECT s.id FROM search_jobs s WHERE s.status='pending'
-            ORDER BY (SELECT COUNT(*) FROM search_jobs p WHERE p.status='processing' AND p.user_id = s.user_id) ASC, s.id ASC
+        // Pick the next USER fairly (fewest in-flight jobs, then oldest work),
+        // then claim that user's oldest pending job. Grouping by user keeps this
+        // fast at any backlog size — the correlated count runs once per distinct
+        // user, not once per pending row (22k pending rows froze the old version).
+        $sel = $pdo->query("SELECT s.user_id, MIN(s.id) AS oldest FROM search_jobs s WHERE s.status='pending'
+            GROUP BY s.user_id
+            ORDER BY (SELECT COUNT(*) FROM search_jobs p WHERE p.status='processing' AND p.user_id = s.user_id) ASC, oldest ASC
             LIMIT 1");
-        $id = $sel ? $sel->fetchColumn() : null;
+        $row = $sel ? $sel->fetch(PDO::FETCH_ASSOC) : null;
+        $id = $row ? $row['oldest'] : null;
         if (!$id) return null;
         $upd = $pdo->prepare("UPDATE search_jobs SET status='processing', locked_by=?, started_at=NOW(), attempts=attempts+1 WHERE id=? AND status='pending'");
         $upd->execute([$token, $id]);
