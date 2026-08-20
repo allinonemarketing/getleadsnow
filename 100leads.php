@@ -303,6 +303,96 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
       .cartooncta .btn:hover{background:linear-gradient(135deg,#e91e7e,#f27f1b)}
       .ctagirl{position:absolute;right:28px;bottom:0;width:200px;z-index:0;filter:drop-shadow(0 8px 18px rgba(34,34,74,.3))}
       .cartooncta::after{display:none}
+
+      /* ===== colorful body sections (carry the ad energy all the way down) ===== */
+      .h2c h2{font-family:'Lilita One','Inter',system-ui,sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.015em;color:#ffc400;
+        text-shadow:-2px -2px 0 #22224a, 2px -2px 0 #22224a, -2px 2px 0 #22224a, 2px 2px 0 #22224a, 0 4px 0 #22224a, 0 7px 14px rgba(34,34,74,.25)}
+      .h2c h2 .hl{color:#fff}
+      .h2c p{color:#3c3f47;font-weight:600}
+
+      /* metrics strip: navy band between the sunburst hero and the page */
+      .metrics{background:#22224a !important;border-color:#22224a !important}
+      .metrics .n{color:#fff}
+      .metrics .row > div:nth-child(1) .n .ic{color:#ff5fa8}
+      .metrics .row > div:nth-child(2) .n .ic{color:#29c7e8}
+      .metrics .row > div:nth-child(3) .n .ic{color:#ffb703}
+      .metrics .l{color:#b9bfe0}
+      .metrics .worksrow{color:#8f96c2;border-color:rgba(255,255,255,.12)}
+
+      /* confetti sprinkles on the light sections */
+      section.blk:has(.steps){background:
+        radial-gradient(circle 6px at 6% 22%, rgba(255,95,168,.4) 97%, transparent),
+        radial-gradient(circle 5px at 94% 15%, rgba(41,199,232,.4) 97%, transparent),
+        radial-gradient(circle 7px at 91% 82%, rgba(255,183,3,.45) 97%, transparent),
+        radial-gradient(circle 5px at 7% 80%, rgba(142,224,0,.4) 97%, transparent),
+        radial-gradient(circle 4px at 76% 6%, rgba(180,92,255,.35) 97%, transparent),
+        radial-gradient(circle 4px at 22% 8%, rgba(255,143,45,.4) 97%, transparent), #fff}
+      section.blk:has(.feats){background:
+        radial-gradient(circle 5px at 5% 25%, rgba(255,95,168,.35) 97%, transparent),
+        radial-gradient(circle 6px at 95% 20%, rgba(255,183,3,.4) 97%, transparent),
+        radial-gradient(circle 5px at 92% 85%, rgba(142,224,0,.35) 97%, transparent),
+        radial-gradient(circle 4px at 8% 85%, rgba(41,199,232,.4) 97%, transparent), #f4fcff !important}
+
+      /* 3 steps: tilted cards, fat colored borders, cartoon number badges */
+      .step{border:3px solid;border-radius:22px;box-shadow:0 10px 0 rgba(34,34,74,.07)}
+      .step:nth-child(1){border-color:#ff5fa8;transform:rotate(-1.2deg)}
+      .step:nth-child(2){border-color:#29c7e8;transform:rotate(1deg)}
+      .step:nth-child(3){border-color:#8ee000;transform:rotate(-.8deg)}
+      .step .num{width:46px;height:46px;border-radius:50%;color:#fff;font-size:21px;font-family:'Lilita One','Inter',sans-serif;box-shadow:0 4px 0 rgba(34,34,74,.2)}
+      .step:nth-child(1) .num{background:#ff5fa8}
+      .step:nth-child(2) .num{background:#29c7e8}
+      .step:nth-child(3) .num{background:#8ee000}
+      .step:nth-child(1) h3{color:#e0338a}
+      .step:nth-child(2) h3{color:#0e9cbd}
+      .step:nth-child(3) h3{color:#5ea300}
+
+      /* comparison: red vs green with a VS badge */
+      section.blk:has(.compare){background:#fff8e6 !important}
+      .comp{border-width:3px;border-radius:20px}
+      .comp.old{border-color:#ff8a8a;background:#fff3f3;transform:rotate(-1deg);opacity:1}
+      .comp.new{border-color:#22c55e;background:#f0fdf4;transform:rotate(1deg);box-shadow:0 14px 34px rgba(34,197,94,.2)}
+      .compare{position:relative}
+      .compare::after{content:"VS";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-8deg);
+        font-family:'Lilita One','Inter',sans-serif;font-size:30px;color:#ffc400;z-index:2;
+        text-shadow:-2px -2px 0 #22224a, 2px -2px 0 #22224a, -2px 2px 0 #22224a, 2px 2px 0 #22224a, 0 4px 0 #22224a}
+
+      /* features: colorful icon chips + matching borders */
+      .feat{border-radius:18px;border-width:2px;box-shadow:0 6px 0 rgba(34,34,74,.05)}
+      .feat > .ic{width:42px;height:42px;padding:10px;border-radius:13px;color:#fff;margin-top:0;box-sizing:border-box;box-shadow:0 3px 0 rgba(34,34,74,.15)}
+      .feat:nth-child(6n+1){border-color:#ffc2dd} .feat:nth-child(6n+1) > .ic{background:#ff5fa8}
+      .feat:nth-child(6n+2){border-color:#b8ecf7} .feat:nth-child(6n+2) > .ic{background:#29c7e8}
+      .feat:nth-child(6n+3){border-color:#ffd9b8} .feat:nth-child(6n+3) > .ic{background:#ff8f2d}
+      .feat:nth-child(6n+4){border-color:#e3ccff} .feat:nth-child(6n+4) > .ic{background:#b45cff}
+      .feat:nth-child(6n+5){border-color:#d9f5b8} .feat:nth-child(6n+5) > .ic{background:#7ac800}
+      .feat:nth-child(6n+6){border-color:#ffe9a8} .feat:nth-child(6n+6) > .ic{background:#eaa800}
+
+      /* included-free software: pastel sunburst + navy savings pill + pill checklist */
+      section.blk:has(.incl-grid){background:
+        linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.84)),
+        repeating-conic-gradient(from 0deg at 50% -30%, #ff5fa8 0 14deg, #ffb703 14deg 28deg, #29c7e8 28deg 42deg, #8ee000 42deg 56deg, #ff8f2d 56deg 70deg, #b45cff 70deg 84deg) !important}
+      .incl-save{background:#22224a;color:#ffd34d;box-shadow:0 6px 18px rgba(34,34,74,.25)}
+      .incl-save .ic{color:#ffd34d}
+      .incl-grid .it{background:#fff;border:2px solid #e6e9f2;border-radius:12px;padding:9px 12px;box-shadow:0 3px 0 rgba(34,34,74,.05)}
+      .incl-grid .it:nth-child(4n+1){border-color:#ffd7ea} .incl-grid .it:nth-child(4n+1) .ic{color:#ff5fa8}
+      .incl-grid .it:nth-child(4n+2){border-color:#c9f0f9} .incl-grid .it:nth-child(4n+2) .ic{color:#0eaacc}
+      .incl-grid .it:nth-child(4n+3){border-color:#e2f5c6} .incl-grid .it:nth-child(4n+3) .ic{color:#5ea300}
+      .incl-grid .it:nth-child(4n+4){border-color:#ffe6c9} .incl-grid .it:nth-child(4n+4) .ic{color:#f08300}
+
+      /* reviews: pastel pink section, tilted cards, colorful avatars */
+      section.blk:has(.reviews){background:#fff5f9 !important}
+      .review{border-radius:20px;border-width:2px}
+      .review:nth-child(3n+1){border-color:#ffc2dd;transform:rotate(-.7deg)}
+      .review:nth-child(3n+2){border-color:#b8ecf7;transform:rotate(.6deg)}
+      .review:nth-child(3n+3){border-color:#d9f5b8;transform:rotate(-.4deg)}
+      .review .rstars{color:#ffb703;font-size:16px}
+      .review:nth-child(3n+1) .ravatar{background:#ff5fa8;color:#fff}
+      .review:nth-child(3n+2) .ravatar{background:#29c7e8;color:#fff}
+      .review:nth-child(3n+3) .ravatar{background:#7ac800;color:#fff}
+
+      @media(max-width:900px){
+        .step,.comp,.review{transform:none !important}
+        .compare::after{font-size:26px}
+      }
       @media(max-width:900px){
         .card .adgirl{display:none}
         .cartooncta{padding-right:22px}
