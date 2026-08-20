@@ -31,6 +31,11 @@ session_write_close();  // release the per-user session lock; these pages only r
   .faq .body b{color:var(--ink)}
   .foot{text-align:center;margin-top:26px;color:var(--faint);font-size:14px}
   .foot a{color:var(--accent-d);font-weight:700;text-decoration:none}
+  /* click-to-play walkthrough video (player loads only when played) */
+  .vidwrap{position:relative;padding-top:56.25%;background:linear-gradient(135deg,#1a1c1f,#2c3038);border-radius:14px;overflow:hidden;cursor:pointer;margin-bottom:26px;box-shadow:0 12px 34px rgba(16,20,30,.18)}
+  .vidwrap .vidplay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:74px;height:74px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 10px 26px rgba(200,87,25,.5);transition:transform .15s}
+  .vidwrap:hover .vidplay{transform:translate(-50%,-50%) scale(1.08)}
+  .vidwrap .vidlabel{position:absolute;left:0;right:0;bottom:0;padding:14px 16px;color:#fff;font-weight:700;font-size:14px;background:linear-gradient(transparent,rgba(0,0,0,.6));text-align:center}
 </style>
 </head>
 <body>
@@ -40,6 +45,17 @@ session_write_close();  // release the per-user session lock; these pages only r
     <h1>Frequently Asked Questions</h1>
     <p>Everything you need to know about pulling and working your leads.</p>
   </div>
+
+  <div class="vidwrap" onclick="playWalkthrough(this)" role="button" tabindex="0" title="Play: how to download leads">
+    <div class="vidplay"><i class="fas fa-play"></i></div>
+    <div class="vidlabel">How to download leads &mdash; step-by-step walkthrough</div>
+  </div>
+  <script>
+    function playWalkthrough(el){
+      el.innerHTML='<iframe src="https://player.vimeo.com/video/1219974130?h=d0d90bab82&autoplay=1" style="position:absolute;inset:0;width:100%;height:100%;border:0;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="How to download leads"></iframe>';
+      el.onclick=null; el.style.cursor='default';
+    }
+  </script>
 
   <details class="faq" open>
     <summary>I got 100 leads but only some have emails &mdash; why?</summary>
