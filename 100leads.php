@@ -288,7 +288,26 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
       /* hot CTA gradient to match the creative */
       .card .btn,.mobbar .btn{background:linear-gradient(135deg,#ff2f92,#ff8f2d);box-shadow:0 8px 24px rgba(255,47,146,.35)}
       .card .btn:hover,.mobbar .btn:hover{background:linear-gradient(135deg,#e91e7e,#f27f1b);box-shadow:0 12px 30px rgba(255,47,146,.45)}
-      @media(max-width:900px){ .card .adgirl{display:none} }
+      /* mascot above the how-it-works heading */
+      .secgirl{display:block;margin:0 auto 18px;width:150px;filter:drop-shadow(0 10px 20px rgba(34,34,74,.18))}
+      /* final CTA re-skinned as the ad creative: sunburst + outlined type + mascot */
+      .cartooncta{background:
+        radial-gradient(closest-side at 46% 42%, rgba(255,255,255,.6), rgba(255,255,255,0)),
+        repeating-conic-gradient(from 0deg at 50% 28%, #ff5fa8 0 12deg, #ffb703 12deg 24deg, #29c7e8 24deg 36deg, #8ee000 36deg 48deg, #ff8f2d 48deg 60deg, #b45cff 60deg 72deg);
+        padding-right:250px}
+      .cartooncta h2{font-family:'Lilita One','Inter',system-ui,sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.01em;color:#fff;
+        text-shadow:-2px -2px 0 #22224a, 2px -2px 0 #22224a, -2px 2px 0 #22224a, 2px 2px 0 #22224a, 0 4px 0 #22224a, 0 8px 16px rgba(34,34,74,.35)}
+      .cartooncta p{color:#22224a;font-weight:700}
+      .cartooncta .fine{color:#22224a;font-weight:700}
+      .cartooncta .btn{background:linear-gradient(135deg,#ff2f92,#ff8f2d);box-shadow:0 8px 24px rgba(255,47,146,.4)}
+      .cartooncta .btn:hover{background:linear-gradient(135deg,#e91e7e,#f27f1b)}
+      .ctagirl{position:absolute;right:28px;bottom:0;width:200px;z-index:0;filter:drop-shadow(0 8px 18px rgba(34,34,74,.3))}
+      .cartooncta::after{display:none}
+      @media(max-width:900px){
+        .card .adgirl{display:none}
+        .cartooncta{padding-right:22px}
+        .ctagirl{position:static;display:block;margin:0 auto -10px;width:150px}
+      }
     </style>
 </head>
 
@@ -325,7 +344,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
 <section class="hero">
   <div class="wrap grid">
     <div class="mobhook" aria-hidden="true">
-      <img class="mh-girl" src="/assets/adgirl-2.png" alt="" onerror="if(!this.dataset.f){this.dataset.f=1;this.src='/assets/adgirl-1.png'}else{this.style.display='none'}">
+      <img class="mh-girl" src="/assets/adgirl-3.png" alt="" onerror="if(!this.dataset.f){this.dataset.f=1;this.src='/assets/adgirl-1.png'}else{this.style.display='none'}">
 
       <span class="eyebrow"><svg class="ic"><use href="#i-bolt"/></svg> 100 leads included</span>
       <div class="mh-title" id="mh1">Get 100 business leads <span class="hl">+ marketing software</span> — free!</div>
@@ -449,6 +468,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
 <!-- HOW IT WORKS -->
 <section class="blk">
   <div class="wrap">
+    <img class="secgirl" src="/assets/adgirl-4.png" alt="" aria-hidden="true">
     <div class="h2c"><h2>From “I need leads” to a full pipeline in 3 steps</h2><p>No tech skills. No spreadsheets. No paying $2 a lead for stale lists.</p></div>
     <div class="steps">
       <div class="step"><div class="num">1</div><h3>Search a niche + city</h3><p>“Dentists in Austin.” “Roofers in Miami.” Anything. We pull every matching business from Google Maps.</p></div>
@@ -584,7 +604,8 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
 <!-- FINAL CTA -->
 <section class="blk">
   <div class="wrap">
-    <div class="cta">
+    <div class="cta cartooncta">
+      <img class="ctagirl" src="/assets/adgirl-5.png" alt="" aria-hidden="true">
       <h2>Your next 100 customers are already on Google Maps.</h2>
       <p>Your competitor can pull the same list tomorrow. Grab your 100 leads and get there first — before you close this tab.</p>
       <a href="#signup" class="btn js-focus">Get My 100 Leads →</a>
