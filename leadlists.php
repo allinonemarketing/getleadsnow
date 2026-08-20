@@ -5252,9 +5252,13 @@ class LeadListsApp {
 
     async init() {
         await this.loadLists();
-        // Restore the open list after a page refresh (list id lives in the hash).
-        const m = (location.hash || '').match(/^#list=(\d+)$/);
-        if (m) { this.openList(parseInt(m[1], 10)); }
+        // Restore the open list after a page refresh. sessionStorage (not the URL
+        // hash) because this page lives in the dashboard iframe: a top-level F5
+        // rebuilds the iframe with a fresh URL, losing any hash we set here.
+        try {
+            const saved = parseInt(sessionStorage.getItem('aiom_open_list') || '0', 10);
+            if (saved > 0) { this.openList(saved); }
+        } catch (e) {}
     }
 
     async api(action, params = {}, method = 'GET') {
@@ -5801,8 +5805,8 @@ class LeadListsApp {
         });
 
         this.checkEnrichmentStatus(id);
-        // Survive refresh: record the open list in the URL (hash doesn't reload the iframe).
-        try { history.replaceState(null, '', location.pathname + location.search + '#list=' + id); } catch (e) {}
+        // Survive top-level refresh: remember the open list per-tab.
+        try { sessionStorage.setItem('aiom_open_list', String(id)); } catch (e) {}
     }
 
     async checkEnrichmentStatus(listId) {
@@ -5834,7 +5838,7 @@ class LeadListsApp {
     }
 
     goBack() {
-        try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+        try { sessionStorage.removeItem('aiom_open_list'); } catch (e) {}
         const eb = document.getElementById('enrichBanner');
         if (eb) eb.style.display = 'none';
         this.enrichmentPollId = null;

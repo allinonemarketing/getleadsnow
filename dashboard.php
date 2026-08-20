@@ -604,7 +604,7 @@ session_write_close();
             <li class="nav-item">
                 <a href="?section=lead_lists" class="nav-link <?php echo $current_section === 'lead_lists' ? 'active' : ''; ?>" data-section="lead_lists">
                     <i class="fas fa-folder-open"></i>
-                    Lead Lists
+                    Get Leads
                 </a>
             </li>
             <li class="nav-item">
