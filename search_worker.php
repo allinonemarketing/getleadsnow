@@ -115,6 +115,18 @@ function process_job(PDO $pdo, array $job) {
         $counts = ingestLeads($pdo, (int)$job['user_id'], (int)$job['list_id'], $leads);
     }
 
+    // Record the search for admin stats + "Searched Areas" (the old client-side
+    // loggers disappeared with the queue rework; the worker is the right place —
+    // it can log the ACTUAL result count and credits used, not a guess).
+    try {
+        $pdo->prepare("INSERT INTO api_calls (user_id, credits_used, scraper_model, url, search_query, input_params, status) VALUES (?,?,?,?,?,?,?)")
+            ->execute([(int)$job['user_id'], (int)$counts['inserted'], 'google_maps', null, $query, json_encode(['limit' => (int)$job['per_city'], 'via' => 'queue']), 'done']);
+    } catch (Throwable $e) {}
+    try {
+        $pdo->prepare("INSERT INTO lead_list_searches (list_id, user_id, search_query, state_name, city, results_count) VALUES (?,?,?,?,?,?)")
+            ->execute([(int)$job['list_id'], (int)$job['user_id'], $job['query'], $job['state_name'], $job['city'], count($results)]);
+    } catch (Throwable $e) {}
+
     $pdo->prepare("UPDATE search_jobs SET status='done', finished_at=NOW(), results_found=?, inserted=?, skipped=?, skipped_no_credit=? WHERE id=?")
         ->execute([count($results), $counts['inserted'], $counts['skipped'], $counts['skipped_no_credit'], $id]);
     $pdo->prepare("UPDATE lead_lists SET updated_at = NOW() WHERE id = ? AND user_id = ?")->execute([(int)$job['list_id'], (int)$job['user_id']]);

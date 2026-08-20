@@ -237,6 +237,8 @@ $conversion_rate = $total_users > 0 ? round(($paying_users / $total_users) * 100
 $active_today = $pdo->query("SELECT COUNT(*) FROM users WHERE last_active_at >= CURDATE()")->fetchColumn() ?: 0;
 $new_today = $pdo->query("SELECT COUNT(*) FROM users WHERE DATE(created_at) = CURDATE()")->fetchColumn() ?: 0;
 $scrapes_today = $pdo->query("SELECT COUNT(*) FROM api_calls WHERE created_at >= CURDATE()")->fetchColumn() ?: 0;
+$leads_today   = $pdo->query("SELECT COUNT(*) FROM lead_list_items WHERE created_at >= CURDATE()")->fetchColumn() ?: 0;
+$leads_total   = $pdo->query("SELECT COUNT(*) FROM lead_list_items")->fetchColumn() ?: 0;
 
 $plan_stats = $pdo->query("SELECT subscription_plan, COUNT(*) as c FROM users GROUP BY subscription_plan")->fetchAll(PDO::FETCH_ASSOC);
 $plan_counts = ['none'=>0,'business'=>0,'agency'=>0,'enterprise'=>0];
@@ -399,6 +401,8 @@ tr{cursor:pointer;}
         <div class="stat-box green"><div class="val"><?php echo $active_today; ?></div><div class="lbl">Active Today</div></div>
         <div class="stat-box purple"><div class="val"><?php echo $new_today; ?></div><div class="lbl">New Today</div></div>
         <div class="stat-box orange"><div class="val"><?php echo number_format($scrapes_today); ?></div><div class="lbl">Searches Today</div></div>
+        <div class="stat-box blue"><div class="val"><?php echo number_format($leads_today); ?></div><div class="lbl">Leads Today</div></div>
+        <div class="stat-box purple"><div class="val"><?php echo number_format($leads_total); ?></div><div class="lbl">Total Leads Pulled</div></div>
         <div class="stat-box green"><div class="val"><?php echo number_format($paying_users); ?></div><div class="lbl">Paying Users</div></div>
         <div class="stat-box"><div class="val"><?php echo $conversion_rate; ?>%</div><div class="lbl">Conversion</div></div>
     </div>
