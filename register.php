@@ -33,6 +33,13 @@ $referrer    = trim($_POST['referrer'] ?? '');
 // /start (FB ads) => free_signup (default); /leads => email_referral; /1cent (FB "1 cent leads" ads) => fb_1cent.
 $signupSource = $_POST['signup_source'] ?? 'free_signup';
 if (!in_array($signupSource, ['free_signup', 'email_referral', 'fb_1cent'], true)) { $signupSource = 'free_signup'; }
+// Safety net: derive the source from the ACTUAL landing-page URL (sent by every
+// signup form as event_source_url). The page path is authoritative — it corrects
+// stale hidden fields and makes attribution auditable against the referrer.
+$srcPath = strtolower((string)(parse_url(trim($_POST['event_source_url'] ?? ''), PHP_URL_PATH) ?: ''));
+if (strpos($srcPath, '/1cent') === 0)      { $signupSource = 'fb_1cent'; }
+elseif (strpos($srcPath, '/leads') === 0)  { $signupSource = 'email_referral'; }
+elseif (strpos($srcPath, '/start') === 0)  { $signupSource = 'free_signup'; }
 $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? ($_SERVER['REMOTE_ADDR'] ?? '');
 if (strpos($ip, ',') !== false) { $ip = trim(explode(',', $ip)[0]); } // first hop in a proxy chain
 $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
