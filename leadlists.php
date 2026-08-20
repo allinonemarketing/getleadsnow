@@ -4393,10 +4393,17 @@ if (isset($_GET['action'])) {
 
     <!-- Live enrichment status: emails/socials are found in the background over a
          few minutes; this banner tells the user that and disappears when done. -->
-    <div id="enrichBanner" style="display:none;align-items:center;gap:10px;background:#eef4ff;border:1px solid #d3e0fb;color:#1e40af;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:13.5px;font-weight:600;line-height:1.5;">
-        <i class="fas fa-wand-magic-sparkles"></i>
-        <span>Finding emails &amp; social profiles for your leads &mdash; this takes a few minutes and results appear automatically (no refresh needed). Emails aren&rsquo;t instant!</span>
-        <span id="enrichBannerPct" style="margin-left:auto;white-space:nowrap;font-weight:800;color:#2563eb;"></span>
+    <div id="enrichBanner" style="display:none;background:#eef4ff;border:1px solid #d3e0fb;color:#1e40af;border-radius:12px;padding:13px 16px 12px;margin-bottom:16px;font-size:13.5px;font-weight:600;line-height:1.5;">
+        <style>@keyframes enrichStripes { from { background-position: 0 0; } to { background-position: 28px 0; } }</style>
+        <div style="display:flex;align-items:center;gap:10px;">
+            <i class="fas fa-wand-magic-sparkles"></i>
+            <span>Finding emails &amp; social profiles for your leads &mdash; results appear automatically (no refresh needed). Emails aren&rsquo;t instant!</span>
+            <span id="enrichBannerPct" style="margin-left:auto;white-space:nowrap;font-weight:800;color:#2563eb;"></span>
+        </div>
+        <div style="margin-top:9px;height:10px;background:#d6e4fc;border-radius:999px;overflow:hidden;">
+            <div id="enrichBarFill" style="height:100%;width:0%;border-radius:999px;background:repeating-linear-gradient(45deg,#2563eb 0 10px,#60a5fa 10px 20px);background-size:28px 28px;animation:enrichStripes .8s linear infinite;transition:width .6s ease;"></div>
+        </div>
+        <div id="enrichBarSub" style="margin-top:6px;font-size:11.5px;color:#3b82f6;font-weight:700;"></div>
     </div>
 
     <div id="searchedStatesArea" class="hidden" style="margin-bottom:20px;">
@@ -6957,9 +6964,14 @@ class LeadListsApp {
         if (eb) {
             const active = (pending || 0) + (processing || 0) + (needs_enrichment || 0);
             if (active > 0) {
-                eb.style.display = 'flex';
-                const donePct = total > 0 ? Math.round(((completed || 0) + (failed || 0)) / total * 100) : 0;
+                eb.style.display = 'block';
+                const doneCount = (completed || 0) + (failed || 0);
+                const donePct = total > 0 ? Math.round(doneCount / total * 100) : 0;
                 document.getElementById('enrichBannerPct').textContent = donePct + '% done';
+                const fill = document.getElementById('enrichBarFill');
+                if (fill) fill.style.width = Math.max(3, donePct) + '%';
+                const sub = document.getElementById('enrichBarSub');
+                if (sub) sub.textContent = doneCount.toLocaleString() + ' of ' + (total || 0).toLocaleString() + ' leads enriched';
             } else {
                 eb.style.display = 'none';
             }
