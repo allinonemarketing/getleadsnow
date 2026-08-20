@@ -46,7 +46,7 @@ $a = $_POST['a'] ?? '';
 try {
     if ($a === 'view') {
         $page = strtolower((string)($_POST['p'] ?? ''));
-        if (!in_array($page, ['start', 'leads', '1cent', '100leads', 'startnow'], true)) exit('{}');
+        if (!in_array($page, ['start', 'leads', '1cent', '100leads', 'startnow', '100free'], true)) exit('{}');
         $vid = substr(preg_replace('/[^a-z0-9]/i', '', (string)($_POST['v'] ?? '')), 0, 40);
         if ($vid === '') exit('{}');
         $st = $pdo->prepare("INSERT INTO lp_views (page, vid) VALUES (?, ?)");

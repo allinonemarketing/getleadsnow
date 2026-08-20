@@ -39,7 +39,8 @@ function sendSignupToSheet($data) {
     $url = env('SIGNUP_SHEET_WEBHOOK', 'https://script.google.com/macros/s/AKfycbxopvufaoxaHoKAS-yZiWNfqZgv1LcfmjI59hzSjd8dLmozjX8bKKBYTmJrA--td8Xk/exec');
     if (!$url) return false;
     $payload = json_encode([
-        'date'            => date('Y-m-d H:i:s'),
+        // Eastern time, 12-hour — the server clock is UTC.
+        'date'            => (new DateTime('now', new DateTimeZone('America/New_York')))->format('n/j/Y g:i:s A'),
         'name'            => $data['name'] ?? '',
         'email'           => $data['email'] ?? '',
         'phone'           => $data['phone'] ?? '',
