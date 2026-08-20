@@ -6911,7 +6911,9 @@ class LeadListsApp {
         this.scraping = false;
 
         await this.refreshCurrentList();
-        if (finalInserted === 0 && finalFound > 0) {
+        if (finalFound === 0 && finalInserted === 0) {
+            this.toast(`No businesses found for that search. This usually means the town is very small or the niche wording is uncommon — try a bigger nearby city or a simpler keyword (e.g. "dentist" instead of "dental practitioners"). No credits were used.`);
+        } else if (finalInserted === 0 && finalFound > 0) {
             this.toast(`No new leads added — those ${finalFound.toLocaleString()} results are already in this list. Try a new city or a different search.`);
         } else if (finalNoCredit > 0) {
             this.toast(`${finalInserted.toLocaleString()} new leads added — you ran out of credits before saving the rest. Upgrade to continue.`);

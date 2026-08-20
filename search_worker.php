@@ -102,6 +102,18 @@ function process_job(PDO $pdo, array $job) {
     }
 
     $results = $r['data'];
+
+    // A 200 response with ZERO results can be upstream flakiness, not a truly
+    // empty city (seen live: "barber shop in Philadelphia" returned 0 three
+    // times in one bad window, then 5/5 minutes later). Retry a couple times
+    // before believing it — tiny towns still resolve to a genuine 0 after the
+    // retries, at the cost of at most two extra $0.001 API calls.
+    if (empty($results) && (int)$job['attempts'] < 3) {
+        $pdo->prepare("UPDATE search_jobs SET status='pending', locked_by=NULL WHERE id=?")->execute([$id]);
+        usleep(RATELIMIT_SLEEP_US);
+        return;
+    }
+
     $leads = [];
     foreach ($results as $x) {
         if (!is_array($x)) continue;
