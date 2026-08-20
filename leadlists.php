@@ -5235,7 +5235,7 @@ class LeadListsApp {
         this.searchedCitiesForList = new Set();
         this.cityFilter = 'all';
         this.scraping = false;
-        this.enrichmentPollId = null;
+        this.enrichmentPollId = null; this._hideEnrichBanner();
         this.currentLeadDetail = null;
         this.searchDebounce = null;
         this.hasFilter = '';
@@ -5845,7 +5845,7 @@ class LeadListsApp {
         try { sessionStorage.removeItem('aiom_open_list'); } catch (e) {}
         const eb = document.getElementById('enrichBanner');
         if (eb) eb.style.display = 'none';
-        this.enrichmentPollId = null;
+        this.enrichmentPollId = null; this._hideEnrichBanner();
         this._recoveryAttempts = 0;
         this._totalRecoveryAttempts = 0;
         this._failedRetryDone = false;
@@ -6962,6 +6962,11 @@ class LeadListsApp {
         this._enrichLiveLoop(listId);
     }
 
+    _hideEnrichBanner() {
+        const eb = document.getElementById('enrichBanner');
+        if (eb) eb.style.display = 'none';
+    }
+
     async _enrichLiveLoop(listId) {
         if (this.enrichmentPollId !== listId) return;
 
@@ -7012,7 +7017,7 @@ class LeadListsApp {
                         this.loadLeads();
                         this._enrichLiveLoop(listId);
                     } else {
-                        this.enrichmentPollId = null;
+                        this.enrichmentPollId = null; this._hideEnrichBanner();
                         this.loadLeads();
                     }
                 });
@@ -7020,7 +7025,7 @@ class LeadListsApp {
             }
             this._failedRetryDone = false;
             this._recoveryAttempts = 0;
-            this.enrichmentPollId = null;
+            this.enrichmentPollId = null; this._hideEnrichBanner();
         } else if ((processing || 0) > 0 && (pending || 0) === 0 && (needs_enrichment || 0) === 0) {
             this._recoveryAttempts = (this._recoveryAttempts || 0) + 1;
             this._totalRecoveryAttempts = (this._totalRecoveryAttempts || 0) + 1;
@@ -7028,7 +7033,7 @@ class LeadListsApp {
                 this._totalRecoveryAttempts = 0;
                 this._recoveryAttempts = 0;
                 this._failedRetryDone = false;
-                this.enrichmentPollId = null;
+                this.enrichmentPollId = null; this._hideEnrichBanner();
                 this.loadLeads();
                 return;
             }
@@ -7044,7 +7049,7 @@ class LeadListsApp {
                 const r = await this.api('fireAllScrapes', { list_id: listId, batch_size: 100 }, 'POST');
                 if (r && typeof r.credits !== 'undefined') { this.credits = r.credits; this.updateCreditsDisplay(); }
                 if (r && r.out_of_credits) {
-                    this.enrichmentPollId = null;   // stop polling; leads stay pending until top-up
+                    this.enrichmentPollId = null; this._hideEnrichBanner();   // stop polling; leads stay pending until top-up
                     this.toast('Out of credits — enrichment paused. Add credits to finish.');
                     this.loadLeads();
                     return;
