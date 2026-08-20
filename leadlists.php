@@ -2331,6 +2331,9 @@ if (isset($_GET['action'])) {
     }
     exit;
 }
+// The app frame must never be served stale from browser cache — deploys were
+// invisible to users until a hard refresh.
+header('Cache-Control: no-store, max-age=0');
 ?><!DOCTYPE html>
 <html lang="en">
 <head>
@@ -4349,7 +4352,17 @@ if (isset($_GET['action'])) {
               .wfaq summary::after{content:"\f078";font-family:"Font Awesome 6 Free";font-weight:900;font-size:12px;color:var(--accent,#c85719);transition:transform .2s;flex:none}
               .wfaq[open] summary::after{transform:rotate(180deg)}
               .wfaq .wfaq-body{padding:0 16px 14px;font-size:13.5px;line-height:1.6;color:var(--text-secondary,#5b6066)}
+              /* permanent help section (all users); the welcome screen carries its
+                 own copy of the FAQs, so hide this one while that screen shows */
+              #emptyState:not(.hidden) ~ #faqsPermanent{display:none}
+              #faqsPermanent{max-width:660px;margin:0 auto;padding-bottom:34px}
+              #faqsPermanent .welcome-faqs{margin-top:0}
+              .vidwrap{position:relative;padding-top:56.25%;background:linear-gradient(135deg,#1a1c1f,#2c3038);border-radius:14px;overflow:hidden;cursor:pointer;margin-bottom:20px;box-shadow:0 12px 34px rgba(16,20,30,.18)}
+              .vidwrap .vidplay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:74px;height:74px;border-radius:50%;background:var(--accent,#c85719);color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 10px 26px rgba(200,87,25,.5);transition:transform .15s}
+              .vidwrap:hover .vidplay{transform:translate(-50%,-50%) scale(1.08)}
+              .vidwrap .vidlabel{position:absolute;left:0;right:0;bottom:0;padding:14px 16px;color:#fff;font-weight:700;font-size:14px;background:linear-gradient(transparent,rgba(0,0,0,.6));text-align:center}
             </style>
+            <?php ob_start(); ?>
             <div class="welcome-faqs">
               <h3>Frequently asked questions</h3>
               <details class="wfaq"><summary>How do I download leads? (step-by-step video)</summary><div class="wfaq-body">Watch the quick walkthrough &mdash; it covers creating a list, searching a niche + city, enriching emails and exporting.<br><button onclick="app.openHelpVideo()" style="margin-top:10px;background:var(--accent,#c85719);color:#fff;border:none;border-radius:9px;padding:9px 16px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;"><i class="fas fa-circle-play"></i> Watch the video</button></div></details>
@@ -4361,7 +4374,20 @@ if (isset($_GET['action'])) {
               <details class="wfaq"><summary>Can I export my leads?</summary><div class="wfaq-body">Yes &mdash; use the Export menu to download a CSV, or push your leads straight into your Free CRM.</div></details>
               <details class="wfaq"><summary>What if a search returns no leads?</summary><div class="wfaq-body">You&rsquo;re only charged for leads actually returned, so a search that finds nothing costs you no credits.</div></details>
             </div>
+            <?php $welcomeFaqsHtml = ob_get_clean(); echo $welcomeFaqsHtml; ?>
         </div>
+    </div>
+
+    <!-- Permanent help & FAQs — always visible on the lead lists page for every
+         account (auto-hidden only while the new-user welcome screen, which has
+         its own copy, is showing). -->
+    <div id="faqsPermanent">
+        <h3 style="text-align:center;font-size:17px;font-weight:800;margin:40px 0 16px;color:var(--text-primary,#141517);"><i class="fas fa-circle-play" style="color:var(--accent,#c85719);margin-right:7px;"></i>Help &amp; FAQs</h3>
+        <div class="vidwrap" onclick="app.playInlineVideo(this)" role="button" tabindex="0" title="Play: how to download leads">
+            <div class="vidplay"><i class="fas fa-play"></i></div>
+            <div class="vidlabel">How to download leads &mdash; step-by-step walkthrough</div>
+        </div>
+        <?php echo $welcomeFaqsHtml; ?>
     </div>
 </div>
 
@@ -5653,6 +5679,14 @@ class LeadListsApp {
     closeHelpVideo() {
         document.getElementById('helpVideoModal').classList.remove('active');
         document.getElementById('helpVideoBox').innerHTML = '';
+    }
+
+    // Click-to-play facade for the permanent help section — the Vimeo player
+    // only loads once someone actually hits play.
+    playInlineVideo(el) {
+        el.innerHTML = '<iframe src="https://player.vimeo.com/video/1219974130?h=d0d90bab82&autoplay=1" style="position:absolute;inset:0;width:100%;height:100%;border:0;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="How to download leads"></iframe>';
+        el.onclick = null;
+        el.style.cursor = 'default';
     }
 
     openCreateModal() {
