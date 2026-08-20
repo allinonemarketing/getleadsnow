@@ -4710,6 +4710,7 @@ if (isset($_GET['action'])) {
                 <div style="font-size:13px;color:var(--text-secondary);">
                     <span id="selectedCitiesCount">0</span> cities selected &middot;
                     up to <strong style="color:var(--accent);"><span id="estimatedCredits">0</span> leads</strong>
+                    <span id="capHint" style="display:none;color:#b45309;font-weight:700;"></span>
                     &middot; <span style="opacity:.75;">1 credit per lead returned · enrichment is free</span>
                 </div>
                 <div style="font-size:13px;font-weight:700;color:var(--accent);white-space:nowrap;">
@@ -6767,10 +6768,23 @@ class LeadListsApp {
 
     updateCityCounts() {
         const perCity = this.getScrapeLimit();
-        document.getElementById('selectedCitiesCount').textContent = this.selectedCities.size;
-        // Upper bound of LEADS (cities x results-per-city). Each lead a search
-        // returns costs 1 credit; enrichment is free.
-        document.getElementById('estimatedCredits').textContent = (this.selectedCities.size * perCity).toLocaleString();
+        const n = this.selectedCities.size;
+        document.getElementById('selectedCitiesCount').textContent = n;
+        // Cap the shown estimate at what the balance can actually buy — the raw
+        // cities x per-city number promised leads the user could never afford.
+        const rawMax = n * perCity;
+        const est = Math.min(rawMax, this.credits);
+        document.getElementById('estimatedCredits').textContent = est.toLocaleString();
+        const hint = document.getElementById('capHint');
+        if (hint) {
+            if (rawMax > this.credits && n > 0) {
+                const capCities = Math.min(1000, Math.ceil(this.credits / perCity) + 10);
+                hint.style.display = 'inline';
+                hint.textContent = `— your ${this.credits.toLocaleString()} credits cover ~${Math.min(n, capCities).toLocaleString()} of these cities`;
+            } else {
+                hint.style.display = 'none';
+            }
+        }
     }
 
     async startBulkScrape() {
