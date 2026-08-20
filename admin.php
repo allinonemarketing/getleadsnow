@@ -250,6 +250,28 @@ $scrapes_today = $pdo->query("SELECT COUNT(*) FROM api_calls WHERE created_at >=
 $leads_today   = $pdo->query("SELECT COUNT(*) FROM lead_list_items WHERE created_at >= CURDATE()")->fetchColumn() ?: 0;
 $leads_total   = $pdo->query("SELECT COUNT(*) FROM lead_list_items")->fetchColumn() ?: 0;
 
+// Landing-page analytics (lp_views is written by lp_track.php beacons; the
+// table/column may not exist until first traffic, so fail soft to empty).
+$lpRange = $_GET['lp'] ?? '7d';
+if (!in_array($lpRange, ['today', '7d', 'all'], true)) $lpRange = '7d';
+$lpWhere = $lpRange === 'today' ? "created_at >= CURDATE()" : ($lpRange === '7d' ? "created_at >= NOW() - INTERVAL 7 DAY" : "1=1");
+$lpPages = [
+    'start'    => 'free_signup',
+    'leads'    => 'email_referral',
+    '1cent'    => 'fb_1cent',
+    '100leads' => 'fb_100leads',
+    'startnow' => 'fb_startnow',
+];
+$lpStats = []; $lpSignups = [];
+try {
+    foreach ($pdo->query("SELECT page, COUNT(*) views, COUNT(DISTINCT vid) uniq,
+        AVG(NULLIF(seconds,0)) avg_s, AVG(NULLIF(scroll_pct,0)) avg_sc
+        FROM lp_views WHERE $lpWhere GROUP BY page") as $r) { $lpStats[$r['page']] = $r; }
+} catch (Throwable $e) {}
+try {
+    foreach ($pdo->query("SELECT signup_source, COUNT(*) c FROM users WHERE signup_source IS NOT NULL AND $lpWhere GROUP BY signup_source") as $r) { $lpSignups[$r['signup_source']] = (int)$r['c']; }
+} catch (Throwable $e) {}
+
 $plan_stats = $pdo->query("SELECT subscription_plan, COUNT(*) as c FROM users GROUP BY subscription_plan")->fetchAll(PDO::FETCH_ASSOC);
 $plan_counts = ['none'=>0,'business'=>0,'agency'=>0,'enterprise'=>0];
 foreach ($plan_stats as $p) $plan_counts[$p['subscription_plan'] ?? 'none'] = $p['c'];
@@ -437,6 +459,45 @@ tr{cursor:pointer;}
                 <div class="stat-box purple"><div class="val"><?php echo $plan_counts['enterprise']; ?></div><div class="lbl">Enterprise</div></div>
             </div>
         </div>
+    </div>
+
+    <div class="card">
+        <h2 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span><i class="fas fa-bullseye" style="color:var(--accent);margin-right:6px;"></i>Landing Pages</span>
+            <span style="font-size:12px;font-weight:600;margin-left:auto;">
+                <?php foreach (['today' => 'Today', '7d' => '7 Days', 'all' => 'All Time'] as $rk => $rl): ?>
+                    <a href="?lp=<?php echo $rk; ?>" style="padding:4px 10px;border-radius:999px;text-decoration:none;<?php echo $lpRange === $rk ? 'background:var(--accent);color:#fff;' : 'color:var(--text-secondary);'; ?>"><?php echo $rl; ?></a>
+                <?php endforeach; ?>
+            </span>
+        </h2>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="text-align:left;color:var(--text-tertiary);font-size:11px;text-transform:uppercase;letter-spacing:.04em;">
+                <th style="padding:8px 6px;">Page</th><th style="padding:8px 6px;">Views</th><th style="padding:8px 6px;">Unique</th>
+                <th style="padding:8px 6px;">Signups</th><th style="padding:8px 6px;">Conv %</th>
+                <th style="padding:8px 6px;">Avg Time</th><th style="padding:8px 6px;">Avg Scroll</th>
+            </tr></thead>
+            <tbody>
+            <?php foreach ($lpPages as $lpPage => $lpSrc):
+                $s = $lpStats[$lpPage] ?? null;
+                $views = (int)($s['views'] ?? 0); $uniq = (int)($s['uniq'] ?? 0);
+                $sign = $lpSignups[$lpSrc] ?? 0;
+                $conv = $uniq > 0 ? round($sign / $uniq * 100, 1) : null;
+                $avgS = ($s && $s['avg_s'] !== null) ? round((float)$s['avg_s']) : null;
+                $avgSc = ($s && $s['avg_sc'] !== null) ? round((float)$s['avg_sc']) : null;
+            ?>
+            <tr style="border-top:1px solid var(--border);">
+                <td style="padding:9px 6px;font-weight:700;">/<?php echo $lpPage; ?></td>
+                <td style="padding:9px 6px;"><?php echo number_format($views); ?></td>
+                <td style="padding:9px 6px;"><?php echo number_format($uniq); ?></td>
+                <td style="padding:9px 6px;"><?php echo number_format($sign); ?></td>
+                <td style="padding:9px 6px;font-weight:700;<?php echo $conv !== null && $conv >= 10 ? 'color:var(--green);' : ''; ?>"><?php echo $conv === null ? '—' : $conv . '%'; ?></td>
+                <td style="padding:9px 6px;"><?php echo $avgS === null ? '—' : ($avgS >= 60 ? floor($avgS / 60) . 'm ' . ($avgS % 60) . 's' : $avgS . 's'); ?></td>
+                <td style="padding:9px 6px;"><?php echo $avgSc === null ? '—' : $avgSc . '%'; ?></td>
+            </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+        <div style="font-size:11.5px;color:var(--text-tertiary);margin-top:10px;">Conv % = signups &divide; unique visitors. View/signup tracking began Aug 20, 2026 — older signups aren&rsquo;t attributed. Bot and Facebook-crawler hits are filtered out.</div>
     </div>
 
     <div class="card">

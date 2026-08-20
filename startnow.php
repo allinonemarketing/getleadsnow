@@ -890,5 +890,22 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
     }).catch(function(){ if(settled) return; settled=true; clearTimeout(hangTimer); fail('Network error — please try again.'); });
   });
 </script>
+<script>
+// Landing-page analytics beacon (views / dwell time / scroll depth -> admin stats).
+(function(){try{
+  var vid=localStorage.getItem('aiom_vid');
+  if(!vid){vid=Date.now().toString(36)+Math.random().toString(36).slice(2,10);localStorage.setItem('aiom_vid',vid);}
+  var page=(location.pathname.split('/')[1]||'start').toLowerCase();
+  var t0=Date.now(),maxs=0,rowId=null;
+  var fd=new FormData();fd.append('a','view');fd.append('p',page);fd.append('v',vid);
+  fetch('/lp_track.php',{method:'POST',body:fd,keepalive:true}).then(function(r){return r.json()}).then(function(j){rowId=j&&j.id||null;}).catch(function(){});
+  addEventListener('scroll',function(){var d=document.documentElement;var p=Math.round((window.scrollY+window.innerHeight)/d.scrollHeight*100);if(p>maxs)maxs=Math.min(100,p);},{passive:true});
+  function curp(){var d=document.documentElement;return Math.min(100,Math.round((window.scrollY+window.innerHeight)/d.scrollHeight*100));}
+  function fin(){if(!rowId)return;var f=new FormData();f.append('a','fin');f.append('id',rowId);f.append('s',Math.round((Date.now()-t0)/1000));f.append('sc',Math.max(maxs,curp()));navigator.sendBeacon('/lp_track.php',f);}
+  addEventListener('pagehide',fin);
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')fin();});
+}catch(e){}})();
+</script>
 </body>
+
 </html>
