@@ -112,6 +112,7 @@ function sendSignupToGHL($d) {
         $tags = ['lead gen software signup', 'lead gen software signup dnd'];
         if (($d['source'] ?? '') === 'email_referral') { $tags[] = 'lead gen software email referral'; }
         if (($d['source'] ?? '') === 'fb_1cent')       { $tags[] = 'lead gen software 1 cent fb'; }
+        if (($d['source'] ?? '') === 'fb_100leads')    { $tags[] = 'lead gen software 100 leads fb'; }
         $ch = curl_init("https://services.leadconnectorhq.com/contacts/{$contactId}/tags");
         curl_setopt_array($ch, [
             CURLOPT_POST           => true,
