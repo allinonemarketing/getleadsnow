@@ -4672,10 +4672,6 @@ if (isset($_GET['action'])) {
                 <div class="selector-panel">
                     <div class="selector-header">
                         <span id="statesLabel">States</span>
-                        <label class="selector-item" style="padding:0;margin:0;">
-                            <input type="checkbox" id="selectAllStates" onchange="app.toggleAllStates(this.checked)">
-                            <span style="font-size:12px;">All</span>
-                        </label>
                     </div>
                     <div style="padding:6px 8px;border-bottom:1px solid var(--card-border);">
                         <input type="text" id="stateSearch" placeholder="Search states..." oninput="app.filterStates()" style="width:100%;padding:6px 10px;border:1px solid var(--card-border);border-radius:6px;font-size:13px;font-family:inherit;outline:none;background:var(--bg);">
@@ -4689,10 +4685,6 @@ if (isset($_GET['action'])) {
                             <button class="city-filter-pill active" data-cityfilter="all" onclick="app.setCityFilter('all')">All</button>
                             <button class="city-filter-pill" data-cityfilter="searched" onclick="app.setCityFilter('searched')">Searched</button>
                             <button class="city-filter-pill" data-cityfilter="unsearched" onclick="app.setCityFilter('unsearched')">New</button>
-                            <label class="selector-item" style="padding:0;margin:0 0 0 4px;">
-                                <input type="checkbox" id="selectAllCities" onchange="app.toggleAllCities(this.checked)">
-                                <span style="font-size:11px;">Select All</span>
-                            </label>
                         </div>
                         <div style="display:flex;gap:3px;align-items:center;width:100%;margin-top:4px;">
                             <span style="font-size:11px;color:var(--text-tertiary);margin-right:4px;">Sort:</span>
