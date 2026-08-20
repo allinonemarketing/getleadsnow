@@ -6817,7 +6817,15 @@ class LeadListsApp {
             if (cityObj) cityList.push(cityObj);
         });
 
-        const total = cityList.length;
+        // Tell the user when their selection exceeds what their credits can cover —
+        // the server only queues what they can pay for (hard cap 1,000 cities).
+        const maxCities = Math.min(1000, Math.ceil(this.credits / limit) + 10);
+        if (cityList.length > maxCities) {
+            const ok = confirm(`You selected ${cityList.length.toLocaleString()} cities, but at ${limit} results per city your ${this.credits.toLocaleString()} credits cover about ${maxCities.toLocaleString()} cities.\n\nWe'll search the first ${maxCities.toLocaleString()} cities. Continue?`);
+            if (!ok) { this.scraping = false; this.resetScrapeUI(); return; }
+        }
+
+        const total = Math.min(cityList.length, maxCities);
         document.getElementById('scrapeProgressText').textContent = `Queuing ${total} ${total === 1 ? 'city' : 'cities'}...`;
 
         // Hand the whole search to the background queue — one job per city. The
