@@ -5252,6 +5252,9 @@ class LeadListsApp {
 
     async init() {
         await this.loadLists();
+        // Restore the open list after a page refresh (list id lives in the hash).
+        const m = (location.hash || '').match(/^#list=(\d+)$/);
+        if (m) { this.openList(parseInt(m[1], 10)); }
     }
 
     async api(action, params = {}, method = 'GET') {
@@ -5798,6 +5801,8 @@ class LeadListsApp {
         });
 
         this.checkEnrichmentStatus(id);
+        // Survive refresh: record the open list in the URL (hash doesn't reload the iframe).
+        try { history.replaceState(null, '', location.pathname + location.search + '#list=' + id); } catch (e) {}
     }
 
     async checkEnrichmentStatus(listId) {
@@ -5829,6 +5834,7 @@ class LeadListsApp {
     }
 
     goBack() {
+        try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
         const eb = document.getElementById('enrichBanner');
         if (eb) eb.style.display = 'none';
         this.enrichmentPollId = null;
@@ -6986,6 +6992,7 @@ class LeadListsApp {
         if (this.currentList && this.currentList.id == listId && (Date.now() - (this._lastEnrichReload || 0)) > 6000) {
             this._lastEnrichReload = Date.now();
             this.loadLeads();
+            this.refreshCurrentList();   // stat cards (HAVE EMAIL etc.) update live too
         }
 
         if ((processing || 0) === 0 && (pending || 0) === 0 && (needs_enrichment || 0) === 0) {
