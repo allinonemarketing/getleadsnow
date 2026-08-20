@@ -4404,6 +4404,7 @@ if (isset($_GET['action'])) {
             <div id="enrichBarFill" style="height:100%;width:0%;border-radius:999px;background:repeating-linear-gradient(45deg,#2563eb 0 10px,#60a5fa 10px 20px);background-size:28px 28px;animation:enrichStripes .8s linear infinite;transition:width .6s ease;"></div>
         </div>
         <div id="enrichBarSub" style="margin-top:6px;font-size:11.5px;color:#3b82f6;font-weight:700;"></div>
+        <div style="margin-top:4px;font-size:11.5px;color:#60a5fa;font-weight:600;">Note: not every business publishes an email &mdash; leads without one still include phone &amp; social profiles.</div>
     </div>
 
     <div id="searchedStatesArea" class="hidden" style="margin-bottom:20px;">
@@ -4412,6 +4413,9 @@ if (isset($_GET['action'])) {
     </div>
 
     <div id="topStatsRow"></div>
+    <div style="margin:-8px 0 16px;font-size:12px;color:var(--text-tertiary);line-height:1.5;">
+        <i class="fas fa-circle-info" style="margin-right:5px;"></i>* Not every business publishes an email address &mdash; it&rsquo;s normal for some leads to have phone &amp; socials but no email. That&rsquo;s the data that exists, not a glitch.
+    </div>
 
     <div id="listMapWrap" style="margin-bottom:20px;background:var(--card-solid);border:1px solid var(--card-border);border-radius:var(--radius);overflow:hidden;">
         <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--card-border);">
