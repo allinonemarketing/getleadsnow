@@ -4275,6 +4275,7 @@ if (isset($_GET['action'])) {
         </div>
         <div style="display:flex;gap:12px;align-items:center;">
             <span class="credits-badge"><i class="fas fa-coins"></i> <span id="creditsDisplay"><?php echo number_format($userCredits); ?></span> credits</span>
+            <button class="btn" onclick="app.openHelpVideo()" style="background:#eefaf1;border:1px solid #cdeed7;color:#14713a;font-weight:700;" title="Step-by-step video: how to download leads"><i class="fas fa-circle-play"></i> How It Works</button>
             <button class="btn btn-primary" onclick="app.openCreateModal()"><i class="fas fa-plus"></i> New List</button>
         </div>
     </div>
@@ -4351,6 +4352,7 @@ if (isset($_GET['action'])) {
             </style>
             <div class="welcome-faqs">
               <h3>Frequently asked questions</h3>
+              <details class="wfaq"><summary>How do I download leads? (step-by-step video)</summary><div class="wfaq-body">Watch the quick walkthrough &mdash; it covers creating a list, searching a niche + city, enriching emails and exporting.<br><button onclick="app.openHelpVideo()" style="margin-top:10px;background:var(--accent,#c85719);color:#fff;border:none;border-radius:9px;padding:9px 16px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;"><i class="fas fa-circle-play"></i> Watch the video</button></div></details>
               <details class="wfaq"><summary>Does every lead come with an email address?</summary><div class="wfaq-body">No &mdash; leads are pulled live from Google Maps, so every lead includes the business name, phone, website, rating and address, but not every business lists an email publicly. Our free one-click enrichment then fills in emails &amp; socials wherever they&rsquo;re available, so some leads simply won&rsquo;t have an email.</div></details>
               <details class="wfaq"><summary>What does a search cost?</summary><div class="wfaq-body">1 credit per lead returned. Enriching leads with emails &amp; socials is always free &mdash; and so is exporting.</div></details>
               <details class="wfaq"><summary>What data do I get for each lead?</summary><div class="wfaq-body">Business name, phone number, website, rating, address and category &mdash; plus emails and social profiles after free enrichment.</div></details>
@@ -4486,6 +4488,19 @@ if (isset($_GET['action'])) {
         </div>
     </div>
     <div id="paginationArea" class="pagination"></div>
+</div>
+
+<!-- HELP VIDEO MODAL (step-by-step: how to download leads) -->
+<div id="helpVideoModal" class="modal-overlay" onclick="if(event.target===this)app.closeHelpVideo()">
+    <div class="modal" style="max-width:840px;width:94%;">
+        <div class="modal-header">
+            <h2><i class="fas fa-circle-play" style="color:var(--accent);margin-right:8px;"></i>How to Download Leads</h2>
+            <button class="btn-icon" onclick="app.closeHelpVideo()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" style="padding:0;">
+            <div id="helpVideoBox" style="position:relative;padding-top:56.25%;background:#000;border-radius:0 0 12px 12px;overflow:hidden;"></div>
+        </div>
+    </div>
 </div>
 
 <!-- CREATE/EDIT LIST MODAL -->
@@ -5625,6 +5640,19 @@ class LeadListsApp {
                 </div>
             `;
         }).join('');
+    }
+
+    openHelpVideo() {
+        // Iframe injected on open / removed on close so the player only loads
+        // (and always stops) when the modal is actually in use.
+        const box = document.getElementById('helpVideoBox');
+        box.innerHTML = '<iframe src="https://player.vimeo.com/video/1219974130?h=d0d90bab82&autoplay=1" style="position:absolute;inset:0;width:100%;height:100%;border:0;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="How to download leads"></iframe>';
+        document.getElementById('helpVideoModal').classList.add('active');
+    }
+
+    closeHelpVideo() {
+        document.getElementById('helpVideoModal').classList.remove('active');
+        document.getElementById('helpVideoBox').innerHTML = '';
     }
 
     openCreateModal() {
