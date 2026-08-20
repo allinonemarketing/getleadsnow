@@ -120,7 +120,7 @@ function sendWelcomeEmail($userData) {
             <h2>Welcome {$userData['name']}!</h2>
             <p>Thank you for joining {$appName}. You've got <strong>" . (defined('FREE_TIER_CREDITS') ? FREE_TIER_CREDITS : 100) . " free credits</strong> to start finding leads right away — that's 1 credit per lead.</p>
             <p><a href='{$appUrl}/dashboard.php' style='background-color:#c85719;color:#fff;padding:10px 20px;text-decoration:none;border-radius:8px;font-weight:600;'>Go to Dashboard</a></p>
-            <p style='margin-top:18px;'>New here? <a href='https://vimeo.com/1219974130/d0d90bab82' style='color:#c85719;font-weight:600;'>&#9654; Watch the quick walkthrough video</a> &mdash; it shows you step by step how to pull your first leads.</p>
+            <p style='margin-top:18px;'>To get started, <a href='{$appUrl}/dashboard' style='color:#c85719;font-weight:600;'>go to your dashboard</a> and watch the Get Started video &mdash; it walks you through pulling your first leads step by step.</p>
             <br><p>Best regards,<br>{$appName} Team</p>
         </body></html>";
         return $mail->send();
