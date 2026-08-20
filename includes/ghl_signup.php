@@ -109,10 +109,14 @@ function sendSignupToGHL($d) {
     try {
         // Every signup gets the two base tags; email-referral signups (/leads page)
         // get a third tag so they can be segmented/automated separately in GHL.
+        // FB ad signups get 4 tags: the 2 base tags + a generic "fb lead" tag
+        // (segment ALL Facebook leads at once) + a page-specific tag.
         $tags = ['lead gen software signup', 'lead gen software signup dnd'];
-        if (($d['source'] ?? '') === 'email_referral') { $tags[] = 'lead gen software email referral'; }
-        if (($d['source'] ?? '') === 'fb_1cent')       { $tags[] = 'lead gen software 1 cent fb'; }
-        if (($d['source'] ?? '') === 'fb_100leads')    { $tags[] = 'lead gen software 100 leads fb'; }
+        $src = (string) ($d['source'] ?? '');
+        if ($src === 'email_referral')    { $tags[] = 'lead gen software email referral'; }
+        if (strpos($src, 'fb_') === 0)    { $tags[] = 'lead gen software fb lead'; }
+        if ($src === 'fb_1cent')          { $tags[] = 'lead gen software 1 cent fb'; }
+        if ($src === 'fb_100leads')       { $tags[] = 'lead gen software 100 leads fb'; }
         $ch = curl_init("https://services.leadconnectorhq.com/contacts/{$contactId}/tags");
         curl_setopt_array($ch, [
             CURLOPT_POST           => true,
