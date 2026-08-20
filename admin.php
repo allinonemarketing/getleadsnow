@@ -236,6 +236,16 @@ $conversion_rate = $total_users > 0 ? round(($paying_users / $total_users) * 100
 
 $active_today = $pdo->query("SELECT COUNT(*) FROM users WHERE last_active_at >= CURDATE()")->fetchColumn() ?: 0;
 $new_today = $pdo->query("SELECT COUNT(*) FROM users WHERE DATE(created_at) = CURDATE()")->fetchColumn() ?: 0;
+// DB timestamps are UTC (server clock). Display them in Eastern time.
+function estTime($ts, $fmt = 'M j, g:ia') {
+    if (!$ts) return 'Never';
+    try {
+        $d = new DateTime($ts, new DateTimeZone('UTC'));
+        $d->setTimezone(new DateTimeZone('America/New_York'));
+        return $d->format($fmt);
+    } catch (Exception $e) { return $ts; }
+}
+
 $scrapes_today = $pdo->query("SELECT COUNT(*) FROM api_calls WHERE created_at >= CURDATE()")->fetchColumn() ?: 0;
 $leads_today   = $pdo->query("SELECT COUNT(*) FROM lead_list_items WHERE created_at >= CURDATE()")->fetchColumn() ?: 0;
 $leads_total   = $pdo->query("SELECT COUNT(*) FROM lead_list_items")->fetchColumn() ?: 0;
@@ -492,7 +502,7 @@ tr{cursor:pointer;}
                     <td><?php echo $u['list_count']; ?></td>
                     <td><?php echo number_format($u['lead_count']); ?></td>
                     <td>$<?php echo number_format($u['total_spent'], 0); ?></td>
-                    <td style="font-size:12px;color:var(--text-tertiary);"><?php echo $u['last_active_at'] ? date('M j, g:ia', strtotime($u['last_active_at'])) : 'Never'; ?></td>
+                    <td style="font-size:12px;color:var(--text-tertiary);"><?php echo estTime($u['last_active_at']); ?></td>
                 </tr>
                 <?php endforeach; ?>
                 </tbody>
@@ -510,7 +520,7 @@ tr{cursor:pointer;}
                 <tbody>
                 <?php foreach ($transactions_json as $t): ?>
                 <tr onclick="openUser(<?php echo $t['user_id']; ?>)">
-                    <td><?php echo date('M j, g:ia', strtotime($t['created_at'])); ?></td>
+                    <td><?php echo estTime($t['created_at']); ?></td>
                     <td style="font-weight:500;"><?php echo htmlspecialchars($t['user_name']); ?></td>
                     <td><?php echo number_format($t['credits']); ?></td>
                     <td style="color:var(--green);font-weight:600;">$<?php echo number_format($t['amount'], 2); ?></td>
@@ -533,7 +543,7 @@ tr{cursor:pointer;}
                 <tbody>
                 <?php foreach ($api_calls_json as $c): ?>
                 <tr onclick="openUser(<?php echo $c['user_id']; ?>)">
-                    <td><?php echo date('M j, g:ia', strtotime($c['created_at'])); ?></td>
+                    <td><?php echo estTime($c['created_at']); ?></td>
                     <td style="font-weight:500;"><?php echo htmlspecialchars($c['user_name']); ?></td>
                     <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?php echo htmlspecialchars(!empty($c['search_query']) ? $c['search_query'] : ($c['url'] ?? '')); ?></td>
                     <td><span class="badge badge-gray"><?php echo htmlspecialchars($c['scraper_model']); ?></span></td>
@@ -570,7 +580,7 @@ tr{cursor:pointer;}
                 <tbody>
                 <?php foreach ($ghl_imports as $gi): ?>
                 <tr class="ghl-import-row" data-user="<?php echo htmlspecialchars(strtolower($gi['user_name'] . ' ' . $gi['user_email'])); ?>" data-status="<?php echo $gi['status']; ?>" data-list="<?php echo htmlspecialchars(strtolower($gi['list_name'] ?? '')); ?>" onclick="openUser(<?php echo $gi['user_id']; ?>)">
-                    <td style="white-space:nowrap;"><?php echo date('M j, g:ia', strtotime($gi['created_at'])); ?></td>
+                    <td style="white-space:nowrap;"><?php echo estTime($gi['created_at']); ?></td>
                     <td style="font-weight:500;"><?php echo htmlspecialchars($gi['user_name']); ?></td>
                     <td><?php echo htmlspecialchars($gi['list_name'] ?? 'List #' . $gi['list_id']); ?></td>
                     <td style="font-size:12px;"><?php echo htmlspecialchars($gi['connection_name'] ?? '—'); ?></td>
