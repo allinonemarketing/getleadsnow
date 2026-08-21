@@ -61,7 +61,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
     padding:20px 20px;font-size:26px;font-weight:700;letter-spacing:.04em;cursor:pointer;font-family:inherit;transition:background .12s}
   .btn:hover{background:#4356e0}
   .btn:disabled{opacity:.6;cursor:default}
-  .tcpa{max-width:560px;margin:16px auto 0;font-size:8px;line-height:1.6;color:#8a8f96;text-transform:uppercase;letter-spacing:.02em}
+  .tcpa{max-width:560px;margin:16px auto 0;font-size:7px;line-height:1.6;color:#8a8f96;text-transform:uppercase;letter-spacing:.02em}
   .tcpa a{color:#8a8f96}
   .qbox{background:#fff;border:1px solid #d8d8d8;border-radius:10px;padding:20px 18px;text-align:left;margin-bottom:6px}
   .qbox .qh{font-weight:700;font-size:15px;margin-bottom:8px;color:#111}
