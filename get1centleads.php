@@ -61,12 +61,12 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
     padding:20px 20px;font-size:26px;font-weight:700;letter-spacing:.04em;cursor:pointer;font-family:inherit;transition:background .12s}
   .btn:hover{background:#4356e0}
   .btn:disabled{opacity:.6;cursor:default}
-  .tcpa{max-width:620px;margin:18px auto 0;font-size:9.5px;line-height:1.6;color:#8a8f96;text-transform:uppercase;letter-spacing:.02em}
+  .tcpa{max-width:560px;margin:16px auto 0;font-size:8px;line-height:1.6;color:#8a8f96;text-transform:uppercase;letter-spacing:.02em}
   .tcpa a{color:#8a8f96}
   .qbox{background:#fff;border:1px solid #d8d8d8;border-radius:10px;padding:20px 18px;text-align:left;margin-bottom:6px}
   .qbox .qh{font-weight:700;font-size:15px;margin-bottom:8px;color:#111}
-  .qbox p{font-size:14px;color:#444;margin-bottom:12px}
-  .qbox .qsub{color:#888;font-size:12.5px}
+  .qbox p{font-size:17px;font-weight:500;color:#222;margin-bottom:14px}
+  .qbox .qsub{color:#888;font-size:13px;font-weight:400}
   .qopts{display:grid;gap:9px}
   .qopts label{display:flex;align-items:center;gap:10px;border:1px solid #d8d8d8;border-radius:8px;padding:12px 14px;cursor:pointer;font-size:14.5px;font-weight:500;background:#fafafa}
   .qopts label:hover{border-color:#5468ff}
@@ -110,7 +110,6 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
       <!-- Part 2: reseller question + TCPA + final submit -->
       <div class="fstep" data-step="2" hidden>
         <fieldset class="qbox" id="ownOpts" style="border:none;">
-          <legend class="qh">One quick question</legend>
           <p>Do you want to get leads for less than 1 penny, plus sell this tool to create an additional revenue stream? <span class="qsub">Either answer still gets you your 100 free leads.</span></p>
           <div class="qopts">
             <label for="own_yes"><input type="radio" name="own" id="own_yes" value="yes"><span>Yes, show me</span></label>
