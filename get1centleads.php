@@ -175,6 +175,18 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
     [F.name,F.email,F.phone].forEach(el=>el.addEventListener('input',function(){ if(el.classList.contains('bad')) setField(el,true);
       if(!started){ started=true; try{ if(window.fbq){ fbq('trackCustom','FormStart'); fbq('track','ViewContent',{content_name:'get1cent_signup'}); } }catch(e){} } }));
 
+    // Live phone mask: (xxx) xxx-xxxx, max 10 digits; a pasted/typed leading
+    // "1" country code (11 digits) is stripped so numbers never come through
+    // as 1516473431x.
+    F.phone.addEventListener('input',function(){
+      var d=F.phone.value.replace(/\D+/g,'');
+      if(d.length>10 && d.charAt(0)==='1') d=d.slice(1);
+      d=d.slice(0,10);
+      F.phone.value = d.length>6 ? '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6)
+                    : d.length>3 ? '('+d.slice(0,3)+') '+d.slice(3)
+                    : d.length>0 ? '('+d : '';
+    });
+
     function showStep(n){ step=n; steps.forEach(s=>{ s.hidden = parseInt(s.getAttribute('data-step'),10)!==n; }); }
 
     form.addEventListener('submit',function(e){
