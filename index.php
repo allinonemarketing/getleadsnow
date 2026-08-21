@@ -575,7 +575,7 @@ if (isLoggedIn()) {
                 .then(data => {
                     if (data.success) {
                         if (selectedPlanId) proceedToCheckout(selectedPlanId);
-                        else window.location.href = "/dashboard";
+                        else window.location.href = data.redirect || "/dashboard";
                     } else {
                         errEl.textContent = data.message || 'Invalid email or password';
                         errEl.style.display = 'block';

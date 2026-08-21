@@ -20,7 +20,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($user && password_verify($password, $user['password'])) {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_name'] = $user['name'];
-            echo json_encode(['success' => true, 'message' => 'Login successful.']);
+            // Every login AFTER the first lands on the "Get Leads For Less Than
+            // 1¢" page (per account). Landing there also stands in for the penny
+            // promo popup this session, so they aren't pitched twice.
+            $redirect = '/dashboard';
+            try {
+                $pdo->prepare("UPDATE users SET login_count = login_count + 1 WHERE id = ?")->execute([$user['id']]);
+                $lcStmt = $pdo->prepare("SELECT login_count FROM users WHERE id = ?");
+                $lcStmt->execute([$user['id']]);
+                if ((int)$lcStmt->fetchColumn() > 1) {
+                    $redirect = '/dashboard?section=penny';
+                    $_SESSION['penny_promo_shown'] = 1;
+                }
+            } catch (Throwable $e) {}
+            echo json_encode(['success' => true, 'message' => 'Login successful.', 'redirect' => $redirect]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Invalid email or password.']);
         }
@@ -259,7 +272,7 @@ $appLogo = htmlspecialchars(APP_LOGO);
                 const res = await fetch('login.php', { method: 'POST', body: fd });
                 const data = await res.json();
                 if (data.success) {
-                    window.location.href = "/dashboard";
+                    window.location.href = data.redirect || "/dashboard";
                 } else {
                     errorMsg.textContent = data.message;
                     errorMsg.style.display = 'block';

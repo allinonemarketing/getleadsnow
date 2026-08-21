@@ -74,7 +74,9 @@ try {
 
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
     // Free tier: everyone starts with a one-time batch of free credits.
-    $stmt = $pdo->prepare("INSERT INTO users (name, email, password, credits, wants_ownership, phone, signup_source) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    // login_count = 1: the signup session counts as the first login, so the
+    // user's next actual login is treated as returning (lands on the penny page).
+    $stmt = $pdo->prepare("INSERT INTO users (name, email, password, credits, wants_ownership, phone, signup_source, login_count) VALUES (?, ?, ?, ?, ?, ?, ?, 1)");
     $stmt->execute([$name, $email, $hashedPassword, FREE_TIER_CREDITS, $wantsOwnership, $phone, $signupSource]);
     $userId = $pdo->lastInsertId();
 
