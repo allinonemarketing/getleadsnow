@@ -804,7 +804,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
   // country code so 11-digit entries never come through mangled.
   F.phone.addEventListener('input',function(){
     var d=F.phone.value.replace(/\D+/g,'');
-    if(d.length>10 && d.charAt(0)==='1') d=d.slice(1);
+    d=d.replace(/^[01]+/,'');   // no US number starts with 1 or 0 — a leading 1 is always the country code
     d=d.slice(0,10);
     F.phone.value = d.length>6 ? '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6)
                   : d.length>3 ? '('+d.slice(0,3)+') '+d.slice(3)
