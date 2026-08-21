@@ -50,8 +50,10 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
   .field input:focus{outline:2px solid #5468ff;border-color:#5468ff}
   .phone{display:flex;align-items:center;background:#fff;border:1px solid #cfcfcf;border-radius:6px}
   .phone:focus-within{outline:2px solid #5468ff;border-color:#5468ff}
-  .phone .flag{padding:0 4px 0 14px;font-size:17px;flex:none}
-  .phone input{border:none;flex:1;text-align:center}
+  .phone .flag{display:flex;align-items:center;padding-left:14px;flex:none;width:52px}
+  .phone .flag svg{border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+  .phone::after{content:"";flex:none;width:52px}  /* balances the flag so the placeholder centers */
+  .phone input{border:none;flex:1;text-align:center;min-width:0}
   .phone input:focus{outline:none}
   .fe{display:none;color:#c0392b;font-size:12.5px;font-weight:500;margin-top:5px;text-align:center}
   .bad{border-color:#c0392b !important}
@@ -101,7 +103,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
       <div class="fstep" data-step="1">
         <div class="field"><input type="text" id="f_name" placeholder="Name" autocomplete="name" autocapitalize="words" enterkeyhint="next" required><div class="fe" id="fe_name">Please enter your name.</div></div>
         <div class="field"><input type="email" id="f_email" placeholder="Email" autocomplete="email" inputmode="email" autocapitalize="none" enterkeyhint="next" required><div class="fe" id="fe_email">Please enter a valid email.</div></div>
-        <div class="field"><div class="phone"><span class="flag">&#127482;&#127480;</span><input type="tel" id="f_phone" placeholder="Phone" autocomplete="tel-national" inputmode="tel" enterkeyhint="go" required></div><div class="fe" id="fe_phone">Please enter a valid 10-digit phone number.</div></div>
+        <div class="field"><div class="phone"><span class="flag" aria-hidden="true"><svg viewBox="0 0 24 16" width="24" height="16" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="16" fill="#fff"/><g fill="#b22234"><rect y="0" width="24" height="1.23"/><rect y="2.46" width="24" height="1.23"/><rect y="4.92" width="24" height="1.23"/><rect y="7.38" width="24" height="1.23"/><rect y="9.85" width="24" height="1.23"/><rect y="12.31" width="24" height="1.23"/><rect y="14.77" width="24" height="1.23"/></g><rect width="9.6" height="8.6" fill="#3c3b6e"/><g fill="#fff"><circle cx="1.6" cy="1.5" r=".45"/><circle cx="4.8" cy="1.5" r=".45"/><circle cx="8" cy="1.5" r=".45"/><circle cx="3.2" cy="3" r=".45"/><circle cx="6.4" cy="3" r=".45"/><circle cx="1.6" cy="4.5" r=".45"/><circle cx="4.8" cy="4.5" r=".45"/><circle cx="8" cy="4.5" r=".45"/><circle cx="3.2" cy="6" r=".45"/><circle cx="6.4" cy="6" r=".45"/><circle cx="1.6" cy="7.4" r=".45"/><circle cx="4.8" cy="7.4" r=".45"/><circle cx="8" cy="7.4" r=".45"/></g></svg></span><input type="tel" id="f_phone" placeholder="Phone" autocomplete="tel-national" inputmode="tel" enterkeyhint="go" required></div><div class="fe" id="fe_phone">Please enter a valid 10-digit phone number.</div></div>
         <button type="submit" class="btn">UNLOCK</button>
       </div>
 
