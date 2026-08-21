@@ -40,7 +40,9 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
   .logo{display:flex;justify-content:center;padding:22px 0 14px}
   .logo img{height:44px;width:auto}
   .card{max-width:1180px;margin:0 auto 26px;background:#f2f2f2;border-radius:14px;padding:52px 24px 44px}
-  .inner{max-width:640px;margin:0 auto;text-align:center}
+  .inner{max-width:1000px;margin:0 auto;text-align:center}
+  #leadForm{max-width:620px;margin:0 auto}
+  .inner > .err{max-width:620px;margin-left:auto;margin-right:auto}
   .eyebrow{font-size:17px;color:#333;margin-bottom:14px}
   h1{font-size:clamp(1.7rem,3.6vw,2.6rem);font-weight:900;line-height:1.18;letter-spacing:-.01em;color:#111;margin-bottom:30px}
   .field{margin-bottom:14px;text-align:left}
