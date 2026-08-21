@@ -766,7 +766,9 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
   (function(){
     const el=document.getElementById('f_phone'); if(!el) return;
     el.addEventListener('input',function(){
-      let d=el.value.replace(/\D/g,'').slice(0,10);
+      // Strip leading 1/0 first — no US number starts with them, so a typed
+      // "+1" country code never eats a digit of the real number.
+      let d=el.value.replace(/\D/g,'').replace(/^[01]+/,'').slice(0,10);
       let out=d;
       if(d.length>6) out='('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6);
       else if(d.length>3) out='('+d.slice(0,3)+') '+d.slice(3);
@@ -800,16 +802,6 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
   function vPhone(){return setField(F.phone,F.phone.value.trim().replace(/\D/g,'').length===10);}
   F.name.addEventListener('blur',vName); F.email.addEventListener('blur',vEmail);
   F.phone.addEventListener('blur',vPhone);
-  // Live phone mask: (xxx) xxx-xxxx, max 10 digits; strips a leading "1"
-  // country code so 11-digit entries never come through mangled.
-  F.phone.addEventListener('input',function(){
-    var d=F.phone.value.replace(/\D+/g,'');
-    d=d.replace(/^[01]+/,'');   // no US number starts with 1 or 0 — a leading 1 is always the country code
-    d=d.slice(0,10);
-    F.phone.value = d.length>6 ? '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6)
-                  : d.length>3 ? '('+d.slice(0,3)+') '+d.slice(3)
-                  : d.length>0 ? '('+d : '';
-  });
   [F.name,F.email,F.phone].forEach(el=>el.addEventListener('input',function(){ if(el.classList.contains('bad')) setField(el,true); }));
 
   // Render error text safely (never inject server-supplied strings as HTML).
