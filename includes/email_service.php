@@ -115,10 +115,23 @@ function sendWelcomeEmail($userData) {
         $mail->Subject = "Welcome to " . APP_NAME . "!";
         $appName = APP_NAME;
         $appUrl = APP_URL;
+        // Ad-page signups get an auto-generated password — deliver it here.
+        $credsBlock = '';
+        if (!empty($userData['password'])) {
+            $safePw = htmlspecialchars($userData['password']);
+            $safeEm = htmlspecialchars($userData['email']);
+            $credsBlock = "<div style='background:#f6f7f9;border:1px solid #e5e7eb;border-radius:10px;padding:14px 18px;margin:14px 0;'>
+                <strong>Your login details</strong><br>
+                Email: <strong>{$safeEm}</strong><br>
+                Password: <strong style='font-family:monospace;'>{$safePw}</strong><br>
+                <span style='font-size:12px;color:#777;'>You can change your password anytime under My Account.</span>
+            </div>";
+        }
         $mail->Body = "
         <html><body>
             <h2>Welcome {$userData['name']}!</h2>
             <p>Thank you for joining {$appName}. You've got <strong>" . (defined('FREE_TIER_CREDITS') ? FREE_TIER_CREDITS : 100) . " free credits</strong> to start finding leads right away — that's 1 credit per lead.</p>
+            {$credsBlock}
             <p>To get started, go to your dashboard and watch the Get Started video &mdash; it walks you through pulling your first leads step by step.</p>
             <p style='margin-top:18px;'><a href='{$appUrl}/dashboard.php' style='background-color:#c85719;color:#fff;padding:10px 20px;text-decoration:none;border-radius:8px;font-weight:600;'>Go to Dashboard</a></p>
             <br><p>Best regards,<br>{$appName} Team</p>

@@ -365,24 +365,8 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
           </div>
         </div>
 
-        <!-- Step 3: password -->
+        <!-- Step 3: ownership question + submit (password is auto-generated and emailed) -->
         <div class="fstep" data-step="3" hidden>
-          <div class="field">
-            <label for="f_pass">Create a password <span class="hint">· instant access, no email confirmation to wait on</span></label>
-            <div class="pwrap">
-              <input type="password" id="f_pass" placeholder="At least 6 characters" autocomplete="new-password" enterkeyhint="next" required aria-describedby="fe_pass">
-              <button type="button" class="pwtoggle" id="pwToggle" aria-label="Show password">Show</button>
-            </div>
-            <div class="fe" id="fe_pass">Password must be at least 6 characters.</div>
-          </div>
-          <div class="fnav">
-            <button type="button" class="btn-ghost backBtn">← Back</button>
-            <button type="submit" class="btn">Continue →</button>
-          </div>
-        </div>
-
-        <!-- Step 4: ownership question + submit -->
-        <div class="fstep" data-step="4" hidden>
           <fieldset class="qbox" id="ownOpts" aria-describedby="ownErr">
             <legend class="qh">One quick question</legend>
             <p>Do you want to get leads for less than 1 penny, plus sell this tool to create an additional revenue stream? <span class="qsub">Either answer still gets you your 100 leads.</span></p>
@@ -651,12 +635,12 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
 
   const form=document.getElementById('leadForm'), err=document.getElementById('err'), btn=document.getElementById('submitBtn');
   const btnLabel=btn.querySelector('.btn-label')||btn;
-  const F={name:document.getElementById('f_name'),email:document.getElementById('f_email'),phone:document.getElementById('f_phone'),pass:document.getElementById('f_pass')};
+  const F={name:document.getElementById('f_name'),email:document.getElementById('f_email'),phone:document.getElementById('f_phone')};
   const emailOk=v=>/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
 
   // Fire a one-time form-start signal so Meta can optimize on form-starters, not just PageView.
   let started=false;
-  [F.name,F.email,F.phone,F.pass].forEach(el=>el.addEventListener('focus',function(){
+  [F.name,F.email,F.phone].forEach(el=>el.addEventListener('focus',function(){
     if(started) return; started=true;
     try{ if(window.fbq){ fbq('trackCustom','FormStart'); fbq('track','ViewContent',{content_name:'start_signup'}); } }catch(e){}
   },{once:false}));
@@ -672,10 +656,9 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
   function vName(){return setField(F.name,F.name.value.trim().length>0);}
   function vEmail(){return setField(F.email,emailOk(F.email.value.trim()));}
   function vPhone(){return setField(F.phone,F.phone.value.trim().replace(/\D/g,'').length===10);}
-  function vPass(){return setField(F.pass,F.pass.value.length>=6);}
   F.name.addEventListener('blur',vName); F.email.addEventListener('blur',vEmail);
-  F.phone.addEventListener('blur',vPhone); F.pass.addEventListener('blur',vPass);
-  [F.name,F.email,F.phone,F.pass].forEach(el=>el.addEventListener('input',function(){ if(el.classList.contains('bad')) setField(el,true); }));
+  F.phone.addEventListener('blur',vPhone);
+  [F.name,F.email,F.phone].forEach(el=>el.addEventListener('input',function(){ if(el.classList.contains('bad')) setField(el,true); }));
 
   // Render error text safely (never inject server-supplied strings as HTML).
   function fail(msg){ err.textContent=msg; err.style.display='block'; btn.classList.remove('loading'); btn.disabled=false; btnLabel.textContent='Get My 100 Leads →'; }
@@ -695,14 +678,13 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
     if(fstepnumEl) fstepnumEl.textContent='Step '+n+' of '+TOTAL;
     err.style.display='none';
     if(doFocus){
-      var fe = n===1?F.name : n===2?F.phone : n===3?F.pass : document.getElementById('own_yes');
+      var fe = n===1?F.name : n===2?F.phone : document.getElementById('own_yes');
       if(fe){ try{ fe.focus({preventScroll:true}); }catch(e){} }
     }
   }
   function validateStep(n){
     if(n===1){ var a=vName(), b=vEmail(); if(!(a&&b)){ focusInvalid(!a?F.name:F.email); return false; } return true; }
     if(n===2){ if(!vPhone()){ focusInvalid(F.phone); return false; } return true; }
-    if(n===3){ if(!vPass()){ focusInvalid(F.pass); return false; } return true; }
     return true;
   }
   form.querySelectorAll('.backBtn').forEach(function(b){ b.addEventListener('click',function(){ if(currentStep>1) showStep(currentStep-1,true); }); });
@@ -717,10 +699,9 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
     }
     // Final step: re-validate everything, jumping back to any invalid step.
     err.style.display='none';
-    const okN=vName(), okE=vEmail(), okP=vPhone(), okW=vPass();
+    const okN=vName(), okE=vEmail(), okP=vPhone();
     if(!okN||!okE){ showStep(1,true); focusInvalid(!okN?F.name:F.email); return fail('Please fix the highlighted fields.'); }
     if(!okP){ showStep(2,true); return fail('Please enter a valid 10-digit phone number.'); }
-    if(!okW){ showStep(3,true); return fail('Password must be at least 6 characters.'); }
     const own=document.querySelector('input[name="own"]:checked');
     const ownErr=document.getElementById('ownErr'); ownErr.style.display = own ? 'none':'block';
     if(!own){ focusInvalid(document.getElementById('own_yes')); return fail('Please answer the question above.'); }
@@ -731,7 +712,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
     const leadEventId='lead.'+Date.now()+'.'+Math.floor(Math.random()*1e9);
     const fd=new FormData();
     fd.append('name',F.name.value.trim()); fd.append('phone',F.phone.value.trim());
-    fd.append('email',F.email.value.trim()); fd.append('password',F.pass.value);
+    fd.append('email',F.email.value.trim());
     fd.append('wants_ownership',own.value);
     Object.keys(track).forEach(k=>fd.append(k,track[k]));
     fd.append('event_id',leadEventId); fd.append('event_source_url',location.href);

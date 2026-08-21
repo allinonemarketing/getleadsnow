@@ -15,6 +15,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $name = trim($_POST['name'] ?? '');
 $email = trim($_POST['email'] ?? '');
 $password = $_POST['password'] ?? '';
+
+// Frictionless signup: the ad pages no longer ask for a password. Generate a
+// random one and include it in the welcome email (changeable in My Account).
+$passwordGenerated = false;
+if ($password === '') {
+    $alphabet = 'abcdefghjkmnpqrstuvwxyz23456789';   // no lookalikes (0/O, 1/l/i)
+    $rand = '';
+    for ($i = 0; $i < 8; $i++) { $rand .= $alphabet[random_int(0, strlen($alphabet) - 1)]; }
+    $password = 'Leads-' . $rand;
+    $passwordGenerated = true;
+}
 $phone = trim($_POST['phone'] ?? '');
 $wantsOwnership = (($_POST['wants_ownership'] ?? '') === 'yes') ? 'yes' : 'no';
 
@@ -47,8 +58,8 @@ $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? ($_SERVER['REMOTE_ADDR'] ?? '');
 if (strpos($ip, ',') !== false) { $ip = trim(explode(',', $ip)[0]); } // first hop in a proxy chain
 $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
 
-if (empty($name) || empty($email) || empty($password)) {
-    echo json_encode(['success' => false, 'message' => 'Name, email, and password are required.']);
+if (empty($name) || empty($email)) {
+    echo json_encode(['success' => false, 'message' => 'Name and email are required.']);
     exit;
 }
 
@@ -107,7 +118,7 @@ try {
     }
 
     sendAdminNotification(['name' => $name, 'email' => $email, 'wants_ownership' => $wantsOwnership]);
-    sendWelcomeEmail(['name' => $name, 'email' => $email]);
+    sendWelcomeEmail(['name' => $name, 'email' => $email, 'password' => $passwordGenerated ? $password : null]);
     sendSignupToSheet([
         'name' => $name, 'email' => $email, 'phone' => $phone,
         'dnd' => isTexasNumber($phone) ? 'Yes (SMS)' : 'No',
