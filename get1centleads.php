@@ -110,7 +110,7 @@ $appLogo = (defined('APP_LOGO') && APP_LOGO) ? APP_LOGO : '/assets/logo.svg';
       <!-- Part 2: reseller question + TCPA + final submit -->
       <div class="fstep" data-step="2" hidden>
         <fieldset class="qbox" id="ownOpts" style="border:none;">
-          <p>Do you want to get leads for less than 1 penny, plus add a new massive revenue stream? <span class="qsub">Either answer still gets you your 100 free leads.</span></p>
+          <p>Do you want to get leads for less than 1 penny, plus add a new massive revenue stream?</p>
           <div class="qopts">
             <label for="own_yes"><input type="radio" name="own" id="own_yes" value="yes"><span>Yes, show me</span></label>
             <label for="own_no"><input type="radio" name="own" id="own_no" value="no"><span>No, just the leads</span></label>
