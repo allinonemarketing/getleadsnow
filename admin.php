@@ -262,6 +262,7 @@ $lpPages = [
     '100leads' => 'fb_100leads',
     'startnow' => 'fb_startnow',
     '100free'  => 'fb_100free',
+    'get1centleads' => 'fb_get1centleads',
 ];
 $lpStats = []; $lpSignups = [];
 try {

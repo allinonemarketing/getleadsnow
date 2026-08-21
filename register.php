@@ -21,9 +21,8 @@ $password = $_POST['password'] ?? '';
 $passwordGenerated = false;
 if ($password === '') {
     $alphabet = 'abcdefghjkmnpqrstuvwxyz23456789';   // no lookalikes (0/O, 1/l/i)
-    $rand = '';
-    for ($i = 0; $i < 8; $i++) { $rand .= $alphabet[random_int(0, strlen($alphabet) - 1)]; }
-    $password = 'Leads-' . $rand;
+    $password = '';
+    for ($i = 0; $i < 10; $i++) { $password .= $alphabet[random_int(0, strlen($alphabet) - 1)]; }
     $passwordGenerated = true;
 }
 $phone = trim($_POST['phone'] ?? '');
@@ -43,12 +42,13 @@ $referrer    = trim($_POST['referrer'] ?? '');
 // and GHL "source" field. Whitelisted so the client can't inject arbitrary values.
 // /start (FB ads) => free_signup (default); /leads => email_referral; /1cent (FB "1 cent leads" ads) => fb_1cent; /100leads (FB cartoon "100 leads + software" ads) => fb_100leads.
 $signupSource = $_POST['signup_source'] ?? 'free_signup';
-if (!in_array($signupSource, ['free_signup', 'email_referral', 'fb_1cent', 'fb_100leads', 'fb_startnow', 'fb_100free'], true)) { $signupSource = 'free_signup'; }
+if (!in_array($signupSource, ['free_signup', 'email_referral', 'fb_1cent', 'fb_100leads', 'fb_startnow', 'fb_100free', 'fb_get1centleads'], true)) { $signupSource = 'free_signup'; }
 // Safety net: derive the source from the ACTUAL landing-page URL (sent by every
 // signup form as event_source_url). The page path is authoritative — it corrects
 // stale hidden fields and makes attribution auditable against the referrer.
 $srcPath = strtolower((string)(parse_url(trim($_POST['event_source_url'] ?? ''), PHP_URL_PATH) ?: ''));
-if (strpos($srcPath, '/100leads') === 0)   { $signupSource = 'fb_100leads'; }
+if (strpos($srcPath, '/get1centleads') === 0) { $signupSource = 'fb_get1centleads'; }
+elseif (strpos($srcPath, '/100leads') === 0) { $signupSource = 'fb_100leads'; }
 elseif (strpos($srcPath, '/100free') === 0) { $signupSource = 'fb_100free'; }
 elseif (strpos($srcPath, '/1cent') === 0)  { $signupSource = 'fb_1cent'; }
 elseif (strpos($srcPath, '/leads') === 0)  { $signupSource = 'email_referral'; }

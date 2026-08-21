@@ -4382,7 +4382,7 @@ header('Cache-Control: no-store, max-age=0');
          account (auto-hidden only while the new-user welcome screen, which has
          its own copy, is showing). -->
     <div id="faqsPermanent">
-        <h3 style="text-align:center;font-size:17px;font-weight:800;margin:40px 0 16px;color:var(--text-primary,#141517);"><i class="fas fa-circle-play" style="color:var(--accent,#c85719);margin-right:7px;"></i>Help &amp; FAQs</h3>
+        <h3 style="text-align:center;font-size:17px;font-weight:800;margin:40px 0 16px;color:var(--text-primary,#141517);"><i class="fas fa-circle-play" style="color:var(--accent,#c85719);margin-right:7px;"></i>Watch Get Started And Tutorial Video Here</h3>
         <div class="vidwrap" onclick="app.playInlineVideo(this)" role="button" tabindex="0" title="Play: how to download leads">
             <div class="vidplay"><i class="fas fa-play"></i></div>
             <div class="vidlabel">How to download leads &mdash; step-by-step walkthrough</div>
