@@ -9122,6 +9122,30 @@ document.addEventListener('click', (e) => {
     },800);
   }
 
+  // Video-first onboarding: brand-new accounts see the Get Started video full
+  // screen BEFORE the interactive tour. "Get Leads Now" closes it and starts
+  // the step-by-step tour. Shown under the same per-account gate as the tour.
+  function videoGate(onDone){
+    var ov=document.createElement('div');
+    ov.id='vgOv';
+    ov.style.cssText='position:fixed;inset:0;z-index:99990;background:rgba(15,17,21,.93);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;';
+    ov.innerHTML='<div style="max-width:760px;width:100%;text-align:center;">'
+      +'<h2 style="color:#fff;font-size:clamp(20px,3.5vw,28px);font-weight:900;margin-bottom:6px;">Welcome! Watch this quick video to get started</h2>'
+      +'<p style="color:#b7bcc5;font-size:14.5px;margin-bottom:16px;">It walks you through pulling your first 100 leads step by step.</p>'
+      +'<div id="vgVid" style="position:relative;padding-top:56.25%;background:#000;border-radius:14px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.5);cursor:pointer;">'
+        +'<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:78px;height:78px;border-radius:50%;background:#c85719;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 10px 26px rgba(200,87,25,.55);"><i class="fas fa-play"></i></div>'
+        +'<div style="position:absolute;left:0;right:0;bottom:0;padding:13px;color:#fff;font-weight:700;font-size:14px;background:linear-gradient(transparent,rgba(0,0,0,.6));">Watch: Get Started &amp; Tutorial Video</div>'
+      +'</div>'
+      +'<button id="vgGo" style="margin-top:18px;background:#c85719;color:#fff;border:none;border-radius:12px;padding:15px 34px;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 8px 24px rgba(200,87,25,.4);">Get Leads Now &rarr;</button>'
+    +'</div>';
+    document.body.appendChild(ov);
+    document.getElementById('vgVid').addEventListener('click',function(){
+      this.innerHTML='<iframe src="https://player.vimeo.com/video/1219974130?h=d0d90bab82&autoplay=1" style="position:absolute;inset:0;width:100%;height:100%;border:0;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Get started video"></iframe>';
+      this.style.cursor='default';
+    });
+    document.getElementById('vgGo').addEventListener('click',function(){ ov.remove(); onDone(); });
+  }
+
   function init(){
     addHelp();
     watchExport();
@@ -9136,8 +9160,8 @@ document.addEventListener('click', (e) => {
     var tries=0, wait=setInterval(function(){
       tries++;
       if(outOfCredits()){ clearInterval(wait); return; }   // out of credits — don't auto-run the tour
-      if(firstVisible('[onclick*="openCreateModal"]')){ clearInterval(wait); start(); }
-      else if(tries>=20){ clearInterval(wait); start(); }
+      if(firstVisible('[onclick*="openCreateModal"]')){ clearInterval(wait); videoGate(start); }
+      else if(tries>=20){ clearInterval(wait); videoGate(start); }
     },300);
   }
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',function(){ setTimeout(init,400); }); }
