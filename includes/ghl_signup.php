@@ -137,3 +137,69 @@ function sendSignupToGHL($d) {
 
     return true;
 }
+
+/**
+ * Append tags + custom-field values to an EXISTING contact (usage milestones).
+ * The upsert matches by email within the location and merges ONLY the fields
+ * sent here — nothing else on the contact is touched — and the /tags endpoint
+ * appends, never replaces. Fire-and-forget.
+ */
+function ghlAppendUsageMilestone($email, array $tags, array $fieldValues) {
+    $token      = env('GHL_SIGNUP_TOKEN', 'pit-c783c99a-a551-427c-ba0b-f9c18cfd820a');
+    $locationId = env('GHL_SIGNUP_LOCATION', 'rZ5eDWGmionEGPWr3cj4');
+    if (!$token || !$locationId || !$email) return false;
+
+    $customFields = [];
+    foreach ($fieldValues as $id => $val) {
+        if ($val !== '' && $val !== null) { $customFields[] = ['id' => $id, 'value' => (string) $val]; }
+    }
+
+    $headers = [
+        'Authorization: Bearer ' . $token,
+        'Version: 2021-07-28',
+        'Content-Type: application/json',
+        'Accept: application/json',
+    ];
+
+    $body = ['locationId' => $locationId, 'email' => $email];
+    if ($customFields) { $body['customFields'] = $customFields; }
+
+    $contactId = null;
+    try {
+        $ch = curl_init('https://services.leadconnectorhq.com/contacts/upsert');
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($body),
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 4,
+            CURLOPT_TIMEOUT        => 8,
+        ]);
+        $resp = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        $json = json_decode($resp, true);
+        $contactId = $json['contact']['id'] ?? ($json['id'] ?? null);
+        if (!$contactId) { error_log("GHL milestone upsert: no contact id (HTTP $code): " . $resp); return false; }
+    } catch (Exception $e) {
+        error_log("GHL milestone upsert failed: " . $e->getMessage());
+        return false;
+    }
+
+    try {
+        $ch = curl_init("https://services.leadconnectorhq.com/contacts/{$contactId}/tags");
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode(['tags' => array_values($tags)]),
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 4,
+            CURLOPT_TIMEOUT        => 8,
+        ]);
+        curl_exec($ch);
+        curl_close($ch);
+    } catch (Exception $e) {
+        error_log("GHL milestone tags failed: " . $e->getMessage());
+    }
+    return true;
+}

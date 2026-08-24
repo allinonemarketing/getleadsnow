@@ -121,7 +121,53 @@ function ingestLeads(PDO $pdo, int $userId, int $listId, array $leads): array {
         try { $pdo->prepare("UPDATE users SET credits = credits + ? WHERE id = ?")->execute([$charge - $inserted, $userId]); } catch (Exception $e) {}
     }
 
+    // Free-plan usage milestones -> GHL (append-only tags + date fields).
+    // Runs AFTER the refund so the balance check sees the final number.
+    if ($inserted > 0) {
+        try { freePlanUsageMilestones($pdo, $userId); } catch (Throwable $e) {}
+    }
+
     return ['inserted' => $inserted, 'skipped' => $skipped, 'skipped_no_credit' => $skippedNoCredit];
+}
+
+/**
+ * Free-plan lifecycle milestones, pushed to the user's EXISTING GHL contact
+ * (tags append, fields merge — the signup contact is never overwritten):
+ *   - first credits ever spent  -> tag "lead gen software free started using"
+ *                                  + "Date First Leads Pulled" custom field
+ *   - balance reaches 0         -> tag "lead gen software free no credits"
+ *                                  + "Date Free 100 Leads Pulled" custom field
+ * Each fires at most once per account, claimed via NULL-guarded UPDATEs so
+ * concurrent workers can't double-send.
+ */
+function freePlanUsageMilestones(PDO $pdo, int $userId): void {
+    $st = $pdo->prepare("SELECT email, subscription_plan, credits, first_pull_at, credits_exhausted_at FROM users WHERE id = ?");
+    $st->execute([$userId]);
+    $u = $st->fetch(PDO::FETCH_ASSOC);
+    if (!$u || empty($u['email'])) return;
+    $plan = strtolower((string)($u['subscription_plan'] ?? ''));
+    if (!($plan === '' || $plan === 'none' || $plan === 'free')) return;
+
+    $today = (new DateTime('now', new DateTimeZone('America/New_York')))->format('Y-m-d');
+
+    if (empty($u['first_pull_at'])) {
+        $claim = $pdo->prepare("UPDATE users SET first_pull_at = NOW() WHERE id = ? AND first_pull_at IS NULL");
+        $claim->execute([$userId]);
+        if ($claim->rowCount() > 0) {
+            require_once __DIR__ . '/ghl_signup.php';
+            ghlAppendUsageMilestone($u['email'], ['lead gen software free started using'],
+                ['lzVq5ajvgqClb8sy1RBB' => $today]);   // Lead Gen Software Signup - Date First Leads Pulled
+        }
+    }
+    if ((int)$u['credits'] < 1 && empty($u['credits_exhausted_at'])) {
+        $claim = $pdo->prepare("UPDATE users SET credits_exhausted_at = NOW() WHERE id = ? AND credits_exhausted_at IS NULL");
+        $claim->execute([$userId]);
+        if ($claim->rowCount() > 0) {
+            require_once __DIR__ . '/ghl_signup.php';
+            ghlAppendUsageMilestone($u['email'], ['lead gen software free no credits'],
+                ['mkbbm6NuymZLfYnGeHdy' => $today]);   // Lead Gen Software Signup - Date Free 100 Leads Pulled
+        }
+    }
 }
 
 /**
