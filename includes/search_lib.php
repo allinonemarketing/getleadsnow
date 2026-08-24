@@ -164,7 +164,7 @@ function freePlanUsageMilestones(PDO $pdo, int $userId): void {
         $claim->execute([$userId]);
         if ($claim->rowCount() > 0) {
             require_once __DIR__ . '/ghl_signup.php';
-            ghlAppendUsageMilestone($u['email'], ['lead gen software free no credits'],
+            ghlAppendUsageMilestone($u['email'], ['lead gen software free used first 100 credits'],
                 ['mkbbm6NuymZLfYnGeHdy' => $today]);   // Lead Gen Software Signup - Date Free 100 Leads Pulled
         }
     }

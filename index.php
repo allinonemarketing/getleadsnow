@@ -430,7 +430,7 @@ if (isLoggedIn()) {
                     </div>
                     <div class="form-group" id="phoneGroup">
                         <label>Phone Number</label>
-                        <input type="tel" id="authPhone" placeholder="(555) 123-4567">
+                        <input type="tel" id="authPhone" placeholder="(555) 123-4567" oninput="var d=this.value.replace(/\D+/g,'').replace(/^[01]+/,'').slice(0,10);this.value=d.length>6?'('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6):d.length>3?'('+d.slice(0,3)+') '+d.slice(3):d.length>0?'('+d:'';">
                     </div>
                     <div class="form-group">
                         <label>Email</label>
@@ -587,7 +587,7 @@ if (isLoggedIn()) {
                 const name = document.getElementById('authName').value.trim();
                 if (!name) { errEl.textContent = 'Please enter your name'; errEl.style.display = 'block'; btn.textContent = 'Create Account'; btn.disabled = false; return; }
                 const phone = document.getElementById('authPhone').value.trim();
-                if (!phone) { errEl.textContent = 'Please enter your phone number'; errEl.style.display = 'block'; btn.textContent = 'Create Account'; btn.disabled = false; return; }
+                if (phone.replace(/\D+/g, '').replace(/^[01]+/, '').length !== 10) { errEl.textContent = 'Please enter a valid 10-digit phone number'; errEl.style.display = 'block'; btn.textContent = 'Create Account'; btn.disabled = false; return; }
                 const ownershipEl = document.querySelector('input[name="wantsOwnership"]:checked');
                 if (!ownershipEl) { errEl.textContent = 'Please answer the ownership question (Yes or No).'; errEl.style.display = 'block'; btn.textContent = 'Create Account'; btn.disabled = false; return; }
                 const fd = new FormData();

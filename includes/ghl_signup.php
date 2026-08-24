@@ -99,6 +99,26 @@ function sendSignupToGHL($d) {
         curl_close($ch);
         $json = json_decode($resp, true);
         $contactId = $json['contact']['id'] ?? ($json['id'] ?? null);
+        // A malformed phone 400s the whole upsert and the contact (with all its
+        // signup tags) is silently lost — retry once without the phone.
+        if (!$contactId && !empty($body['phone'])) {
+            error_log("GHL upsert failed (HTTP $code), retrying without phone: " . substr((string)$resp, 0, 200));
+            unset($body['phone']);
+            $ch = curl_init('https://services.leadconnectorhq.com/contacts/upsert');
+            curl_setopt_array($ch, [
+                CURLOPT_POST           => true,
+                CURLOPT_POSTFIELDS     => json_encode($body),
+                CURLOPT_HTTPHEADER     => $headers,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_CONNECTTIMEOUT => 4,
+                CURLOPT_TIMEOUT        => 8,
+            ]);
+            $resp = curl_exec($ch);
+            $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            $json = json_decode($resp, true);
+            $contactId = $json['contact']['id'] ?? ($json['id'] ?? null);
+        }
         if (!$contactId) { error_log("GHL upsert: no contact id (HTTP $code): " . $resp); return false; }
     } catch (Exception $e) {
         error_log("GHL upsert failed: " . $e->getMessage());

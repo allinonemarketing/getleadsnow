@@ -26,6 +26,15 @@ if ($password === '') {
     $passwordGenerated = true;
 }
 $phone = trim($_POST['phone'] ?? '');
+// Server-side phone normalization — the guaranteed backstop behind the client
+// masks. Digits only, leading 1/0 country code dropped; anything that isn't a
+// valid 10-digit US number is stored EMPTY (junk phones used to 400 the whole
+// GHL contact push, losing the contact's signup tags — seen live: an email
+// address saved as a phone).
+$pnDigits = ltrim(preg_replace('/\D+/', '', $phone), '01');
+$phone = strlen($pnDigits) === 10
+    ? sprintf('(%s) %s-%s', substr($pnDigits, 0, 3), substr($pnDigits, 3, 3), substr($pnDigits, 6))
+    : '';
 $wantsOwnership = (($_POST['wants_ownership'] ?? '') === 'yes') ? 'yes' : 'no';
 
 // Attribution / context captured client-side + server-side.
