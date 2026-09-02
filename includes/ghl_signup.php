@@ -140,6 +140,7 @@ function sendSignupToGHL($d) {
         if ($src === 'fb_startnow')       { $tags[] = 'lead gen software start now fb'; }
         if ($src === 'fb_100free')        { $tags[] = 'lead gen software 100 free fb'; }
         if ($src === 'fb_get1centleads')  { $tags[] = 'lead gen software get 1 cent leads fb'; }
+        if ($src === 'free_4000leads')    { $tags[] = 'lead gen software 4000 leads'; }
         $ch = curl_init("https://services.leadconnectorhq.com/contacts/{$contactId}/tags");
         curl_setopt_array($ch, [
             CURLOPT_POST           => true,

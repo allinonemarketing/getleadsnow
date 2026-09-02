@@ -130,7 +130,7 @@ function sendWelcomeEmail($userData) {
         $mail->Body = "
         <html><body>
             <h2>Welcome {$userData['name']}!</h2>
-            <p>Thank you for joining {$appName}. You've got <strong>" . (defined('FREE_TIER_CREDITS') ? FREE_TIER_CREDITS : 100) . " free credits</strong> to start finding leads right away — that's 1 credit per lead.</p>
+            <p>Thank you for joining {$appName}. You've got <strong>" . number_format((int)($userData['credits'] ?? (defined('FREE_TIER_CREDITS') ? FREE_TIER_CREDITS : 100))) . " free credits</strong> to start finding leads right away — that's 1 credit per lead.</p>
             {$credsBlock}
             <p>To get started, go to your dashboard and watch the Get Started video &mdash; it walks you through pulling your first leads step by step.</p>
             <p style='margin-top:18px;'><a href='{$appUrl}/dashboard.php' style='background-color:#c85719;color:#fff;padding:10px 20px;text-decoration:none;border-radius:8px;font-weight:600;'>Go to Dashboard</a></p>

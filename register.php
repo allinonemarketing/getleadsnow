@@ -51,12 +51,13 @@ $referrer    = trim($_POST['referrer'] ?? '');
 // and GHL "source" field. Whitelisted so the client can't inject arbitrary values.
 // /start (FB ads) => free_signup (default); /leads => email_referral; /1cent (FB "1 cent leads" ads) => fb_1cent; /100leads (FB cartoon "100 leads + software" ads) => fb_100leads.
 $signupSource = $_POST['signup_source'] ?? 'free_signup';
-if (!in_array($signupSource, ['free_signup', 'email_referral', 'fb_1cent', 'fb_100leads', 'fb_startnow', 'fb_100free', 'fb_get1centleads'], true)) { $signupSource = 'free_signup'; }
+if (!in_array($signupSource, ['free_signup', 'email_referral', 'fb_1cent', 'fb_100leads', 'fb_startnow', 'fb_100free', 'fb_get1centleads', 'free_4000leads'], true)) { $signupSource = 'free_signup'; }
 // Safety net: derive the source from the ACTUAL landing-page URL (sent by every
 // signup form as event_source_url). The page path is authoritative — it corrects
 // stale hidden fields and makes attribution auditable against the referrer.
 $srcPath = strtolower((string)(parse_url(trim($_POST['event_source_url'] ?? ''), PHP_URL_PATH) ?: ''));
 if (strpos($srcPath, '/get1centleads') === 0) { $signupSource = 'fb_get1centleads'; }
+elseif (strpos($srcPath, '/4000leads') === 0) { $signupSource = 'free_4000leads'; }
 elseif (strpos($srcPath, '/100leads') === 0) { $signupSource = 'fb_100leads'; }
 elseif (strpos($srcPath, '/100free') === 0) { $signupSource = 'fb_100free'; }
 elseif (strpos($srcPath, '/1cent') === 0)  { $signupSource = 'fb_1cent'; }
@@ -94,10 +95,13 @@ try {
 
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
     // Free tier: everyone starts with a one-time batch of free credits.
+    // The hidden /4000leads invite channel grants 4,000 credits; everyone else
+    // gets the standard free tier.
+    $grantCredits = $signupSource === 'free_4000leads' ? 4000 : (defined('FREE_TIER_CREDITS') ? FREE_TIER_CREDITS : 100);
     // login_count = 1: the signup session counts as the first login, so the
     // user's next actual login is treated as returning (lands on the penny page).
     $stmt = $pdo->prepare("INSERT INTO users (name, email, password, credits, wants_ownership, phone, signup_source, login_count) VALUES (?, ?, ?, ?, ?, ?, ?, 1)");
-    $stmt->execute([$name, $email, $hashedPassword, FREE_TIER_CREDITS, $wantsOwnership, $phone, $signupSource]);
+    $stmt->execute([$name, $email, $hashedPassword, $grantCredits, $wantsOwnership, $phone, $signupSource]);
     $userId = $pdo->lastInsertId();
 
     if (session_status() === PHP_SESSION_NONE) {
@@ -127,7 +131,7 @@ try {
     }
 
     sendAdminNotification(['name' => $name, 'email' => $email, 'wants_ownership' => $wantsOwnership]);
-    sendWelcomeEmail(['name' => $name, 'email' => $email, 'password' => $passwordGenerated ? $password : null]);
+    sendWelcomeEmail(['name' => $name, 'email' => $email, 'password' => $passwordGenerated ? $password : null, 'credits' => $grantCredits]);
     sendSignupToSheet([
         'name' => $name, 'email' => $email, 'phone' => $phone,
         'dnd' => isTexasNumber($phone) ? 'Yes (SMS)' : 'No',
