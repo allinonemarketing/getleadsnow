@@ -180,6 +180,19 @@ function reclaim_stale(PDO $pdo) {
     } catch (Throwable $e) {}
 }
 
+// Monthly credit allowances on admin-created accounts: when a refill date comes
+// due, top the balance up and advance the date one month. A single atomic
+// UPDATE — after one worker refills a row, its date is in the future and other
+// workers' passes match nothing.
+function refill_admin_monthly(PDO $pdo) {
+    try {
+        $pdo->exec("UPDATE users SET credits = credits + admin_monthly_credits,
+                    admin_credits_next_refill = DATE_ADD(admin_credits_next_refill, INTERVAL 1 MONTH)
+                    WHERE admin_monthly_credits > 0 AND admin_credits_next_refill IS NOT NULL
+                      AND admin_credits_next_refill <= CURDATE()");
+    } catch (Throwable $e) {}
+}
+
 $workerId = substr(gethostname() ?: 'w', 0, 40) . '-' . getmypid();
 fwrite(STDERR, "[search_worker] $workerId started\n");
 $pdo = db_connect();
@@ -208,7 +221,7 @@ while (true) {
         if (!$job) {
             // Idle: use the time to poll enrichment results instead of sleeping.
             $swept = sweep_enrichment($pdo, $workerId);
-            if ((++$idleTicks % STALE_EVERY) === 0) { reclaim_stale($pdo); }
+            if ((++$idleTicks % STALE_EVERY) === 0) { reclaim_stale($pdo); refill_admin_monthly($pdo); }
             if ($swept === 0) usleep(IDLE_SLEEP_US);
             continue;
         }

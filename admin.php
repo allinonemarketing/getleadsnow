@@ -177,6 +177,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['action']) && $data['ac
     exit;
 }
 
+// Admin creates an account directly: auto-generated password (emailed to the
+// user), optional recurring monthly credit allowance (refilled by the worker).
+// No marketing side-effects (no sheet/GHL/FB) — this is an internal channel.
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['action']) && $data['action'] === 'create_user') {
+    header('Content-Type: application/json');
+    try {
+        $name  = trim((string)($data['name'] ?? ''));
+        $email = strtolower(trim((string)($data['email'] ?? '')));
+        $monthly = max(0, (int)($data['monthly_credits'] ?? 0));
+        if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) { echo json_encode(['success' => false, 'error' => 'Valid name and email required']); exit; }
+        $chk = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+        $chk->execute([$email]);
+        if ($chk->fetch()) { echo json_encode(['success' => false, 'error' => 'A user with that email already exists']); exit; }
+        $pnDigits = ltrim(preg_replace('/\D+/', '', (string)($data['phone'] ?? '')), '01');
+        $phone = strlen($pnDigits) === 10 ? sprintf('(%s) %s-%s', substr($pnDigits,0,3), substr($pnDigits,3,3), substr($pnDigits,6)) : '';
+        $alphabet = 'abcdefghjkmnpqrstuvwxyz23456789';
+        $plainPw = '';
+        for ($i = 0; $i < 10; $i++) { $plainPw .= $alphabet[random_int(0, strlen($alphabet) - 1)]; }
+        $stmt = $pdo->prepare("INSERT INTO users (name, email, password, credits, wants_ownership, phone, signup_source, login_count, admin_monthly_credits, admin_credits_next_refill)
+            VALUES (?, ?, ?, ?, 'no', ?, 'admin_created', 1, ?, " . ($monthly > 0 ? "DATE_ADD(CURDATE(), INTERVAL 1 MONTH)" : "NULL") . ")");
+        $stmt->execute([$name, $email, password_hash($plainPw, PASSWORD_DEFAULT), $monthly, $phone, $monthly]);
+        $newId = (int)$pdo->lastInsertId();
+        try { $pdo->prepare("INSERT INTO credit_transactions (user_id, credits, amount, transaction_id, notes) VALUES (?, ?, 0, 'ADMIN_CREATED', ?)")->execute([$newId, $monthly, 'Admin-created account, ' . $monthly . '/month']); } catch (Exception $e) {}
+        sendWelcomeEmail(['name' => $name, 'email' => $email, 'password' => $plainPw, 'credits' => $monthly]);
+        echo json_encode(['success' => true, 'user_id' => $newId, 'password' => $plainPw]);
+    } catch (Exception $e) { echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]); }
+    exit;
+}
+
+// Set/change the recurring monthly credit allowance on an existing user.
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['action']) && $data['action'] === 'set_monthly_credits') {
+    header('Content-Type: application/json');
+    try {
+        $m = max(0, (int)($data['monthly_credits'] ?? 0));
+        $pdo->prepare("UPDATE users SET admin_monthly_credits = ?,
+            admin_credits_next_refill = CASE WHEN ? > 0 THEN COALESCE(admin_credits_next_refill, DATE_ADD(CURDATE(), INTERVAL 1 MONTH)) ELSE NULL END
+            WHERE id = ?")->execute([$m, $m, (int)$data['user_id']]);
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) { echo json_encode(['success' => false, 'error' => 'Database error']); }
+    exit;
+}
+
 if (isset($_GET['action']) && $_GET['action'] === 'get_user') {
     header('Content-Type: application/json');
     try {
@@ -535,8 +577,31 @@ tr{cursor:pointer;}
         <button class="btn btn-sm" style="background:#b91c1c;color:#fff;" onclick="bulkDeleteUsers()"><i class="fas fa-trash"></i> Delete selected</button>
         <button class="btn btn-secondary btn-sm" onclick="clearUserSelection()">Clear</button>
     </div>
-    <div class="search-bar">
-        <input type="text" id="userSearch" placeholder="Search users by name or email..." oninput="filterUsers()">
+    <div class="search-bar" style="display:flex;gap:10px;align-items:center;">
+        <input type="text" id="userSearch" placeholder="Search users by name or email..." oninput="filterUsers()" style="flex:1;">
+        <button class="btn btn-primary btn-sm" onclick="openCreateUser()" style="white-space:nowrap;"><i class="fas fa-user-plus"></i> Add User</button>
+    </div>
+
+    <!-- CREATE USER MODAL -->
+    <div id="createUserOv" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(15,17,21,.55);align-items:center;justify-content:center;padding:20px;" onclick="if(event.target===this)closeCreateUser()">
+        <div style="background:var(--card-solid,#fff);border-radius:16px;max-width:420px;width:100%;padding:26px 24px;box-shadow:0 30px 80px rgba(0,0,0,.3);">
+            <h2 style="font-size:18px;font-weight:800;margin-bottom:4px;">Create User Account</h2>
+            <p style="font-size:12.5px;color:var(--text-tertiary);margin-bottom:16px;">Password is auto-generated and emailed to them with their login details.</p>
+            <div id="cuErr" style="display:none;background:#fee2e2;color:#b91c1c;border-radius:8px;padding:9px 12px;font-size:13px;margin-bottom:12px;"></div>
+            <label style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px;">Full name</label>
+            <input type="text" id="cuName" style="width:100%;padding:10px 12px;border:1px solid var(--card-border,#e5e7eb);border-radius:9px;font-family:inherit;font-size:14px;margin-bottom:12px;">
+            <label style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px;">Email</label>
+            <input type="email" id="cuEmail" style="width:100%;padding:10px 12px;border:1px solid var(--card-border,#e5e7eb);border-radius:9px;font-family:inherit;font-size:14px;margin-bottom:12px;">
+            <label style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px;">Phone <span style="font-weight:500;color:var(--text-tertiary);">(optional)</span></label>
+            <input type="tel" id="cuPhone" style="width:100%;padding:10px 12px;border:1px solid var(--card-border,#e5e7eb);border-radius:9px;font-family:inherit;font-size:14px;margin-bottom:12px;">
+            <label style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px;">Leads per month (credits)</label>
+            <input type="number" id="cuMonthly" min="0" value="1000" style="width:100%;padding:10px 12px;border:1px solid var(--card-border,#e5e7eb);border-radius:9px;font-family:inherit;font-size:14px;margin-bottom:4px;">
+            <p style="font-size:11.5px;color:var(--text-tertiary);margin-bottom:16px;">Granted now, then automatically refilled every month. Set 0 for no credits.</p>
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-secondary btn-sm" onclick="closeCreateUser()">Cancel</button>
+                <button class="btn btn-primary btn-sm" id="cuSubmit" onclick="submitCreateUser()">Create Account</button>
+            </div>
+        </div>
     </div>
     <div class="card" style="padding:0;overflow:hidden;">
         <div class="tbl-wrap" style="max-height:calc(100vh - 200px);overflow-y:auto;">
@@ -740,6 +805,43 @@ function filterUsers() {
 }
 
 let currentUserId = null;
+function openCreateUser() {
+    document.getElementById('cuErr').style.display = 'none';
+    document.getElementById('createUserOv').style.display = 'flex';
+    document.getElementById('cuName').focus();
+}
+function closeCreateUser() { document.getElementById('createUserOv').style.display = 'none'; }
+async function submitCreateUser() {
+    const btn = document.getElementById('cuSubmit'), errEl = document.getElementById('cuErr');
+    errEl.style.display = 'none';
+    btn.disabled = true; btn.textContent = 'Creating…';
+    try {
+        const res = await fetch('admin.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({
+            action: 'create_user',
+            name: document.getElementById('cuName').value.trim(),
+            email: document.getElementById('cuEmail').value.trim(),
+            phone: document.getElementById('cuPhone').value.trim(),
+            monthly_credits: parseInt(document.getElementById('cuMonthly').value, 10) || 0,
+        })});
+        const data = await res.json();
+        if (data.success) {
+            closeCreateUser();
+            alert('Account created (user #' + data.user_id + ').\n\nPassword: ' + data.password + '\n\nThe login details were also emailed to them.');
+            location.reload();
+        } else {
+            errEl.textContent = data.error || 'Failed to create the account';
+            errEl.style.display = 'block';
+        }
+    } catch (e) { errEl.textContent = 'Network error'; errEl.style.display = 'block'; }
+    btn.disabled = false; btn.textContent = 'Create Account';
+}
+async function setMonthly(userId) {
+    const m = parseInt(document.getElementById('slideMonthly').value, 10) || 0;
+    const res = await fetch('admin.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'set_monthly_credits', user_id: userId, monthly_credits: m }) });
+    const data = await res.json();
+    alert(data.success ? ('Monthly credits set to ' + m.toLocaleString()) : (data.error || 'Failed'));
+}
+
 async function openUser(id) {
     currentUserId = id;
     document.getElementById('slideBackdrop').classList.add('open');
@@ -775,6 +877,8 @@ async function openUser(id) {
                 <option value="enterprise" ${u.subscription_plan==='enterprise'?'selected':''}>Pro</option>
             </select></span></div>
             <div class="info-row"><span class="label">Credits</span><span class="value" id="slideCredits">${Number(u.credits).toLocaleString()}</span></div>
+            <div class="info-row"><span class="label">Monthly Credits</span><span class="value"><input type="number" id="slideMonthly" min="0" value="${Number(u.admin_monthly_credits||0)}" style="width:90px;padding:4px 8px;border:1px solid var(--card-border);border-radius:6px;font-family:inherit;font-size:13px;"> <button class="btn btn-secondary btn-sm" onclick="setMonthly(${u.id})">Save</button></span></div>
+            ${u.admin_credits_next_refill ? `<div class="info-row"><span class="label">Next Refill</span><span class="value">${u.admin_credits_next_refill}</span></div>` : ''}
             <div class="info-row"><span class="label">Joined</span><span class="value">${new Date(u.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span></div>
             <div class="info-row"><span class="label">Admin</span><span class="value"><input type="checkbox" ${u.is_admin?'checked':''} ${u.id==1?'disabled':''} onchange="toggleAdmin(${u.id},this.checked)" style="accent-color:var(--accent);"></span></div>
         </div>
