@@ -46,31 +46,66 @@ if (isset($_GET['action'])) {
     }
 
     if ($_GET['action'] === 'cancelSubscription') {
-        session_write_close();   // Stripe round-trip below — don't hold the session lock
+        session_write_close();   // external round-trips below — don't hold the session lock
         try {
-            $s = $pdo->prepare("SELECT subscription_id, subscription_plan FROM users WHERE id = ?");
+            $s = $pdo->prepare("SELECT name, email, subscription_id, subscription_plan FROM users WHERE id = ?");
             $s->execute([$userId]);
             $sub = $s->fetch(PDO::FETCH_ASSOC);
-            $subId = trim((string)($sub['subscription_id'] ?? ''));
-            if ($subId === '' || ($sub['subscription_plan'] ?? 'none') === 'none') {
+            $plan = (string)($sub['subscription_plan'] ?? 'none');
+            if ($plan === '' || $plan === 'none') {
                 echo json_encode(['success' => false, 'error' => 'No active subscription to cancel.']); exit;
             }
-            require_once 'config/stripe_config.php';
-            // Cancel NOW in Stripe: no further charges, paid plan ends immediately.
-            // The customer.subscription.deleted webhook applies the same downgrade
-            // again later — idempotent.
-            try {
-                $stripeSub = \Stripe\Subscription::retrieve($subId);
-                if (!in_array($stripeSub->status, ['canceled', 'incomplete_expired'], true)) {
-                    $stripeSub->cancel();
+            $subId = trim((string)($sub['subscription_id'] ?? ''));
+
+            if ($subId !== '') {
+                // Stripe-billed: cancel NOW at the source — no further charges.
+                // The customer.subscription.deleted webhook re-applies the same
+                // downgrade later; idempotent.
+                require_once 'config/stripe_config.php';
+                try {
+                    $stripeSub = \Stripe\Subscription::retrieve($subId);
+                    if (!in_array($stripeSub->status, ['canceled', 'incomplete_expired'], true)) {
+                        $stripeSub->cancel();
+                    }
+                } catch (\Stripe\Exception\InvalidRequestException $e) {
+                    // Stripe no longer knows this subscription — still downgrade
+                    // locally so the account matches reality.
+                    error_log('cancelSubscription: stripe lookup: ' . $e->getMessage());
                 }
-            } catch (\Stripe\Exception\InvalidRequestException $e) {
-                // Stripe no longer knows this subscription (already deleted there)
-                // — still downgrade locally so the account matches reality.
-                error_log('cancelSubscription: stripe lookup: ' . $e->getMessage());
             }
+
             $pdo->prepare("UPDATE users SET subscription_id = NULL, subscription_status = 'canceled', subscription_plan = 'none', monthly_credits = 0 WHERE id = ?")
                 ->execute([$userId]);
+
+            if ($subId === '') {
+                // No Stripe subscription on file — the recurring charge lives
+                // outside the app's Stripe integration, so it can't be stopped
+                // automatically here. Tag the CRM contact and alert the admin to
+                // stop the billing wherever this customer is charged.
+                try {
+                    require_once 'includes/ghl_signup.php';
+                    ghlAppendUsageMilestone($sub['email'], ['lead gen software subscription canceled'], []);
+                } catch (Throwable $e) { error_log('cancelSubscription: ghl tag: ' . $e->getMessage()); }
+                try {
+                    require_once 'includes/email_service.php';
+                    $mail = createMailer();
+                    if ($mail) {
+                        $mail->addAddress(ADMIN_EMAIL);
+                        $mail->isHTML(true);
+                        $mail->Subject = 'ACTION NEEDED: Subscription canceled - ' . $sub['email'];
+                        $planLabels = ['business' => 'Starter', 'agency' => 'Growth', 'enterprise' => 'Pro'];
+                        $planLabel = $planLabels[$plan] ?? $plan;
+                        $mail->Body = "<html><body>
+                            <h2>User canceled their subscription</h2>
+                            <p><strong>" . htmlspecialchars((string)$sub['name']) . "</strong> (" . htmlspecialchars((string)$sub['email']) . ") canceled their <strong>{$planLabel}</strong> plan from My Account.</p>
+                            <p style='color:#b91c1c;font-weight:700;'>No Stripe subscription is on file for this account, so billing could NOT be stopped automatically &mdash; cancel their recurring payment wherever this customer is billed so they are not charged again.</p>
+                            <p>Their app access has already been downgraded to Free (remaining credits kept). Their GHL contact was tagged <em>lead gen software subscription canceled</em>.</p>
+                        </body></html>";
+                        $mail->send();
+                    }
+                } catch (Throwable $e) { error_log('cancelSubscription: admin mail: ' . $e->getMessage()); }
+            }
+
             echo json_encode(['success' => true]);
         } catch (Exception $e) {
             error_log('cancelSubscription failed: ' . $e->getMessage());
@@ -164,7 +199,7 @@ session_write_close();
       <div class="row"><span class="k">Current plan</span><span class="v"><span class="pill"><?php echo htmlspecialchars($planLabel); ?></span></span></div>
       <div class="row"><span class="k">Credits available</span><span class="v"><span class="pill green"><?php echo number_format($credits); ?> credits</span></span></div>
     </div>
-    <?php if ($planKey !== 'none' && !empty($u['subscription_id'])): ?>
+    <?php if ($planKey !== 'none' && $planKey !== ''): ?>
     <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(20,21,23,.08);">
       <button id="cancelSubBtn" onclick="cancelSub()" style="background:#fff;border:1.5px solid #e5b4b4;color:#b91c1c;border-radius:9px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Cancel Subscription</button>
       <div class="hint" style="margin-top:7px;">Cancels immediately &mdash; you won&rsquo;t be charged again. Credits already on your account stay yours to use.</div>
