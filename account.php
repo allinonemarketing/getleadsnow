@@ -78,29 +78,65 @@ if (isset($_GET['action'])) {
                 ->execute([$userId]);
 
             if ($subId === '') {
-                // No Stripe subscription on file — the recurring charge lives
-                // outside the app's Stripe integration, so it can't be stopped
-                // automatically here. Tag the CRM contact and alert the admin to
-                // stop the billing wherever this customer is charged.
+                // No subscription id stored (customers who bought outside the
+                // in-app checkout). Find them in Stripe by email. AUTO-CANCEL is
+                // limited to prices approved for self-serve cancellation — the
+                // $97 marketing-software subs + this app's own checkout prices.
+                // Bundles like the $299 Partner Package are NOT auto-canceled:
+                // the admin gets an ACTION NEEDED email and decides.
+                require_once 'config/stripe_config.php';
+                require_once 'config/subscription_config.php';
+                $autoCancelPrices = array_values(array_filter([
+                    'price_1SPolgKOBtDhxvblZ55yxU5h',   // All In One Marketing Software Monthly $97 (MP)
+                    'price_1SOlXNKOBtDhxvbla4IkizrU',   // All In One Marketing Monthly $97
+                    STRIPE_PRICE_STARTER, STRIPE_PRICE_GROWTH, STRIPE_PRICE_ENTERPRISE,
+                ]));
+                $canceledSubs = []; $otherSubs = [];
+                try {
+                    foreach (\Stripe\Customer::all(['email' => $sub['email'], 'limit' => 5])->data as $cust) {
+                        foreach (\Stripe\Subscription::all(['customer' => $cust->id, 'status' => 'all', 'limit' => 10])->data as $ss) {
+                            if (in_array($ss->status, ['canceled', 'incomplete_expired'], true)) continue;
+                            $match = false; $descr = [];
+                            foreach ($ss->items->data as $it) {
+                                if (in_array($it->price->id, $autoCancelPrices, true)) { $match = true; }
+                                $descr[] = '$' . number_format(($it->price->unit_amount ?? 0) / 100) . '/' . ($it->price->recurring->interval ?? '?') . ' [' . $it->price->id . ']';
+                            }
+                            if ($match) { $ss->cancel(); $canceledSubs[] = $ss->id . ' — ' . implode(', ', $descr); }
+                            else { $otherSubs[] = $ss->id . ' — ' . implode(', ', $descr) . ' (' . $ss->status . ')'; }
+                        }
+                    }
+                } catch (Throwable $e) { error_log('cancelSubscription: stripe email lookup: ' . $e->getMessage()); }
+
                 try {
                     require_once 'includes/ghl_signup.php';
                     ghlAppendUsageMilestone($sub['email'], ['lead gen software subscription canceled'], []);
                 } catch (Throwable $e) { error_log('cancelSubscription: ghl tag: ' . $e->getMessage()); }
+
                 try {
                     require_once 'includes/email_service.php';
                     $mail = createMailer();
                     if ($mail) {
+                        $needsAction = !empty($otherSubs);
                         $mail->addAddress(ADMIN_EMAIL);
                         $mail->isHTML(true);
-                        $mail->Subject = 'ACTION NEEDED: Subscription canceled - ' . $sub['email'];
+                        $mail->Subject = ($needsAction ? 'ACTION NEEDED: ' : '') . 'Subscription canceled - ' . $sub['email'];
                         $planLabels = ['business' => 'Starter', 'agency' => 'Growth', 'enterprise' => 'Pro'];
                         $planLabel = $planLabels[$plan] ?? $plan;
-                        $mail->Body = "<html><body>
+                        $body = "<html><body>
                             <h2>User canceled their subscription</h2>
-                            <p><strong>" . htmlspecialchars((string)$sub['name']) . "</strong> (" . htmlspecialchars((string)$sub['email']) . ") canceled their <strong>{$planLabel}</strong> plan from My Account.</p>
-                            <p style='color:#b91c1c;font-weight:700;'>No Stripe subscription is on file for this account, so billing could NOT be stopped automatically &mdash; cancel their recurring payment wherever this customer is billed so they are not charged again.</p>
-                            <p>Their app access has already been downgraded to Free (remaining credits kept). Their GHL contact was tagged <em>lead gen software subscription canceled</em>.</p>
-                        </body></html>";
+                            <p><strong>" . htmlspecialchars((string)$sub['name']) . "</strong> (" . htmlspecialchars((string)$sub['email']) . ") canceled their <strong>{$planLabel}</strong> plan from My Account. Their app access is downgraded to Free (remaining credits kept) and their CRM contact was tagged <em>lead gen software subscription canceled</em>.</p>";
+                        if (!empty($canceledSubs)) {
+                            $body .= "<p><strong>Stripe billing stopped automatically:</strong><br>" . implode('<br>', array_map('htmlspecialchars', $canceledSubs)) . "</p>";
+                        }
+                        if ($needsAction) {
+                            $body .= "<p style='color:#b91c1c;font-weight:700;'>They still have other active Stripe subscription(s) that were NOT auto-canceled (e.g. a bundle like the Partner Package) — review and cancel in Stripe if appropriate:</p>
+                                <p>" . implode('<br>', array_map('htmlspecialchars', $otherSubs)) . "</p>";
+                        }
+                        if (empty($canceledSubs) && empty($otherSubs)) {
+                            $body .= "<p>No active Stripe billing was found for this email — nothing to stop.</p>";
+                        }
+                        $body .= "</body></html>";
+                        $mail->Body = $body;
                         $mail->send();
                     }
                 } catch (Throwable $e) { error_log('cancelSubscription: admin mail: ' . $e->getMessage()); }
