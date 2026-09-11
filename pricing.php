@@ -38,7 +38,7 @@ try {
     // Access granted outside the app's own checkout (Partner Program / AIOM
     // purchase): their card says "Included", not "Current Plan" — they aren't
     // paying the listed price for it.
-    $curLabel = ($userPlan !== 'none' && $userPlan !== '' && empty($userData['subscription_id'])) ? 'Included' : 'Current Plan';
+    $curLabel = ($userPlan !== 'none' && $userPlan !== '' && empty($userData['subscription_id'])) ? 'Included Free With Your Partner Program' : 'Current Plan';
 } catch (PDOException $e) {
     error_log("Database error: " . $e->getMessage());
     $userCredits = 0;
