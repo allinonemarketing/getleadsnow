@@ -30,11 +30,15 @@ if (!isLoggedIn()) {
 $userName = $_SESSION['user_name'] ?? 'User';
 
 try {
-    $stmt = $pdo->prepare("SELECT credits, subscription_plan FROM users WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT credits, subscription_plan, subscription_id FROM users WHERE id = ?");
     $stmt->execute([$_SESSION['user_id']]);
     $userData = $stmt->fetch(PDO::FETCH_ASSOC);
     $userCredits = $userData['credits'] ?? 0;
     $userPlan = $userData['subscription_plan'] ?? 'none';
+    // Access granted outside the app's own checkout (Partner Program / AIOM
+    // purchase): their card says "Included", not "Current Plan" — they aren't
+    // paying the listed price for it.
+    $curLabel = ($userPlan !== 'none' && $userPlan !== '' && empty($userData['subscription_id'])) ? 'Included' : 'Current Plan';
 } catch (PDOException $e) {
     error_log("Database error: " . $e->getMessage());
     $userCredits = 0;
@@ -189,7 +193,7 @@ session_write_close();
                 <div class="pricing-grid">
                     <div class="pricing-card" <?php echo $userPlan === 'business' ? 'style="border-color:var(--green);"' : ''; ?>>
                         <?php if ($userPlan === 'business'): ?>
-                            <div class="badge badge-current">Current Plan</div>
+                            <div class="badge badge-current"><?php echo $curLabel; ?></div>
                         <?php endif; ?>
                         <h3>Starter</h3>
                         <div class="price">$<?php echo PLAN_STARTER_PRICE; ?><span>/mo</span></div>
@@ -202,13 +206,13 @@ session_write_close();
                         </ul>
                         <button class="select-btn <?php echo $userPlan === 'business' ? 'btn-secondary' : 'btn-primary'; ?>"
                                 data-price-id="<?php echo STRIPE_PRICE_STARTER; ?>">
-                            <?php echo $userPlan === 'business' ? 'Current Plan' : 'Get Started'; ?>
+                            <?php echo $userPlan === 'business' ? $curLabel : 'Get Started'; ?>
                         </button>
                     </div>
 
                     <div class="pricing-card featured" <?php echo $userPlan === 'agency' ? 'style="border-color:var(--green);"' : ''; ?>>
                         <?php if ($userPlan === 'agency'): ?>
-                            <div class="badge badge-current" style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);">Current Plan</div>
+                            <div class="badge badge-current" style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);"><?php echo $curLabel; ?></div>
                         <?php endif; ?>
                         <h3>Growth</h3>
                         <div class="price">$<?php echo PLAN_GROWTH_PRICE; ?><span>/mo</span></div>
@@ -221,13 +225,13 @@ session_write_close();
                         </ul>
                         <button class="select-btn <?php echo $userPlan === 'agency' ? 'btn-secondary' : 'btn-primary'; ?>"
                                 data-price-id="<?php echo STRIPE_PRICE_GROWTH; ?>">
-                            <?php echo $userPlan === 'agency' ? 'Current Plan' : 'Get Started'; ?>
+                            <?php echo $userPlan === 'agency' ? $curLabel : 'Get Started'; ?>
                         </button>
                     </div>
 
                     <div class="pricing-card" <?php echo $userPlan === 'enterprise' ? 'style="border-color:var(--green);"' : ''; ?>>
                         <?php if ($userPlan === 'enterprise'): ?>
-                            <div class="badge badge-current">Current Plan</div>
+                            <div class="badge badge-current"><?php echo $curLabel; ?></div>
                         <?php endif; ?>
                         <h3>Pro</h3>
                         <div class="price">$<?php echo PLAN_ENTERPRISE_PRICE; ?><span>/mo</span></div>
@@ -240,7 +244,7 @@ session_write_close();
                         </ul>
                         <button class="select-btn <?php echo $userPlan === 'enterprise' ? 'btn-secondary' : 'btn-primary'; ?>"
                                 data-price-id="<?php echo STRIPE_PRICE_ENTERPRISE; ?>">
-                            <?php echo $userPlan === 'enterprise' ? 'Current Plan' : 'Get Started'; ?>
+                            <?php echo $userPlan === 'enterprise' ? $curLabel : 'Get Started'; ?>
                         </button>
                         <p style="margin-top:12px;margin-bottom:0;font-size:12px;color:var(--text-tertiary);">Need more? <a href="mailto:<?php echo SUPPORT_EMAIL; ?>" style="color:var(--accent);text-decoration:none;font-weight:500;">Email us</a></p>
                     </div>
@@ -278,7 +282,7 @@ session_write_close();
         
         selectBtns.forEach(btn => {
             btn.addEventListener('click', async () => {
-                if (btn.innerText.includes('Current Plan')) {
+                if ((btn.innerText.includes('Current Plan') || btn.innerText.includes('Included'))) {
                     if (confirm('Manage your subscription in the Stripe billing portal?\n\nYou can update payment methods, view invoices, and cancel your subscription.')) {
                         window.open('<?php echo STRIPE_BILLING_PORTAL_URL; ?>', '_blank');
                     }

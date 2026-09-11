@@ -108,39 +108,13 @@ if (isset($_GET['action'])) {
                     }
                 } catch (Throwable $e) { error_log('cancelSubscription: stripe email lookup: ' . $e->getMessage()); }
 
+                // CRM tag only — no admin email. These users are canceling their
+                // GetLeadsNow access, not their other AIOM products; any bundled
+                // billing they have stays untouched and is theirs to manage.
                 try {
                     require_once 'includes/ghl_signup.php';
                     ghlAppendUsageMilestone($sub['email'], ['lead gen software subscription canceled'], []);
                 } catch (Throwable $e) { error_log('cancelSubscription: ghl tag: ' . $e->getMessage()); }
-
-                try {
-                    require_once 'includes/email_service.php';
-                    $mail = createMailer();
-                    if ($mail) {
-                        $needsAction = !empty($otherSubs);
-                        $mail->addAddress(ADMIN_EMAIL);
-                        $mail->isHTML(true);
-                        $mail->Subject = ($needsAction ? 'ACTION NEEDED: ' : '') . 'Subscription canceled - ' . $sub['email'];
-                        $planLabels = ['business' => 'Starter', 'agency' => 'Growth', 'enterprise' => 'Pro'];
-                        $planLabel = $planLabels[$plan] ?? $plan;
-                        $body = "<html><body>
-                            <h2>User canceled their subscription</h2>
-                            <p><strong>" . htmlspecialchars((string)$sub['name']) . "</strong> (" . htmlspecialchars((string)$sub['email']) . ") canceled their <strong>{$planLabel}</strong> plan from My Account. Their app access is downgraded to Free (remaining credits kept) and their CRM contact was tagged <em>lead gen software subscription canceled</em>.</p>";
-                        if (!empty($canceledSubs)) {
-                            $body .= "<p><strong>Stripe billing stopped automatically:</strong><br>" . implode('<br>', array_map('htmlspecialchars', $canceledSubs)) . "</p>";
-                        }
-                        if ($needsAction) {
-                            $body .= "<p style='color:#b91c1c;font-weight:700;'>They still have other active Stripe subscription(s) that were NOT auto-canceled (e.g. a bundle like the Partner Package) — review and cancel in Stripe if appropriate:</p>
-                                <p>" . implode('<br>', array_map('htmlspecialchars', $otherSubs)) . "</p>";
-                        }
-                        if (empty($canceledSubs) && empty($otherSubs)) {
-                            $body .= "<p>No active Stripe billing was found for this email — nothing to stop.</p>";
-                        }
-                        $body .= "</body></html>";
-                        $mail->Body = $body;
-                        $mail->send();
-                    }
-                } catch (Throwable $e) { error_log('cancelSubscription: admin mail: ' . $e->getMessage()); }
             }
 
             echo json_encode(['success' => true]);
@@ -247,7 +221,7 @@ session_write_close();
     <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(20,21,23,.08);">
       <button id="cancelSubBtn" onclick="cancelSub()" style="background:#fff;border:1.5px solid #e5b4b4;color:#b91c1c;border-radius:9px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;"><?php echo $planIncluded ? 'Cancel My Access' : 'Cancel Subscription'; ?></button>
       <?php if ($planIncluded): ?>
-      <div class="hint" style="margin-top:7px;">Ends your GetLeadsNow plan access immediately. Your All In One Marketing billing is managed separately &mdash; our team will follow up about it. Credits already on your account stay yours to use.</div>
+      <div class="hint" style="margin-top:7px;">Ends your GetLeadsNow plan access immediately. Your All In One Marketing subscription is separate and is not affected. Credits already on your account stay yours to use.</div>
       <?php else: ?>
       <div class="hint" style="margin-top:7px;">Cancels immediately &mdash; you won&rsquo;t be charged again. Credits already on your account stay yours to use.</div>
       <?php endif; ?>
