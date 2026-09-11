@@ -45,6 +45,40 @@ if (isset($_GET['action'])) {
         exit;
     }
 
+    if ($_GET['action'] === 'cancelSubscription') {
+        session_write_close();   // Stripe round-trip below — don't hold the session lock
+        try {
+            $s = $pdo->prepare("SELECT subscription_id, subscription_plan FROM users WHERE id = ?");
+            $s->execute([$userId]);
+            $sub = $s->fetch(PDO::FETCH_ASSOC);
+            $subId = trim((string)($sub['subscription_id'] ?? ''));
+            if ($subId === '' || ($sub['subscription_plan'] ?? 'none') === 'none') {
+                echo json_encode(['success' => false, 'error' => 'No active subscription to cancel.']); exit;
+            }
+            require_once 'config/stripe_config.php';
+            // Cancel NOW in Stripe: no further charges, paid plan ends immediately.
+            // The customer.subscription.deleted webhook applies the same downgrade
+            // again later — idempotent.
+            try {
+                $stripeSub = \Stripe\Subscription::retrieve($subId);
+                if (!in_array($stripeSub->status, ['canceled', 'incomplete_expired'], true)) {
+                    $stripeSub->cancel();
+                }
+            } catch (\Stripe\Exception\InvalidRequestException $e) {
+                // Stripe no longer knows this subscription (already deleted there)
+                // — still downgrade locally so the account matches reality.
+                error_log('cancelSubscription: stripe lookup: ' . $e->getMessage());
+            }
+            $pdo->prepare("UPDATE users SET subscription_id = NULL, subscription_status = 'canceled', subscription_plan = 'none', monthly_credits = 0 WHERE id = ?")
+                ->execute([$userId]);
+            echo json_encode(['success' => true]);
+        } catch (Exception $e) {
+            error_log('cancelSubscription failed: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'error' => 'Could not cancel — please contact support at sales@allinonemarketing.com.']);
+        }
+        exit;
+    }
+
     echo json_encode(['success' => false, 'error' => 'Unknown action']); exit;
 }
 
@@ -130,6 +164,12 @@ session_write_close();
       <div class="row"><span class="k">Current plan</span><span class="v"><span class="pill"><?php echo htmlspecialchars($planLabel); ?></span></span></div>
       <div class="row"><span class="k">Credits available</span><span class="v"><span class="pill green"><?php echo number_format($credits); ?> credits</span></span></div>
     </div>
+    <?php if ($planKey !== 'none' && !empty($u['subscription_id'])): ?>
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(20,21,23,.08);">
+      <button id="cancelSubBtn" onclick="cancelSub()" style="background:#fff;border:1.5px solid #e5b4b4;color:#b91c1c;border-radius:9px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Cancel Subscription</button>
+      <div class="hint" style="margin-top:7px;">Cancels immediately &mdash; you won&rsquo;t be charged again. Credits already on your account stay yours to use.</div>
+    </div>
+    <?php endif; ?>
   </div>
 
   <!-- EDIT PROFILE -->
@@ -212,6 +252,25 @@ session_write_close();
     } catch(e){ show(msg, false, 'Network error. Please try again.'); }
     btn.disabled = false;
   });
+
+  async function cancelSub(){
+    if (!confirm('Cancel your subscription?\n\nThis takes effect immediately: your paid plan ends now and you will not be charged again. Credits already on your account stay yours to use.')) return;
+    const btn = document.getElementById('cancelSubBtn');
+    btn.disabled = true; btn.textContent = 'Canceling…';
+    try {
+      const res = await api('cancelSubscription', {});
+      if (res.success){
+        alert('Your subscription has been canceled. You will not be charged again.');
+        location.reload();
+      } else {
+        alert(res.error || 'Could not cancel — please contact support.');
+        btn.disabled = false; btn.textContent = 'Cancel Subscription';
+      }
+    } catch(e){
+      alert('Network error — please try again.');
+      btn.disabled = false; btn.textContent = 'Cancel Subscription';
+    }
+  }
 </script>
 </body>
 </html>

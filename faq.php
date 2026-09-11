@@ -117,6 +117,11 @@ session_write_close();  // release the per-user session lock; these pages only r
     <div class="body">Yes &mdash; check the <b>Get Leads For Less Than 1&cent;</b> tab. Own the software, pull leads at cost, and even resell it to your own clients.</div>
   </details>
 
+  <details class="faq">
+    <summary>How do I cancel my subscription?</summary>
+    <div class="body">Go to <b>My Account &rarr; Plan &amp; Credits</b> and click <b>Cancel Subscription</b>. The cancellation takes effect immediately &mdash; you won&rsquo;t be charged again &mdash; and any credits already on your account stay yours to use. You can re-subscribe anytime from the Plans page.</div>
+  </details>
+
   <div class="foot">Still stuck? Email <a href="mailto:sales@allinonemarketing.com?subject=Support">sales@allinonemarketing.com</a> and we&rsquo;ll help.</div>
 </div>
 </body>
