@@ -77,11 +77,15 @@ if (!isLoggedIn()) {
 $userName = $_SESSION['user_name'] ?? 'User';
 
 try {
-    $stmt = $pdo->prepare("SELECT credits, subscription_plan, subscription_status, shared_for_credits, is_admin FROM users WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT credits, subscription_plan, subscription_status, subscription_id, shared_for_credits, is_admin FROM users WHERE id = ?");
     $stmt->execute([$_SESSION['user_id']]);
     $userData = $stmt->fetch(PDO::FETCH_ASSOC);
     $userCredits = $userData['credits'] ?? 0;
     $userPlan = $userData['subscription_plan'] ?? 'none';
+    // Plan granted outside the app's own checkout (Partner Program / AIOM
+    // purchase) — show "Included", never a GetLeadsNow price-plan name, so
+    // users aren't misled about what they're billed for.
+    $planIncluded = ($userPlan !== 'none' && $userPlan !== '' && empty($userData['subscription_id']));
     $hasShared = $userData['shared_for_credits'] ?? 0;
     $isAdmin = !empty($userData['is_admin']);
     $subStatus = $userData['subscription_status'] ?? '';
@@ -561,7 +565,7 @@ session_write_close();
         <div class="plan-badge-label">Current Plan</div>
         <div class="plan-badge-value"><?php
             $planLabels = ['none' => 'Free', 'business' => 'Starter', 'agency' => 'Growth', 'enterprise' => 'Pro'];
-            echo $planLabels[$userPlan] ?? ucfirst($userPlan);
+            echo !empty($planIncluded) ? 'Included' : ($planLabels[$userPlan] ?? ucfirst($userPlan));
         ?></div>
     </div>
 

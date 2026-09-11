@@ -321,7 +321,7 @@ $plan_stats = $pdo->query("SELECT subscription_plan, COUNT(*) as c FROM users GR
 $plan_counts = ['none'=>0,'business'=>0,'agency'=>0,'enterprise'=>0];
 foreach ($plan_stats as $p) $plan_counts[$p['subscription_plan'] ?? 'none'] = $p['c'];
 
-$users_json = $pdo->query("SELECT u.id, u.name, u.email, u.credits, u.is_admin, u.subscription_plan, u.created_at, u.last_active_at, COUNT(DISTINCT t.id) as total_transactions, COALESCE(SUM(t.amount), 0) as total_spent, (SELECT COUNT(*) FROM lead_lists WHERE user_id = u.id) as list_count, (SELECT COUNT(*) FROM lead_list_items WHERE user_id = u.id) as lead_count, (SELECT COUNT(*) FROM api_calls WHERE user_id = u.id) as api_calls FROM users u LEFT JOIN credit_transactions t ON u.id = t.user_id AND t.amount > 0 GROUP BY u.id ORDER BY u.last_active_at DESC, u.id DESC")->fetchAll(PDO::FETCH_ASSOC);
+$users_json = $pdo->query("SELECT u.id, u.name, u.email, u.credits, u.is_admin, u.subscription_plan, u.subscription_id, u.created_at, u.last_active_at, COUNT(DISTINCT t.id) as total_transactions, COALESCE(SUM(t.amount), 0) as total_spent, (SELECT COUNT(*) FROM lead_lists WHERE user_id = u.id) as list_count, (SELECT COUNT(*) FROM lead_list_items WHERE user_id = u.id) as lead_count, (SELECT COUNT(*) FROM api_calls WHERE user_id = u.id) as api_calls FROM users u LEFT JOIN credit_transactions t ON u.id = t.user_id AND t.amount > 0 GROUP BY u.id ORDER BY u.last_active_at DESC, u.id DESC")->fetchAll(PDO::FETCH_ASSOC);
 
 $recent_activity = $pdo->query("(SELECT 'scrape' as type, a.user_id, u.name as user_name, COALESCE(a.search_query, a.url) as detail, a.created_at FROM api_calls a JOIN users u ON a.user_id = u.id ORDER BY a.created_at DESC LIMIT 20) UNION ALL (SELECT 'payment' as type, t.user_id, u.name as user_name, CONCAT('$', t.amount, ' - ', t.credits, ' credits') as detail, t.created_at FROM credit_transactions t JOIN users u ON t.user_id = u.id WHERE t.amount > 0 ORDER BY t.created_at DESC LIMIT 10) UNION ALL (SELECT 'signup' as type, u.id as user_id, u.name as user_name, u.email as detail, u.created_at FROM users u ORDER BY u.created_at DESC LIMIT 10) ORDER BY created_at DESC LIMIT 30")->fetchAll(PDO::FETCH_ASSOC);
 
@@ -626,7 +626,9 @@ tr{cursor:pointer;}
                         </div>
                     </td>
                     <td><span class="online-dot <?php echo $isOnline ? 'on' : 'off'; ?>"></span><?php echo $isOnline ? 'Online' : 'Offline'; ?></td>
-                    <td><span class="badge <?php echo $planBadge; ?>"><?php $plMap = ['none' => 'Free', 'business' => 'Starter', 'agency' => 'Growth', 'enterprise' => 'Pro']; echo $plMap[$u['subscription_plan'] ?? 'none'] ?? ucfirst($u['subscription_plan']); ?></span></td>
+                    <td><span class="badge <?php echo $planBadge; ?>"><?php $plMap = ['none' => 'Free', 'business' => 'Starter', 'agency' => 'Growth', 'enterprise' => 'Pro'];
+                        $plPaid = ($u['subscription_plan'] ?? 'none') !== 'none' && ($u['subscription_plan'] ?? '') !== '';
+                        echo ($plPaid && empty($u['subscription_id'])) ? 'Included' : ($plMap[$u['subscription_plan'] ?? 'none'] ?? ucfirst($u['subscription_plan'])); ?></span></td>
                     <td><?php echo number_format($u['credits']); ?></td>
                     <td><?php echo $u['list_count']; ?></td>
                     <td><?php echo number_format($u['lead_count']); ?></td>
@@ -876,6 +878,7 @@ async function openUser(id) {
                 <option value="agency" ${u.subscription_plan==='agency'?'selected':''}>Growth</option>
                 <option value="enterprise" ${u.subscription_plan==='enterprise'?'selected':''}>Pro</option>
             </select></span></div>
+            <div class="info-row"><span class="label">Billing</span><span class="value" style="font-size:12px;">${u.subscription_id ? 'GetLeadsNow Stripe sub' : ((u.subscription_plan && u.subscription_plan !== 'none') ? 'Included (Partner / AIOM purchase)' : '—')}</span></div>
             <div class="info-row"><span class="label">Credits</span><span class="value" id="slideCredits">${Number(u.credits).toLocaleString()}</span></div>
             <div class="info-row"><span class="label">Monthly Credits</span><span class="value"><input type="number" id="slideMonthly" min="0" value="${Number(u.admin_monthly_credits||0)}" style="width:90px;padding:4px 8px;border:1px solid var(--card-border);border-radius:6px;font-family:inherit;font-size:13px;"> <button class="btn btn-secondary btn-sm" onclick="setMonthly(${u.id})">Save</button></span></div>
             ${u.admin_credits_next_refill ? `<div class="info-row"><span class="label">Next Refill</span><span class="value">${u.admin_credits_next_refill}</span></div>` : ''}

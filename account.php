@@ -160,7 +160,11 @@ $phone   = $u['phone'] ?? '';
 $credits = (int)($u['credits'] ?? 0);
 $planKey = $u['subscription_plan'] ?? 'none';
 $planLabels = ['none' => 'Free', 'business' => 'Starter', 'agency' => 'Growth', 'enterprise' => 'Pro'];
-$planLabel  = $planLabels[$planKey] ?? ucfirst((string)$planKey);
+// Access granted outside the app's own checkout (Partner Program / All In One
+// Marketing purchase): never label it with a GetLeadsNow price plan — users on
+// the Partner Package were reading "Starter" as "I pay $95/mo for this".
+$planIncluded = ($planKey !== 'none' && $planKey !== '' && empty($u['subscription_id']));
+$planLabel  = $planIncluded ? 'Included' : ($planLabels[$planKey] ?? ucfirst((string)$planKey));
 $memberSince = '';
 if (!empty($u['created_at'])) { $memberSince = date('F j, Y', strtotime($u['created_at'])); }
 // Render path only (action handlers above exit): release the session lock so this
@@ -234,12 +238,19 @@ session_write_close();
     <h2><i class="fas fa-gem"></i> Plan &amp; Credits</h2>
     <div class="rows">
       <div class="row"><span class="k">Current plan</span><span class="v"><span class="pill"><?php echo htmlspecialchars($planLabel); ?></span></span></div>
+      <?php if ($planIncluded): ?>
+      <div class="hint" style="margin-top:-4px;">Your GetLeadsNow access is included with your All In One Marketing purchase (e.g. the Partner Program) &mdash; you are not billed separately for a GetLeadsNow plan.</div>
+      <?php endif; ?>
       <div class="row"><span class="k">Credits available</span><span class="v"><span class="pill green"><?php echo number_format($credits); ?> credits</span></span></div>
     </div>
     <?php if ($planKey !== 'none' && $planKey !== ''): ?>
     <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(20,21,23,.08);">
-      <button id="cancelSubBtn" onclick="cancelSub()" style="background:#fff;border:1.5px solid #e5b4b4;color:#b91c1c;border-radius:9px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Cancel Subscription</button>
+      <button id="cancelSubBtn" onclick="cancelSub()" style="background:#fff;border:1.5px solid #e5b4b4;color:#b91c1c;border-radius:9px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;"><?php echo $planIncluded ? 'Cancel My Access' : 'Cancel Subscription'; ?></button>
+      <?php if ($planIncluded): ?>
+      <div class="hint" style="margin-top:7px;">Ends your GetLeadsNow plan access immediately. Your All In One Marketing billing is managed separately &mdash; our team will follow up about it. Credits already on your account stay yours to use.</div>
+      <?php else: ?>
       <div class="hint" style="margin-top:7px;">Cancels immediately &mdash; you won&rsquo;t be charged again. Credits already on your account stay yours to use.</div>
+      <?php endif; ?>
     </div>
     <?php endif; ?>
   </div>
