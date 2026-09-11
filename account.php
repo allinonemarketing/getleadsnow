@@ -79,16 +79,17 @@ if (isset($_GET['action'])) {
 
             if ($subId === '') {
                 // No subscription id stored (customers who bought outside the
-                // in-app checkout). Find them in Stripe by email. AUTO-CANCEL is
-                // limited to prices approved for self-serve cancellation — the
-                // $97 marketing-software subs + this app's own checkout prices.
-                // Bundles like the $299 Partner Package are NOT auto-canceled:
-                // the admin gets an ACTION NEEDED email and decides.
+                // in-app checkout). Find them in Stripe by email.
+                //
+                // CRITICAL: AUTO-CANCEL ONLY THIS APP'S OWN CHECKOUT PRICES.
+                // The shared Stripe account also bills OTHER products (the $97
+                // All In One Marketing software, the $299 Partner Package, the
+                // AI bot, store...). Canceling any of those from the leads app
+                // would kill a different product the customer still wants —
+                // those always go to the admin as an ACTION NEEDED email.
                 require_once 'config/stripe_config.php';
                 require_once 'config/subscription_config.php';
                 $autoCancelPrices = array_values(array_filter([
-                    'price_1SPolgKOBtDhxvblZ55yxU5h',   // All In One Marketing Software Monthly $97 (MP)
-                    'price_1SOlXNKOBtDhxvbla4IkizrU',   // All In One Marketing Monthly $97
                     STRIPE_PRICE_STARTER, STRIPE_PRICE_GROWTH, STRIPE_PRICE_ENTERPRISE,
                 ]));
                 $canceledSubs = []; $otherSubs = [];
