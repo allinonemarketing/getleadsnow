@@ -73,8 +73,17 @@ if ($password === '') {
     exit;
 }
 
-// Monthly credit allotment (1,000 by default — same as the Starter plan).
-$planCredits = (int) env('GHL_PLAN_CREDITS', 1000);
+// Account type: pass "account_type": "highlevel" in the GHL webhook payload for
+// the HighLevel-referral offer — 2,000 leads/month and the Free CRM offer hidden
+// (they already have HighLevel). Anything else gets the standard allotment.
+$accountType = strtolower(trim((string) ($data['account_type'] ?? '')));
+if (!in_array($accountType, ['highlevel'], true)) { $accountType = ''; }
+
+// Monthly credit allotment (1,000 by default — same as the Starter plan;
+// 2,000 for highlevel accounts).
+$planCredits = $accountType === 'highlevel'
+    ? (int) env('GHL_HIGHLEVEL_CREDITS', 2000)
+    : (int) env('GHL_PLAN_CREDITS', 1000);
 $txnId = $idempotencyKey !== '' ? ('GHL_' . $idempotencyKey) : '';
 
 try {
@@ -100,18 +109,19 @@ try {
         $pdo->prepare("
             UPDATE users
             SET credits = credits + ?, subscription_plan = 'business',
-                subscription_status = 'active', monthly_credits = ?
+                subscription_status = 'active', monthly_credits = ?,
+                account_type = COALESCE(NULLIF(?, ''), account_type)
             WHERE id = ?
-        ")->execute([$planCredits, $planCredits, $userId]);
+        ")->execute([$planCredits, $planCredits, $accountType, $userId]);
         $action = 'renewed';
         $notes = 'GHL monthly top-up';
     } else {
         // New user — create the account provisioned by GHL.
         $hash = password_hash($password, PASSWORD_DEFAULT);
         $pdo->prepare("
-            INSERT INTO users (name, email, password, credits, subscription_plan, subscription_status, monthly_credits)
-            VALUES (?, ?, ?, ?, 'business', 'active', ?)
-        ")->execute([$name, $email, $hash, $planCredits, $planCredits]);
+            INSERT INTO users (name, email, password, credits, subscription_plan, subscription_status, monthly_credits, account_type)
+            VALUES (?, ?, ?, ?, 'business', 'active', ?, NULLIF(?, ''))
+        ")->execute([$name, $email, $hash, $planCredits, $planCredits, $accountType]);
         $userId = (int) $pdo->lastInsertId();
         $action = 'created';
         $notes = 'GHL provisioning';
@@ -140,6 +150,7 @@ try {
         'action'  => $action,
         'user_id' => $userId,
         'credits_granted' => $planCredits,
+        'account_type' => $accountType !== '' ? $accountType : 'standard',
     ]);
 } catch (PDOException $e) {
     if ($pdo->inTransaction()) { $pdo->rollBack(); }

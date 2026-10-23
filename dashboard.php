@@ -77,7 +77,7 @@ if (!isLoggedIn()) {
 $userName = $_SESSION['user_name'] ?? 'User';
 
 try {
-    $stmt = $pdo->prepare("SELECT credits, subscription_plan, subscription_status, subscription_id, shared_for_credits, is_admin FROM users WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT credits, subscription_plan, subscription_status, subscription_id, shared_for_credits, is_admin, account_type FROM users WHERE id = ?");
     $stmt->execute([$_SESSION['user_id']]);
     $userData = $stmt->fetch(PDO::FETCH_ASSOC);
     $userCredits = $userData['credits'] ?? 0;
@@ -86,6 +86,8 @@ try {
     // purchase) — show "Included", never a GetLeadsNow price-plan name, so
     // users aren't misled about what they're billed for.
     $planIncluded = ($userPlan !== 'none' && $userPlan !== '' && empty($userData['subscription_id']));
+    // HighLevel-referral accounts already have HighLevel — hide the Free CRM offer.
+    $hideCrmOffer = (($userData['account_type'] ?? '') === 'highlevel');
     $hasShared = $userData['shared_for_credits'] ?? 0;
     $isAdmin = !empty($userData['is_admin']);
     $subStatus = $userData['subscription_status'] ?? '';
@@ -593,12 +595,14 @@ session_write_close();
                     Get Leads Less Than 1&cent;
                 </a>
             </li>
+            <?php if (empty($hideCrmOffer)): ?>
             <li class="nav-item">
                 <a href="?section=freecrm" class="nav-link <?php echo $current_section === 'freecrm' ? 'active' : ''; ?>" data-section="freecrm">
                     <i class="fas fa-gift"></i>
                     Get Free CRM
                 </a>
             </li>
+            <?php endif; ?>
             <li class="nav-item">
                 <a href="?section=aibot" class="nav-link <?php echo $current_section === 'aibot' ? 'active' : ''; ?>" data-section="aibot">
                     <i class="fas fa-robot"></i>
@@ -660,7 +664,9 @@ session_write_close();
     <nav class="mobile-bottombar">
         <button class="mb-item <?php echo $current_section === 'lead_lists' ? 'active' : ''; ?>" type="button" data-section="lead_lists"><i class="fas fa-folder-open"></i><span>Leads</span></button>
         <button class="mb-item mb-penny <?php echo $current_section === 'penny' ? 'active' : ''; ?>" type="button" data-section="penny"><i class="fas fa-bolt"></i><span>&lt;1&cent; Leads</span></button>
+        <?php if (empty($hideCrmOffer)): ?>
         <button class="mb-item <?php echo $current_section === 'freecrm' ? 'active' : ''; ?>" type="button" data-section="freecrm"><i class="fas fa-gift"></i><span>Free CRM</span></button>
+        <?php endif; ?>
         <button class="mb-item <?php echo $current_section === 'aibot' ? 'active' : ''; ?>" type="button" data-section="aibot"><i class="fas fa-robot"></i><span>AI Bot</span></button>
         <button class="mb-item <?php echo $current_section === 'support' ? 'active' : ''; ?>" type="button" data-section="support"><i class="fas fa-life-ring"></i><span>Support</span></button>
     </nav>

@@ -12,12 +12,15 @@ if (!isLoggedIn()) {
 
 $userId = $_SESSION['user_id'];
 $isAdminViewing = isset($_SESSION['admin_original_id']);
-$stmt = $pdo->prepare("SELECT credits, shared_for_credits, subscription_plan FROM users WHERE id = ?");
+$stmt = $pdo->prepare("SELECT credits, shared_for_credits, subscription_plan, account_type FROM users WHERE id = ?");
 $stmt->execute([$userId]);
 $uRow = $stmt->fetch(PDO::FETCH_ASSOC);
 $userCredits = $uRow['credits'] ?? 0;
 $userHasShared = $uRow['shared_for_credits'] ?? 0;
 $userPlan = $uRow['subscription_plan'] ?? 'none';
+// HighLevel-referral accounts already have a CRM — the export flow skips the
+// "Did you set up your Free CRM yet?" offer gate and goes straight to connect.
+$isHighLevelAccount = (($uRow['account_type'] ?? '') === 'highlevel');
 
 // --- Billing helpers ---------------------------------------------------------
 // Model: 1 credit per lead returned by a search (charged as leads are saved in
@@ -4266,7 +4269,9 @@ header('Cache-Control: no-store, max-age=0');
             .slide-panel { width: 100%; }
         }
     </style>
+<script>window.AIOM_HL_ACCOUNT = <?php echo $isHighLevelAccount ? 'true' : 'false'; ?>;</script>
 </head>
+
 <body>
 
 <!-- LISTS VIEW -->
@@ -7800,7 +7805,14 @@ class LeadListsApp {
 
         if (this._ghlConnections.length === 0) {
             // First-timer: gate on whether they've claimed the Free CRM yet.
-            this.showGHLScreen('ghlGateScreen');
+            // HighLevel-referral accounts already have a CRM — skip the offer
+            // gate and go straight to the connection setup.
+            if (window.AIOM_HL_ACCOUNT) {
+                this.showGHLScreen('ghlSetupScreen');
+                this.renderGHLConnectionsList();
+            } else {
+                this.showGHLScreen('ghlGateScreen');
+            }
             this.updateGHLBadge(false);
         } else {
             this._ghlActiveConn = this._ghlConnections[0];
