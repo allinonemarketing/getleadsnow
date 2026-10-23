@@ -18,9 +18,9 @@ $uRow = $stmt->fetch(PDO::FETCH_ASSOC);
 $userCredits = $uRow['credits'] ?? 0;
 $userHasShared = $uRow['shared_for_credits'] ?? 0;
 $userPlan = $uRow['subscription_plan'] ?? 'none';
-// Partner Program Pro accounts already have a CRM — the export flow skips the
-// "Did you set up your Free CRM yet?" offer gate and goes straight to connect.
-$isPartnerProAccount = (($uRow['account_type'] ?? '') === 'partner_pro');
+// Webhook-provisioned partner accounts already have a CRM — the export flow
+// skips the "Did you set up your Free CRM yet?" offer gate, straight to connect.
+$isPartnerProAccount = in_array($uRow['account_type'] ?? '', ['partner_pro', 'partner'], true);
 
 // --- Billing helpers ---------------------------------------------------------
 // Model: 1 credit per lead returned by a search (charged as leads are saved in

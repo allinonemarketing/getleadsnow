@@ -118,12 +118,16 @@ try {
         $action = 'renewed';
         $notes = 'GHL monthly top-up';
     } else {
-        // New user — create the account provisioned by GHL.
+        // New user — create the account provisioned by GHL. Every NEW webhook
+        // account is marked (standard => 'partner', pro => 'partner_pro') so the
+        // in-app Free CRM offer is hidden — they already come from HighLevel.
+        // Existing accounts are never re-marked by a standard renewal.
+        $createType = $accountType !== '' ? $accountType : 'partner';
         $hash = password_hash($password, PASSWORD_DEFAULT);
         $pdo->prepare("
             INSERT INTO users (name, email, password, credits, subscription_plan, subscription_status, monthly_credits, account_type)
-            VALUES (?, ?, ?, ?, 'business', 'active', ?, NULLIF(?, ''))
-        ")->execute([$name, $email, $hash, $planCredits, $planCredits, $accountType]);
+            VALUES (?, ?, ?, ?, 'business', 'active', ?, ?)
+        ")->execute([$name, $email, $hash, $planCredits, $planCredits, $createType]);
         $userId = (int) $pdo->lastInsertId();
         $action = 'created';
         $notes = 'GHL provisioning';
