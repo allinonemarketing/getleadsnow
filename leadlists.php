@@ -18,9 +18,9 @@ $uRow = $stmt->fetch(PDO::FETCH_ASSOC);
 $userCredits = $uRow['credits'] ?? 0;
 $userHasShared = $uRow['shared_for_credits'] ?? 0;
 $userPlan = $uRow['subscription_plan'] ?? 'none';
-// HighLevel-referral accounts already have a CRM — the export flow skips the
+// Partner Program Pro accounts already have a CRM — the export flow skips the
 // "Did you set up your Free CRM yet?" offer gate and goes straight to connect.
-$isHighLevelAccount = (($uRow['account_type'] ?? '') === 'highlevel');
+$isPartnerProAccount = (($uRow['account_type'] ?? '') === 'partner_pro');
 
 // --- Billing helpers ---------------------------------------------------------
 // Model: 1 credit per lead returned by a search (charged as leads are saved in
@@ -4269,7 +4269,7 @@ header('Cache-Control: no-store, max-age=0');
             .slide-panel { width: 100%; }
         }
     </style>
-<script>window.AIOM_HL_ACCOUNT = <?php echo $isHighLevelAccount ? 'true' : 'false'; ?>;</script>
+<script>window.AIOM_PARTNER_PRO = <?php echo $isPartnerProAccount ? 'true' : 'false'; ?>;</script>
 </head>
 
 <body>
@@ -7805,9 +7805,9 @@ class LeadListsApp {
 
         if (this._ghlConnections.length === 0) {
             // First-timer: gate on whether they've claimed the Free CRM yet.
-            // HighLevel-referral accounts already have a CRM — skip the offer
+            // Partner Program Pro accounts already have a CRM — skip the offer
             // gate and go straight to the connection setup.
-            if (window.AIOM_HL_ACCOUNT) {
+            if (window.AIOM_PARTNER_PRO) {
                 this.showGHLScreen('ghlSetupScreen');
                 this.renderGHLConnectionsList();
             } else {

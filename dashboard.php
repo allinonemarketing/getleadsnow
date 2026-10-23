@@ -86,8 +86,8 @@ try {
     // purchase) — show "Included", never a GetLeadsNow price-plan name, so
     // users aren't misled about what they're billed for.
     $planIncluded = ($userPlan !== 'none' && $userPlan !== '' && empty($userData['subscription_id']));
-    // HighLevel-referral accounts already have HighLevel — hide the Free CRM offer.
-    $hideCrmOffer = (($userData['account_type'] ?? '') === 'highlevel');
+    // Partner Program Pro accounts already have HighLevel — hide the Free CRM offer.
+    $hideCrmOffer = (($userData['account_type'] ?? '') === 'partner_pro');
     $hasShared = $userData['shared_for_credits'] ?? 0;
     $isAdmin = !empty($userData['is_admin']);
     $subStatus = $userData['subscription_status'] ?? '';

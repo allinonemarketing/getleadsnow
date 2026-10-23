@@ -73,16 +73,18 @@ if ($password === '') {
     exit;
 }
 
-// Account type: pass "account_type": "highlevel" in the GHL webhook payload for
-// the HighLevel-referral offer — 2,000 leads/month and the Free CRM offer hidden
-// (they already have HighLevel). Anything else gets the standard allotment.
-$accountType = strtolower(trim((string) ($data['account_type'] ?? '')));
-if (!in_array($accountType, ['highlevel'], true)) { $accountType = ''; }
+// Account type: pass "account_type": "Partner Program Pro" in the GHL webhook
+// payload for the HighLevel-referral offer — 2,000 leads/month and the Free CRM
+// offer hidden (they already have HighLevel). Anything else gets the standard
+// allotment. Accepted spellings (case-insensitive): "Partner Program Pro",
+// "partner_pro", "highlevel" — all stored as 'partner_pro'.
+$accountType = strtolower(preg_replace('/[\s_-]+/', '', trim((string) ($data['account_type'] ?? ''))));
+$accountType = in_array($accountType, ['partnerprogrampro', 'partnerpro', 'highlevel'], true) ? 'partner_pro' : '';
 
 // Monthly credit allotment (1,000 by default — same as the Starter plan;
-// 2,000 for highlevel accounts).
-$planCredits = $accountType === 'highlevel'
-    ? (int) env('GHL_HIGHLEVEL_CREDITS', 2000)
+// 2,000 for Partner Program Pro accounts).
+$planCredits = $accountType === 'partner_pro'
+    ? (int) env('GHL_PARTNER_PRO_CREDITS', 2000)
     : (int) env('GHL_PLAN_CREDITS', 1000);
 $txnId = $idempotencyKey !== '' ? ('GHL_' . $idempotencyKey) : '';
 
