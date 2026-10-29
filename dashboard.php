@@ -605,12 +605,14 @@ session_write_close();
                 </a>
             </li>
             <?php endif; ?>
+            <?php if (empty($hideCrmOffer)): // partner accounts already get the AI bot ?>
             <li class="nav-item">
                 <a href="?section=aibot" class="nav-link <?php echo $current_section === 'aibot' ? 'active' : ''; ?>" data-section="aibot">
                     <i class="fas fa-robot"></i>
                     Get AI Bot
                 </a>
             </li>
+            <?php endif; ?>
             <li class="nav-item">
                 <a href="?section=lead_lists" class="nav-link <?php echo $current_section === 'lead_lists' ? 'active' : ''; ?>" data-section="lead_lists">
                     <i class="fas fa-folder-open"></i>
@@ -669,7 +671,9 @@ session_write_close();
         <?php if (empty($hideCrmOffer)): ?>
         <button class="mb-item <?php echo $current_section === 'freecrm' ? 'active' : ''; ?>" type="button" data-section="freecrm"><i class="fas fa-gift"></i><span>Free CRM</span></button>
         <?php endif; ?>
+        <?php if (empty($hideCrmOffer)): ?>
         <button class="mb-item <?php echo $current_section === 'aibot' ? 'active' : ''; ?>" type="button" data-section="aibot"><i class="fas fa-robot"></i><span>AI Bot</span></button>
+        <?php endif; ?>
         <button class="mb-item <?php echo $current_section === 'support' ? 'active' : ''; ?>" type="button" data-section="support"><i class="fas fa-life-ring"></i><span>Support</span></button>
     </nav>
 
@@ -776,17 +780,10 @@ session_write_close();
                 }
             });
 
-            logoutBtn.addEventListener('click', async (e) => {
+            logoutBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                try {
-                    const response = await fetch('logout.php');
-                    const data = await response.json();
-                    if (data.success) {
-                        window.location.href = 'login.php';
-                    }
-                } catch (error) {
-                    console.error('Logout error:', error);
-                }
+                // logout.php destroys the session and redirects to /login itself.
+                window.location.href = 'logout.php';
             });
 
             menuToggle.addEventListener('click', () => {
