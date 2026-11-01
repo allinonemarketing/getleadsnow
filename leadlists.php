@@ -6892,6 +6892,24 @@ class LeadListsApp {
         // Each lead a search returns costs 1 credit. Need at least 1 to start.
         if (this.credits < 1) { this.showUpgradePrompt(1); return; }
 
+        // Plain-math confirmation for multi-city searches — the limit is PER
+        // CITY and people kept reading it as a total (a user expecting ~300
+        // leads got 957 across 5 cities). Spell out the ceiling before running.
+        {
+            const nCities = this.selectedCities.size;
+            if (nCities > 1) {
+                const perCity = this.getScrapeLimit();
+                const maxLeads = nCities * perCity;
+                const canUse = Math.min(maxLeads, this.credits);
+                const ok = confirm(
+                    `${nCities.toLocaleString()} cities × ${perCity} leads per city = up to ${maxLeads.toLocaleString()} leads (1 credit each).\n\n` +
+                    `You have ${this.credits.toLocaleString()} credits — this search can use up to ${canUse.toLocaleString()} of them.\n\n` +
+                    `Tip: to cap the total, lower the per-city limit or select fewer cities.\n\nContinue?`
+                );
+                if (!ok) return;
+            }
+        }
+
         this.scraping = true;
         const limit = this.getScrapeLimit();
         const btn = document.getElementById('startScrapeBtn');
