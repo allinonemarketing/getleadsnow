@@ -1,4 +1,8 @@
 <?php
+// The penny/reseller offer was retired (Nov 2026) — this page is kept on disk
+// for history but is no longer reachable; send any stray visits home.
+header('Location: /dashboard');
+exit;
 session_start();
 require_once 'includes/auth.php';
 if (!isLoggedIn()) { header('Location: login.php'); exit(); }

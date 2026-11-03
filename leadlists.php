@@ -348,11 +348,8 @@ try {
 // serialize and each blocked request ties up a PHP-FPM worker — under load that
 // exhausts the worker pool and the whole site times out. (API requests skip this;
 // the action dispatch closes its own session.)
-$showPennyPromo = false;
 if (!isset($_GET['action'])) {
     if (!isset($_SESSION['tour_seen_at_login'])) { $_SESSION['tour_seen_at_login'] = $tourSeen; }
-    $showPennyPromo = (!empty($_SESSION['tour_seen_at_login']) && empty($_SESSION['penny_promo_shown']));
-    if ($showPennyPromo) { $_SESSION['penny_promo_shown'] = 1; }
     session_write_close();
 }
 
@@ -4647,7 +4644,7 @@ header('Cache-Control: no-store, max-age=0');
         </div>
         <?php
             // Plan-aware upgrade prompt. Show only tiers ABOVE the user's current
-            // plan; if they're already on the top plan, promote the 1¢ page instead.
+            // plan; on the top plan, point to a custom-volume email instead.
             $planRank = ['none' => 0, 'business' => 1, 'agency' => 2, 'enterprise' => 3];
             $curRank  = $planRank[$userPlan] ?? 0;
             $allPlans = [
@@ -4662,11 +4659,11 @@ header('Cache-Control: no-store, max-age=0');
         ?>
         <?php if ($isTopPlan): ?>
         <h2 style="font-size:20px;font-weight:700;margin:0 0 8px;">You&rsquo;re on our biggest plan</h2>
-        <p style="color:#6e6e73;font-size:14px;margin:0 0 20px;line-height:1.55;">You have <strong id="upgradeHave">0</strong> credits left and you&rsquo;re already on <strong>Pro</strong> &mdash; our highest tier. The best way to keep pulling leads now is to get them <strong>at cost, for less than 1&cent; each</strong>. Own the software, pull leads directly from the source, and even resell them to your clients.</p>
-        <div style="border:1.5px solid #dc2626;border-radius:14px;padding:20px 16px;background:#fff5f5;margin-bottom:6px;">
-            <div style="font-weight:800;font-size:16px;color:#b91c1c;margin-bottom:4px;"><i class="fas fa-bolt"></i> Get Leads For Less Than 1&cent;</div>
-            <div style="font-size:13px;color:#6e6e73;line-height:1.5;margin-bottom:14px;">The best plan for high-volume users like you &mdash; leads at cost instead of a fixed monthly cap.</div>
-            <button onclick="app.gotoPenny()" style="width:100%;padding:12px;border-radius:10px;border:none;cursor:pointer;font-weight:800;font-size:14px;font-family:inherit;background:#dc2626;color:#fff;">Show me how &rarr;</button>
+        <p style="color:#6e6e73;font-size:14px;margin:0 0 20px;line-height:1.55;">You have <strong id="upgradeHave">0</strong> credits left and you&rsquo;re already on <strong>Pro</strong> &mdash; our highest tier. Need more volume than your monthly allowance? We&rsquo;ll set up a custom package for you.</p>
+        <div style="border:1.5px solid var(--card-border,#e5e7eb);border-radius:14px;padding:20px 16px;background:var(--card-solid,#fafafa);margin-bottom:6px;">
+            <div style="font-weight:800;font-size:16px;margin-bottom:4px;"><i class="fas fa-envelope" style="color:var(--accent,#c85719);"></i> Need a higher volume?</div>
+            <div style="font-size:13px;color:#6e6e73;line-height:1.5;margin-bottom:14px;">Email us and we&rsquo;ll put together a custom lead package for your scale.</div>
+            <a href="mailto:sales@allinonemarketing.com?subject=Custom%20lead%20volume" style="display:block;width:100%;padding:12px;border-radius:10px;border:none;cursor:pointer;font-weight:800;font-size:14px;font-family:inherit;background:var(--accent,#c85719);color:#fff;text-align:center;text-decoration:none;box-sizing:border-box;">Email us &rarr;</a>
         </div>
         <?php else: ?>
         <h2 style="font-size:20px;font-weight:700;margin:0 0 8px;">Out of credits</h2>
@@ -5346,11 +5343,6 @@ class LeadListsApp {
     }
     closeUpgradeModal() {
         document.getElementById('upgradeModal').style.display = 'none';
-    }
-    gotoPenny() {
-        // Top-plan users are promoted to the 1¢ page instead of an upgrade.
-        this.closeUpgradeModal();
-        (window.top || window).location.href = '/dashboard?section=penny';
     }
     async upgradeTo(priceId, btnEl) {
         if (!priceId) { this.toast('This plan is not available yet.'); return; }
@@ -9108,32 +9100,6 @@ document.addEventListener('click', (e) => {
     et.querySelector('[data-a="ok"]').addEventListener('click',function(){
       clearInterval(iv); if(et.parentNode)et.remove(); if(em.parentNode)em.remove();
       try{ localStorage.setItem(EKEY,'1'); }catch(e){}
-      var sc=null; try{ sc=localStorage.getItem(CKEY); }catch(e){}
-      if(!sc){ cheaperTip(); }   // then nudge them toward cheaper leads
-    });
-  }
-
-  // Final upsell nudge (shown once, after the export tip): forces them to the
-  // "Get Leads For Less Than 1c" page.
-  var CKEY='aiom_cheaptip_v1_<?php echo (int)$userId; ?>';
-  function cheaperTip(){
-    var cm=document.createElementNS(SVGNS,'svg'); cm.setAttribute('class','lt-mask'); document.body.appendChild(cm);
-    var ct=mk('lt-tip'); document.body.appendChild(ct);
-    ct.innerHTML='<div class="lt-badge">One more thing</div><h4>Get leads even cheaper &mdash; less than 1&cent;!</h4>'+
-      '<p>Want leads for a fraction of a penny each? Own the software, pull leads at cost and even resell it for profit. See how in the <b>Get Leads For Less Than 1&cent;</b> tab.</p>'+
-      '<div class="lt-row"><span></span><div class="lt-actions"><button class="lt-btn lt-next" data-a="go">Show me how &rarr;</button></div></div>';
-    function place(){
-      var W=window.innerWidth, H=window.innerHeight;
-      cm.setAttribute('width',W); cm.setAttribute('height',H); cm.setAttribute('viewBox','0 0 '+W+' '+H);
-      cm.innerHTML='<rect width="'+W+'" height="'+H+'" fill="rgba(12,15,18,0.55)"/>';
-      var tw=ct.offsetWidth||330, th=ct.offsetHeight||190;
-      ct.style.left=Math.max(8,(W-tw)/2)+'px'; ct.style.top=Math.max(8,(H-th)/2)+'px';
-    }
-    place(); ct.style.display='block'; cm.style.display='block';
-    var iv=setInterval(place,300);
-    ct.querySelector('[data-a="go"]').addEventListener('click',function(){
-      clearInterval(iv); try{ localStorage.setItem(CKEY,'1'); }catch(e){}
-      try{ (window.top||window).location.href='/dashboard?section=penny'; }catch(e){ try{ location.href='/dashboard?section=penny'; }catch(_){} }
     });
   }
 
@@ -9199,44 +9165,5 @@ document.addEventListener('click', (e) => {
 })();
 </script>
 
-<?php // $showPennyPromo was computed near the top (page-render path) before the session lock was released. ?>
-<?php if ($showPennyPromo): ?>
-<div id="pennyPromo" class="pp-ov" role="dialog" aria-modal="true" aria-labelledby="ppTitle">
-  <div class="pp-card">
-    <button class="pp-x" type="button" aria-label="Close">&times;</button>
-    <div class="pp-badge"><i class="fas fa-bolt"></i> Insider offer</div>
-    <h3 id="ppTitle">Get leads for <span>less than 1&cent;</span> each</h3>
-    <p>Own this exact software, pull leads at cost, and even resell it to your own clients for profit &mdash; a whole new revenue stream.</p>
-    <button class="pp-cta" type="button" id="ppGo">Show me how &rarr;</button>
-    <button class="pp-later" type="button" id="ppLater">Maybe later</button>
-  </div>
-</div>
-<style>
-  .pp-ov{position:fixed;inset:0;z-index:100000;background:rgba(12,15,18,.55);display:flex;align-items:center;justify-content:center;padding:20px;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
-  .pp-card{background:#fff;border-radius:20px;max-width:420px;width:100%;padding:32px 28px 24px;text-align:center;box-shadow:0 30px 80px rgba(10,15,25,.4);position:relative;animation:ppin .22s ease}
-  @keyframes ppin{from{transform:translateY(12px) scale(.98);opacity:0}to{transform:none;opacity:1}}
-  .pp-x{position:absolute;top:12px;right:14px;border:none;background:transparent;font-size:26px;line-height:1;color:#98a0a8;cursor:pointer;padding:4px}
-  .pp-x:hover{color:#5b6066}
-  .pp-badge{display:inline-flex;align-items:center;gap:7px;background:#fee2e2;color:#b91c1c;font-weight:800;font-size:12px;letter-spacing:.03em;text-transform:uppercase;padding:7px 14px;border-radius:999px;margin-bottom:14px}
-  .pp-card h3{font-size:24px;font-weight:900;letter-spacing:-.02em;color:#141517;line-height:1.15}
-  .pp-card h3 span{color:#dc2626}
-  .pp-card p{font-size:14.5px;color:#5b6066;line-height:1.6;margin:12px auto 22px;max-width:34ch}
-  .pp-cta{display:block;width:100%;background:#dc2626;color:#fff;font-weight:800;font-size:16px;border:none;border-radius:12px;padding:15px;cursor:pointer;box-shadow:0 10px 26px rgba(220,38,38,.32);font-family:inherit}
-  .pp-cta:hover{background:#b91c1c}
-  .pp-later{display:block;width:100%;background:transparent;color:#7a8088;font-weight:700;font-size:13px;border:none;padding:12px 0 2px;cursor:pointer;font-family:inherit}
-  .pp-later:hover{color:#5b6066}
-</style>
-<script>
-(function(){
-  var ov=document.getElementById('pennyPromo'); if(!ov) return;
-  function close(){ ov.style.display='none'; }
-  ov.querySelector('.pp-x').addEventListener('click',close);
-  document.getElementById('ppLater').addEventListener('click',close);
-  document.getElementById('ppGo').addEventListener('click',function(){ (window.top||window).location.href='/dashboard?section=penny'; });
-  ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
-  document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
-})();
-</script>
-<?php endif; ?>
 </body>
 </html>

@@ -99,7 +99,7 @@ try {
     // gets the standard free tier.
     $grantCredits = $signupSource === 'free_4000leads' ? 4000 : (defined('FREE_TIER_CREDITS') ? FREE_TIER_CREDITS : 100);
     // login_count = 1: the signup session counts as the first login, so the
-    // user's next actual login is treated as returning (lands on the penny page).
+    // user's next actual login is counted as returning.
     $stmt = $pdo->prepare("INSERT INTO users (name, email, password, credits, wants_ownership, phone, signup_source, login_count) VALUES (?, ?, ?, ?, ?, ?, ?, 1)");
     $stmt->execute([$name, $email, $hashedPassword, $grantCredits, $wantsOwnership, $phone, $signupSource]);
     $userId = $pdo->lastInsertId();

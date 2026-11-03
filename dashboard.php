@@ -271,20 +271,7 @@ session_write_close();
         }
 
         /* Red promo item (stays red even when not the active tab) */
-        .nav-link.nav-penny,
-        .nav-link.nav-penny.active {
-            background: #dc2626;
-            color: #ffffff;
-        }
-        .nav-link.nav-penny:hover {
-            background: #b91c1c;
-            color: #ffffff;
-        }
-        .nav-link.nav-penny i,
-        .nav-link.nav-penny.active i {
-            color: #ffffff;
-        }
-
+        
         .nav-link i {
             width: 20px;
             text-align: center;
@@ -523,7 +510,6 @@ session_write_close();
             .mb-item i { font-size: 17px; }
             .mb-item span { line-height: 1; }
             .mb-item.active { color: var(--accent); }
-            .mb-item.mb-penny, .mb-item.mb-penny.active { color: #dc2626; }
         }
 
         ::-webkit-scrollbar { width: 6px; }
@@ -591,12 +577,6 @@ session_write_close();
             <img src="<?php echo APP_LOGO; ?>" alt="<?php echo APP_NAME; ?>">
         </div>
         <ul class="nav-links">
-            <li class="nav-item">
-                <a href="?section=penny" class="nav-link nav-penny <?php echo $current_section === 'penny' ? 'active' : ''; ?>" data-section="penny">
-                    <i class="fas fa-bolt"></i>
-                    Get Leads Less Than 1&cent;
-                </a>
-            </li>
             <?php if (empty($hideCrmOffer)): ?>
             <li class="nav-item">
                 <a href="?section=freecrm" class="nav-link <?php echo $current_section === 'freecrm' ? 'active' : ''; ?>" data-section="freecrm">
@@ -667,7 +647,6 @@ session_write_close();
     <!-- Fixed mobile bottom nav -->
     <nav class="mobile-bottombar">
         <button class="mb-item <?php echo $current_section === 'lead_lists' ? 'active' : ''; ?>" type="button" data-section="lead_lists"><i class="fas fa-folder-open"></i><span>Leads</span></button>
-        <button class="mb-item mb-penny <?php echo $current_section === 'penny' ? 'active' : ''; ?>" type="button" data-section="penny"><i class="fas fa-bolt"></i><span>&lt;1&cent; Leads</span></button>
         <?php if (empty($hideCrmOffer)): ?>
         <button class="mb-item <?php echo $current_section === 'freecrm' ? 'active' : ''; ?>" type="button" data-section="freecrm"><i class="fas fa-gift"></i><span>Free CRM</span></button>
         <?php endif; ?>
@@ -689,9 +668,6 @@ session_write_close();
         </div>
         <div id="aibot" class="content-section <?php echo $current_section === 'aibot' ? 'active' : ''; ?>">
             <div id="aibot-content"></div>
-        </div>
-        <div id="penny" class="content-section <?php echo $current_section === 'penny' ? 'active' : ''; ?>">
-            <div id="penny-content"></div>
         </div>
         <div id="faqs" class="content-section <?php echo $current_section === 'faqs' ? 'active' : ''; ?>">
             <div id="faqs-content"></div>
@@ -749,7 +725,6 @@ session_write_close();
                 'section5': 'pricing.php',
                 'freecrm': 'freecrm.php',
                 'aibot': 'aibot.php',
-                'penny': 'resell.php',
                 'faqs': 'faq.php',
                 'account': 'account.php',
                 'support': 'support.php'
