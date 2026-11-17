@@ -38,7 +38,11 @@ try {
     // Access granted outside the app's own checkout (Partner Program / AIOM
     // purchase): their card says "Included", not "Current Plan" — they aren't
     // paying the listed price for it.
-    $curLabel = ($userPlan !== 'none' && $userPlan !== '' && empty($userData['subscription_id'])) ? 'Included Free With Your Partner Program' : 'Current Plan';
+    $isPartnerViewer = ($userPlan !== 'none' && $userPlan !== '' && empty($userData['subscription_id']));
+    $curLabel = $isPartnerViewer ? 'Included Free With Your Partner Program' : 'Current Plan';
+    // Partner-program members pay $98/mo for their package — show that on the
+    // Starter card instead of the standalone $95 price so it matches their bill.
+    $starterDisplayPrice = $isPartnerViewer ? 98 : PLAN_STARTER_PRICE;
 } catch (PDOException $e) {
     error_log("Database error: " . $e->getMessage());
     $userCredits = 0;
@@ -196,8 +200,8 @@ session_write_close();
                             <div class="badge badge-current"><?php echo $curLabel; ?></div>
                         <?php endif; ?>
                         <h3>Starter</h3>
-                        <div class="price">$<?php echo PLAN_STARTER_PRICE; ?><span>/mo</span></div>
-                        <div style="margin:-6px 0 22px;"><span style="display:inline-block;background:var(--accent-light);color:var(--accent);font-weight:800;font-size:16px;padding:8px 18px;border-radius:999px;letter-spacing:-.01em;"><?php echo number_format(PLAN_STARTER_PRICE / PLAN_STARTER_CREDITS * 100, 1); ?>&cent; per lead</span></div>
+                        <div class="price">$<?php echo $starterDisplayPrice; ?><span>/mo</span></div>
+                        <div style="margin:-6px 0 22px;"><span style="display:inline-block;background:var(--accent-light);color:var(--accent);font-weight:800;font-size:16px;padding:8px 18px;border-radius:999px;letter-spacing:-.01em;"><?php echo number_format($starterDisplayPrice / PLAN_STARTER_CREDITS * 100, 1); ?>&cent; per lead</span></div>
                         <ul class="features-list">
                             <li><i class="fas fa-check"></i> 1,000 Leads / month</li>
                             <li><i class="fas fa-check"></i> Free AI Email Enrichment</li>
