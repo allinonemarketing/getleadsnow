@@ -67,7 +67,9 @@ $granted = 0; $skipped = 0; $errors = 0;
 
 try {
     $users = $pdo->query("
-        SELECT id, monthly_credits, created_at
+        SELECT id, monthly_credits, created_at,
+               (SELECT MIN(created_at) FROM credit_transactions ct
+                 WHERE ct.user_id = users.id AND ct.transaction_id LIKE 'GHL%') AS first_grant_at
         FROM users
         WHERE subscription_status = 'active'
           AND (subscription_id IS NULL OR subscription_id = '')
@@ -86,9 +88,13 @@ try {
         $userId = (int) $u['id'];
         $credits = ((int) $u['monthly_credits']) > 0 ? (int) $u['monthly_credits'] : $defaultCredits;
 
-        // Anchor the renewal cycle to the user's signup day.
+        // Anchor the renewal cycle to the day they were first GRANTED plan
+        // credits (their purchase/provisioning date) — NOT the account-creation
+        // day. A free signup from August who buys in November renews on the
+        // 12ths (purchase day), not the 19ths (signup day).
         try {
-            $signup = !empty($u['created_at']) ? new DateTimeImmutable($u['created_at']) : $today;
+            $anchorTs = !empty($u['first_grant_at']) ? $u['first_grant_at'] : ($u['created_at'] ?? null);
+            $signup = !empty($anchorTs) ? new DateTimeImmutable($anchorTs) : $today;
         } catch (Exception $e) {
             $signup = $today;
         }

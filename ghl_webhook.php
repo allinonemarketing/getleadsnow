@@ -121,11 +121,14 @@ try {
             echo json_encode(['success' => true, 'action' => 'duplicate_ignored', 'user_id' => $userId, 'credits_granted' => 0]);
             exit;
         }
+        // Mark the account at purchase time too: an existing FREE account that
+        // buys through GHL becomes a partner account (offers hidden) exactly
+        // like a webhook-created one. Accounts that already have a type keep it.
         $pdo->prepare("
             UPDATE users
             SET credits = credits + ?, subscription_plan = 'business',
                 subscription_status = 'active', monthly_credits = ?,
-                account_type = COALESCE(NULLIF(?, ''), account_type)
+                account_type = COALESCE(NULLIF(?, ''), account_type, 'partner')
             WHERE id = ?
         ")->execute([$planCredits, $planCredits, $accountType, $userId]);
         $action = 'renewed';
