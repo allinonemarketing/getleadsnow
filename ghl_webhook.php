@@ -108,6 +108,19 @@ try {
     if ($existingId) {
         // Existing user — add this cycle's credits (rollover); leave password alone.
         $userId = (int) $existingId;
+
+        // Duplicate-delivery guard: GHL's idempotency keys turned out to be
+        // random per delivery, so retried/duplicate webhooks sailed past the
+        // key check and granted +1,000 twice (sometimes minutes after signup).
+        // A renewal cadence is ~30 days — any GHL grant in the last 25 days
+        // means this delivery is a duplicate, not a new billing cycle.
+        $dup = $pdo->prepare("SELECT 1 FROM credit_transactions WHERE user_id = ? AND transaction_id LIKE 'GHL%' AND created_at > NOW() - INTERVAL 25 DAY LIMIT 1");
+        $dup->execute([$userId]);
+        if ($dup->fetch()) {
+            $pdo->rollBack();
+            echo json_encode(['success' => true, 'action' => 'duplicate_ignored', 'user_id' => $userId, 'credits_granted' => 0]);
+            exit;
+        }
         $pdo->prepare("
             UPDATE users
             SET credits = credits + ?, subscription_plan = 'business',

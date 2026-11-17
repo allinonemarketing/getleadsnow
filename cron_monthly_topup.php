@@ -100,6 +100,15 @@ try {
             $chk->execute([$txnId]);
             if ($chk->fetch()) { $skipped++; continue; }   // already topped up this cycle
 
+            // ANY GHL grant inside this cycle counts — the GHL renewal webhook
+            // also tops users up, and both mechanisms stacking gave people
+            // double credits (+1,000 from a webhook at night, +1,000 from this
+            // cron the next 6am). The cron is now a safety net that only fires
+            // when no webhook grant arrived this cycle.
+            $anyGrant = $pdo->prepare("SELECT 1 FROM credit_transactions WHERE user_id = ? AND transaction_id LIKE 'GHL%' AND created_at >= ? LIMIT 1");
+            $anyGrant->execute([$userId, $cycleStart->format('Y-m-d 00:00:00')]);
+            if ($anyGrant->fetch()) { $skipped++; continue; }
+
             $pdo->beginTransaction();
             $add->execute([$credits, $userId]);
             $log->execute([$userId, $credits, $txnId]);
