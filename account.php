@@ -45,10 +45,56 @@ if (isset($_GET['action'])) {
         exit;
     }
 
+    if ($_GET['action'] === 'changeEmail') {
+        $newEmail = strtolower(trim((string)($in['email'] ?? '')));
+        $password = (string)($in['password'] ?? '');
+        if (!filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
+            echo json_encode(['success' => false, 'error' => 'Please enter a valid email address.']); exit;
+        }
+        try {
+            $s = $pdo->prepare("SELECT name, email, password FROM users WHERE id = ?");
+            $s->execute([$userId]);
+            $row = $s->fetch(PDO::FETCH_ASSOC);
+            if (!$row || !password_verify($password, (string)$row['password'])) {
+                echo json_encode(['success' => false, 'error' => 'Your current password is incorrect.']); exit;
+            }
+            $oldEmail = (string)$row['email'];
+            if (strcasecmp($newEmail, $oldEmail) === 0) {
+                echo json_encode(['success' => false, 'error' => 'That is already your login email.']); exit;
+            }
+            // The new address must not collide with any other account's current
+            // OR previous email (previous emails still work for login).
+            $c = $pdo->prepare("SELECT 1 FROM users WHERE (email = ? OR previous_email = ?) AND id != ? LIMIT 1");
+            $c->execute([$newEmail, $newEmail, $userId]);
+            if ($c->fetch()) {
+                echo json_encode(['success' => false, 'error' => 'That email address is already in use on another account.']); exit;
+            }
+            $pdo->prepare("UPDATE users SET email = ?, previous_email = ? WHERE id = ?")
+                ->execute([$newEmail, $oldEmail, $userId]);
+            session_write_close();   // external round-trips below — don't hold the session lock
+            // Re-point the CRM contact: GHL matches contacts by email, so without
+            // this every later tag/milestone would spawn a duplicate contact.
+            try {
+                require_once 'includes/ghl_signup.php';
+                ghlUpdateContactEmail($oldEmail, $newEmail);
+            } catch (Throwable $e) { error_log('changeEmail: ghl update: ' . $e->getMessage()); }
+            // Security notice to BOTH addresses (the old one catches hijacks).
+            try {
+                require_once 'includes/email_service.php';
+                sendEmailChangedNotice($oldEmail, $newEmail, (string)$row['name']);
+            } catch (Throwable $e) { error_log('changeEmail: notice email: ' . $e->getMessage()); }
+            echo json_encode(['success' => true, 'email' => $newEmail]);
+        } catch (Exception $e) {
+            error_log('changeEmail failed: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'error' => 'Could not update your email. Please try again.']);
+        }
+        exit;
+    }
+
     if ($_GET['action'] === 'cancelSubscription') {
         session_write_close();   // external round-trips below — don't hold the session lock
         try {
-            $s = $pdo->prepare("SELECT name, email, subscription_id, subscription_plan FROM users WHERE id = ?");
+            $s = $pdo->prepare("SELECT name, email, previous_email, subscription_id, subscription_plan FROM users WHERE id = ?");
             $s->execute([$userId]);
             $sub = $s->fetch(PDO::FETCH_ASSOC);
             $plan = (string)($sub['subscription_plan'] ?? 'none');
@@ -93,8 +139,17 @@ if (isset($_GET['action'])) {
                     STRIPE_PRICE_STARTER, STRIPE_PRICE_GROWTH, STRIPE_PRICE_ENTERPRISE,
                 ]));
                 $canceledSubs = []; $otherSubs = [];
+                // Their Stripe customer may still be under the email they signed
+                // up with before changing it — search both addresses.
+                $lookupEmails = array_values(array_unique(array_filter([
+                    (string)($sub['email'] ?? ''), (string)($sub['previous_email'] ?? ''),
+                ])));
                 try {
-                    foreach (\Stripe\Customer::all(['email' => $sub['email'], 'limit' => 5])->data as $cust) {
+                    $custs = [];
+                    foreach ($lookupEmails as $le) {
+                        foreach (\Stripe\Customer::all(['email' => $le, 'limit' => 5])->data as $cu) { $custs[$cu->id] = $cu; }
+                    }
+                    foreach ($custs as $cust) {
                         foreach (\Stripe\Subscription::all(['customer' => $cust->id, 'status' => 'all', 'limit' => 10])->data as $ss) {
                             if (in_array($ss->status, ['canceled', 'incomplete_expired'], true)) continue;
                             $match = false; $descr = [];
@@ -201,7 +256,7 @@ session_write_close();
     <h2><i class="fas fa-id-card"></i> Account Details</h2>
     <div class="rows">
       <div class="row"><span class="k">Name</span><span class="v" id="dName"><?php echo htmlspecialchars($name !== '' ? $name : '—'); ?></span></div>
-      <div class="row"><span class="k">Email <span style="font-weight:600;color:var(--faint)">(this is your login)</span></span><span class="v"><?php echo htmlspecialchars($email !== '' ? $email : '—'); ?></span></div>
+      <div class="row"><span class="k">Email <span style="font-weight:600;color:var(--faint)">(this is your login)</span></span><span class="v" id="dEmail"><?php echo htmlspecialchars($email !== '' ? $email : '—'); ?></span></div>
       <div class="row"><span class="k">Phone</span><span class="v" id="dPhone"><?php echo htmlspecialchars($phone !== '' ? $phone : '—'); ?></span></div>
       <?php if ($memberSince): ?><div class="row"><span class="k">Member since</span><span class="v"><?php echo htmlspecialchars($memberSince); ?></span></div><?php endif; ?>
     </div>
@@ -237,16 +292,32 @@ session_write_close();
       <input type="text" id="fName" value="<?php echo htmlspecialchars($name); ?>" autocomplete="name">
     </div>
     <div class="field">
-      <label for="fEmail">Email (login)</label>
-      <input type="email" id="fEmail" value="<?php echo htmlspecialchars($email); ?>" disabled>
-      <div class="hint">Contact support to change your login email.</div>
-    </div>
-    <div class="field">
       <label for="fPhone">Phone</label>
       <input type="tel" id="fPhone" value="<?php echo htmlspecialchars($phone); ?>" autocomplete="tel">
     </div>
     <button class="btn" id="saveProfile"><i class="fas fa-save"></i> Save Changes</button>
     <div class="msg" id="profileMsg"></div>
+  </div>
+
+  <!-- LOGIN EMAIL -->
+  <div class="card">
+    <h2><i class="fas fa-envelope"></i> Change Login Email</h2>
+    <div class="field">
+      <label>Current email</label>
+      <input type="email" id="curEmail" value="<?php echo htmlspecialchars($email); ?>" disabled>
+    </div>
+    <div class="field">
+      <label for="newEmail">New email</label>
+      <input type="email" id="newEmail" autocomplete="email" placeholder="you@example.com">
+    </div>
+    <div class="field">
+      <label for="emailPass">Current password</label>
+      <input type="password" id="emailPass" autocomplete="current-password">
+      <div class="hint">For your security, confirm your password to change your login email.</div>
+    </div>
+    <button class="btn" id="saveEmail"><i class="fas fa-envelope-circle-check"></i> Update Email</button>
+    <div class="msg" id="emailMsg"></div>
+    <div class="hint" style="margin-top:10px;">Your new email becomes your account email. Your current email will <strong>also keep working</strong> for login, so you won&rsquo;t get locked out.</div>
   </div>
 
   <!-- PASSWORD -->
@@ -289,6 +360,26 @@ session_write_close();
         document.getElementById('dName').textContent = name || '—';
         document.getElementById('dPhone').textContent = phone || '—';
       } else { show(msg, false, res.error || 'Could not save.'); }
+    } catch(e){ show(msg, false, 'Network error. Please try again.'); }
+    btn.disabled = false;
+  });
+
+  document.getElementById('saveEmail').addEventListener('click', async function(){
+    const btn = this, msg = document.getElementById('emailMsg');
+    const email = document.getElementById('newEmail').value.trim();
+    const password = document.getElementById('emailPass').value;
+    if (!email || !email.includes('@')){ show(msg, false, 'Please enter a valid email address.'); return; }
+    if (!password){ show(msg, false, 'Please enter your current password.'); return; }
+    btn.disabled = true;
+    try {
+      const res = await api('changeEmail', {email, password});
+      if (res.success){
+        show(msg, true, 'Email updated. Your old email still works for login too.');
+        document.getElementById('dEmail').textContent = res.email;
+        document.getElementById('curEmail').value = res.email;
+        document.getElementById('newEmail').value = '';
+        document.getElementById('emailPass').value = '';
+      } else { show(msg, false, res.error || 'Could not update your email.'); }
     } catch(e){ show(msg, false, 'Network error. Please try again.'); }
     btn.disabled = false;
   });

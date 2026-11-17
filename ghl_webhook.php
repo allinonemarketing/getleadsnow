@@ -89,8 +89,11 @@ $planCredits = $accountType === 'partner_pro'
 $txnId = $idempotencyKey !== '' ? ('GHL_' . $idempotencyKey) : '';
 
 try {
-    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-    $stmt->execute([$email]);
+    // previous_email too: a user who changed their login email in-app still
+    // renews under the email GHL knows — without this the renewal would
+    // CREATE a duplicate account instead of topping up the real one.
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? OR previous_email = ? ORDER BY (email = ?) DESC LIMIT 1");
+    $stmt->execute([$email, $email, $email]);
     $existingId = $stmt->fetchColumn();
 
     // Idempotency guard: if this exact key was already processed, do nothing.

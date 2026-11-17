@@ -13,8 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         global $pdo;
-        $stmt = $pdo->prepare("SELECT id, name, password FROM users WHERE email = ?");
-        $stmt->execute([$email]);
+        // previous_email: users who changed their login email can still sign in
+        // with the old one (a current-email match always wins over an old one).
+        $stmt = $pdo->prepare("SELECT id, name, password FROM users WHERE email = ? OR previous_email = ? ORDER BY (email = ?) DESC LIMIT 1");
+        $stmt->execute([$email, $email, $email]);
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password'])) {

@@ -107,8 +107,10 @@ if ($event->type == 'checkout.session.completed') {
             $pdo->beginTransaction();
 
             if (!$userId && $email) {
-                $s = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-                $s->execute([$email]);
+                // previous_email too: a customer checking out under the email they
+                // used before changing it should land on their existing account.
+                $s = $pdo->prepare("SELECT id FROM users WHERE email = ? OR previous_email = ? ORDER BY (email = ?) DESC LIMIT 1");
+                $s->execute([$email, $email, $email]);
                 $existingId = $s->fetchColumn();
                 if ($existingId) {
                     $userId = $existingId;

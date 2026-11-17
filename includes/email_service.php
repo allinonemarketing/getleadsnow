@@ -168,6 +168,35 @@ function sendCreditAddedEmail($userData, $credits, $reason = '') {
     }
 }
 
+function sendEmailChangedNotice($oldEmail, $newEmail, $name) {
+    $appName = APP_NAME;
+    $safeName = htmlspecialchars($name !== '' ? $name : 'there');
+    $sent = false;
+    // Both addresses get the notice — the OLD one is the hijack alarm.
+    foreach (array_unique([$oldEmail, $newEmail]) as $to) {
+        $mail = createMailer();
+        if (!$mail) continue;
+        try {
+            $mail->addAddress($to, $name);
+            $mail->isHTML(true);
+            $mail->Subject = "Your login email was changed - " . APP_NAME;
+            $mail->Body = "
+            <html><body>
+                <h2>Login email updated</h2>
+                <p>Hi {$safeName},</p>
+                <p>The login email on your {$appName} account was changed to <strong>" . htmlspecialchars($newEmail) . "</strong>.</p>
+                <p>You can still sign in with your previous email (<strong>" . htmlspecialchars($oldEmail) . "</strong>) too &mdash; both work with your existing password.</p>
+                <p>If you didn't make this change, contact us right away at sales@allinonemarketing.com.</p>
+                <br><p>Best regards,<br>{$appName} Team</p>
+            </body></html>";
+            if ($mail->send()) { $sent = true; }
+        } catch (Exception $e) {
+            error_log("Mailer Error: " . $e->getMessage());
+        }
+    }
+    return $sent;
+}
+
 function sendPasswordResetEmail($email, $name, $token) {
     $mail = createMailer();
     if (!$mail) return false;

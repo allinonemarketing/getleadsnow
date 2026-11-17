@@ -86,8 +86,10 @@ try {
         @file_put_contents($regSchemaFlag, '1');
     }
 
-    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-    $stmt->execute([$email]);
+    // previous_email too: an old login email still belongs to that account —
+    // letting someone register it fresh would make logins ambiguous.
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? OR previous_email = ? LIMIT 1");
+    $stmt->execute([$email, $email]);
     if ($stmt->fetch()) {
         echo json_encode(['success' => false, 'message' => 'An account with this email already exists.']);
         exit;

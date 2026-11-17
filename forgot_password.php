@@ -11,14 +11,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($email)) {
         try {
             global $pdo;
-            $stmt = $pdo->prepare("SELECT id, name, email FROM users WHERE email = ?");
-            $stmt->execute([$email]);
+            // Also match a previous login email (users who changed theirs). The
+            // reset row and email always use the CURRENT primary address so the
+            // reset link lands in the mailbox the account now belongs to.
+            $stmt = $pdo->prepare("SELECT id, name, email FROM users WHERE email = ? OR previous_email = ? ORDER BY (email = ?) DESC LIMIT 1");
+            $stmt->execute([$email, $email, $email]);
             $user = $stmt->fetch();
 
             if ($user) {
                 $token = bin2hex(random_bytes(32));
                 $stmt = $pdo->prepare("INSERT INTO password_resets (email, token, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR))");
-                $stmt->execute([$email, $token]);
+                $stmt->execute([$user['email'], $token]);
                 sendPasswordResetEmail($user['email'], $user['name'], $token);
             }
         } catch (Exception $e) {

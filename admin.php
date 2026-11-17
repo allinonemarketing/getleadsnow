@@ -187,8 +187,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['action']) && $data['ac
         $email = strtolower(trim((string)($data['email'] ?? '')));
         $monthly = max(0, (int)($data['monthly_credits'] ?? 0));
         if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) { echo json_encode(['success' => false, 'error' => 'Valid name and email required']); exit; }
-        $chk = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-        $chk->execute([$email]);
+        $chk = $pdo->prepare("SELECT id FROM users WHERE email = ? OR previous_email = ? LIMIT 1");
+        $chk->execute([$email, $email]);
         if ($chk->fetch()) { echo json_encode(['success' => false, 'error' => 'A user with that email already exists']); exit; }
         $pnDigits = ltrim(preg_replace('/\D+/', '', (string)($data['phone'] ?? '')), '01');
         $phone = strlen($pnDigits) === 10 ? sprintf('(%s) %s-%s', substr($pnDigits,0,3), substr($pnDigits,3,3), substr($pnDigits,6)) : '';
@@ -872,6 +872,7 @@ async function openUser(id) {
         </div>
         <div class="slide-section"><h3>Account</h3>
             <div class="info-row"><span class="label">User ID</span><span class="value">#${u.id}</span></div>
+            ${u.previous_email ? `<div class="info-row"><span class="label">Previous Email</span><span class="value" style="font-size:12px;">${esc(u.previous_email)} <span style="color:var(--muted);font-weight:500;">(still works for login)</span></span></div>` : ''}
             <div class="info-row"><span class="label">Plan</span><span class="value"><select class="badge" style="border:none;cursor:pointer;font-family:inherit;font-size:12px;padding:4px 8px;border-radius:6px;" onchange="changePlan(${u.id},this.value)">
                 <option value="none" ${(u.subscription_plan||'none')==='none'?'selected':''}>Free</option>
                 <option value="business" ${u.subscription_plan==='business'?'selected':''}>Starter</option>

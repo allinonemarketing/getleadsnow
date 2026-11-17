@@ -160,6 +160,73 @@ function sendSignupToGHL($d) {
 }
 
 /**
+ * Point the CRM contact at the user's new login email. GHL matches contacts by
+ * email, so after an in-app email change every later upsert (usage milestones,
+ * cancel tag) would otherwise spawn a duplicate contact under the new address
+ * while the real one — with all its tags and automations — goes stale.
+ * Fire-and-forget.
+ */
+function ghlUpdateContactEmail($oldEmail, $newEmail) {
+    $token      = env('GHL_SIGNUP_TOKEN', 'pit-c783c99a-a551-427c-ba0b-f9c18cfd820a');
+    $locationId = env('GHL_SIGNUP_LOCATION', 'rZ5eDWGmionEGPWr3cj4');
+    if (!$token || !$locationId || !$oldEmail || !$newEmail) return false;
+
+    $headers = [
+        'Authorization: Bearer ' . $token,
+        'Version: 2021-07-28',
+        'Content-Type: application/json',
+        'Accept: application/json',
+    ];
+
+    // Find the contact via upsert on the OLD email (matches the existing
+    // contact; sends no other fields, so nothing on it is modified).
+    $contactId = null;
+    try {
+        $ch = curl_init('https://services.leadconnectorhq.com/contacts/upsert');
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode(['locationId' => $locationId, 'email' => $oldEmail]),
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 4,
+            CURLOPT_TIMEOUT        => 8,
+        ]);
+        $resp = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        $json = json_decode($resp, true);
+        $contactId = $json['contact']['id'] ?? ($json['id'] ?? null);
+        if (!$contactId) { error_log("GHL email-change lookup: no contact id (HTTP $code): " . substr((string)$resp, 0, 200)); return false; }
+    } catch (Exception $e) {
+        error_log("GHL email-change lookup failed: " . $e->getMessage());
+        return false;
+    }
+
+    try {
+        $ch = curl_init("https://services.leadconnectorhq.com/contacts/{$contactId}");
+        curl_setopt_array($ch, [
+            CURLOPT_CUSTOMREQUEST  => 'PUT',
+            CURLOPT_POSTFIELDS     => json_encode(['email' => $newEmail]),
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 4,
+            CURLOPT_TIMEOUT        => 8,
+        ]);
+        $resp = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($code < 200 || $code >= 300) {
+            error_log("GHL email-change update HTTP $code: " . substr((string)$resp, 0, 200));
+            return false;
+        }
+    } catch (Exception $e) {
+        error_log("GHL email-change update failed: " . $e->getMessage());
+        return false;
+    }
+    return true;
+}
+
+/**
  * Append tags + custom-field values to an EXISTING contact (usage milestones).
  * The upsert matches by email within the location and merges ONLY the fields
  * sent here — nothing else on the contact is touched — and the /tags endpoint

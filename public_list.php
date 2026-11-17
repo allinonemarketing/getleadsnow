@@ -52,8 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 
     try {
-        $existing = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-        $existing->execute([$email]);
+        $existing = $pdo->prepare("SELECT id FROM users WHERE email = ? OR previous_email = ? LIMIT 1");
+        $existing->execute([$email, $email]);
         if ($existing->fetch()) {
             echo json_encode(['success' => false, 'message' => 'An account with this email already exists. Please log in instead.']);
             exit;
@@ -108,8 +108,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 
     try {
-        $userStmt = $pdo->prepare("SELECT id, name, password FROM users WHERE email = ?");
-        $userStmt->execute([$email]);
+        $userStmt = $pdo->prepare("SELECT id, name, password FROM users WHERE email = ? OR previous_email = ? ORDER BY (email = ?) DESC LIMIT 1");
+        $userStmt->execute([$email, $email, $email]);
         $user = $userStmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$user || !password_verify($password, $user['password'])) {
