@@ -92,9 +92,18 @@ try {
     // previous_email too: a user who changed their login email in-app still
     // renews under the email GHL knows — without this the renewal would
     // CREATE a duplicate account instead of topping up the real one.
-    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? OR previous_email = ? ORDER BY (email = ?) DESC LIMIT 1");
+    $stmt = $pdo->prepare("SELECT id, account_type FROM users WHERE email = ? OR previous_email = ? ORDER BY (email = ?) DESC LIMIT 1");
     $stmt->execute([$email, $email, $email]);
-    $existingId = $stmt->fetchColumn();
+    $existingRow  = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    $existingId   = $existingRow['id'] ?? false;
+    $existingType = (string)($existingRow['account_type'] ?? '');
+
+    // A renewal payload that doesn't name an account_type must not downgrade a
+    // Partner Program Pro account to the standard allotment — respect the tier
+    // already stored on the user.
+    if ($accountType === '' && $existingType === 'partner_pro') {
+        $planCredits = (int) env('GHL_PARTNER_PRO_CREDITS', 2000);
+    }
 
     // Idempotency guard: if this exact key was already processed, do nothing.
     if ($txnId !== '') {
