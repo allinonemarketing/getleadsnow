@@ -921,7 +921,7 @@ async function openUser(id) {
                 <option value="agency" ${u.subscription_plan==='agency'?'selected':''}>Growth</option>
                 <option value="enterprise" ${u.subscription_plan==='enterprise'?'selected':''}>Pro</option>
             </select></span></div>
-            <div class="info-row"><span class="label">Account Type</span><span class="value"><select class="badge" style="border:none;cursor:pointer;font-family:inherit;font-size:12px;padding:4px 8px;border-radius:6px;" onchange="setAccountType(${u.id},this.value)">
+            <div class="info-row"><span class="label">Account Type</span><span class="value"><select class="badge" style="border:none;cursor:pointer;font-family:inherit;font-size:12px;padding:4px 8px;border-radius:6px;text-align:right;text-align-last:right;" onchange="setAccountType(${u.id},this.value)">
                 <option value="" ${!u.account_type?'selected':''}>Standard</option>
                 <option value="partner" ${u.account_type==='partner'?'selected':''}>Partner Program</option>
                 <option value="partner_pro" ${u.account_type==='partner_pro'?'selected':''}>Partner Program Pro</option>
