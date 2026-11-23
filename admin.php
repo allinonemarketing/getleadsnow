@@ -59,6 +59,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['action']) && $data['ac
     exit;
 }
 
+// Partner status is separate from the billing plan: account_type marks HOW the
+// user got access (standard, partner program, Partner Program Pro). It controls
+// the hidden Free CRM / AI Bot offers and protects the Pro 2,000/month tier on
+// renewals — it does NOT change what (or whether) they're billed.
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['action']) && $data['action'] === 'set_account_type') {
+    header('Content-Type: application/json');
+    try {
+        $t = (string)($data['account_type'] ?? '');
+        if (!in_array($t, ['', 'partner', 'partner_pro'], true)) { echo json_encode(['success' => false, 'error' => 'Invalid type']); exit; }
+        $pdo->prepare("UPDATE users SET account_type = ? WHERE id = ?")->execute([$t, (int)$data['user_id']]);
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) { echo json_encode(['success' => false, 'error' => 'Database error']); }
+    exit;
+}
+
 // Delete one user and everything they own. Returns null on success or an error
 // string. Protections: master admin (#1), the acting admin, and other admins.
 function adminDeleteUser(PDO $pdo, int $uid, int $actingId): ?string {
@@ -896,6 +911,11 @@ async function openUser(id) {
                 <option value="agency" ${u.subscription_plan==='agency'?'selected':''}>Growth</option>
                 <option value="enterprise" ${u.subscription_plan==='enterprise'?'selected':''}>Pro</option>
             </select></span></div>
+            <div class="info-row"><span class="label">Account Type</span><span class="value"><select class="badge" style="border:none;cursor:pointer;font-family:inherit;font-size:12px;padding:4px 8px;border-radius:6px;" onchange="setAccountType(${u.id},this.value)">
+                <option value="" ${!u.account_type?'selected':''}>Standard</option>
+                <option value="partner" ${u.account_type==='partner'?'selected':''}>Partner Program</option>
+                <option value="partner_pro" ${u.account_type==='partner_pro'?'selected':''}>Partner Program Pro</option>
+            </select></span></div>
             <div class="info-row"><span class="label">Billing</span><span class="value" style="font-size:12px;">${u.subscription_id ? 'GetLeadsNow Stripe sub' : ((u.subscription_plan && u.subscription_plan !== 'none') ? 'Included (Partner / AIOM purchase)' : '—')}</span></div>
             <div class="info-row"><span class="label">Credits</span><span class="value" id="slideCredits">${Number(u.credits).toLocaleString()}</span></div>
             <div class="info-row"><span class="label">Monthly Credits</span><span class="value"><input type="number" id="slideMonthly" min="0" value="${(u.subscription_status==='active' && !u.subscription_id && u.subscription_plan && u.subscription_plan!=='none') ? Number(u.monthly_credits||0) : Number(u.admin_monthly_credits||0)}" style="width:90px;padding:4px 8px;border:1px solid var(--card-border);border-radius:6px;font-family:inherit;font-size:13px;"> <button class="btn btn-secondary btn-sm" onclick="setMonthly(${u.id})">Save</button></span></div>
@@ -1015,6 +1035,11 @@ async function deleteUser(userId, userName) {
     if (d.success) { location.reload(); } else { alert(d.error || 'Delete failed'); }
 }
 
+async function setAccountType(userId, type) {
+    const res = await fetch('admin.php', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'set_account_type',user_id:userId,account_type:type}) });
+    const data = await res.json();
+    if (!data.success) alert(data.error || 'Failed to update account type');
+}
 async function changePlan(userId, plan) {
     await fetch('admin.php', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'change_plan',user_id:userId,plan}) });
 }
