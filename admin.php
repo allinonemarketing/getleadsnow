@@ -2,6 +2,7 @@
 session_start();
 require_once 'includes/auth.php';
 require_once 'includes/email_service.php';
+require_once 'config/subscription_config.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
     $input = file_get_contents('php://input');
@@ -887,6 +888,15 @@ async function openUser(id) {
     const u = data.user;
     const isOnline = u.last_active_at && (Date.now() - new Date(u.last_active_at)) < 900000;
     const color = avatarColor(u.email);
+    // Monthly credit sources: a Stripe-billed user's PLAN grants credits on each
+    // invoice; the editable box is an EXTRA admin allowance on top. Partner/GHL
+    // users renew monthly_credits on their anniversary; everyone else only has
+    // the admin allowance.
+    const PLAN_CREDITS = {business: <?php echo (int)PLAN_STARTER_CREDITS; ?>, agency: <?php echo (int)PLAN_GROWTH_CREDITS; ?>, enterprise: <?php echo (int)PLAN_ENTERPRISE_CREDITS; ?>};
+    const stripeBilled = !!u.subscription_id;
+    const extBilled = !stripeBilled && u.subscription_status==='active' && u.subscription_plan && u.subscription_plan!=='none';
+    const planMonthly = stripeBilled ? (PLAN_CREDITS[u.subscription_plan]||0) : 0;
+    const monthlyBoxVal = extBilled ? Number(u.monthly_credits||0) : Number(u.admin_monthly_credits||0);
     let html = `
         <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
             <div class="user-avatar" style="background:${color};">${u.name.charAt(0).toUpperCase()}</div>
@@ -918,8 +928,10 @@ async function openUser(id) {
             </select></span></div>
             <div class="info-row"><span class="label">Billing</span><span class="value" style="font-size:12px;">${u.subscription_id ? 'GetLeadsNow Stripe sub' : ((u.subscription_plan && u.subscription_plan !== 'none') ? 'Included (Partner / AIOM purchase)' : '—')}</span></div>
             <div class="info-row"><span class="label">Credits</span><span class="value" id="slideCredits">${Number(u.credits).toLocaleString()}</span></div>
-            <div class="info-row"><span class="label">Monthly Credits</span><span class="value"><input type="number" id="slideMonthly" min="0" value="${(u.subscription_status==='active' && !u.subscription_id && u.subscription_plan && u.subscription_plan!=='none') ? Number(u.monthly_credits||0) : Number(u.admin_monthly_credits||0)}" style="width:90px;padding:4px 8px;border:1px solid var(--card-border);border-radius:6px;font-family:inherit;font-size:13px;"> <button class="btn btn-secondary btn-sm" onclick="setMonthly(${u.id})">Save</button></span></div>
-            ${(u.subscription_status==='active' && !u.subscription_id && u.subscription_plan && u.subscription_plan!=='none') ? `<div class="info-row"><span class="label">Refills</span><span class="value" style="font-size:12px;color:var(--text-tertiary);">On their monthly renewal date</span></div>` : (u.admin_credits_next_refill ? `<div class="info-row"><span class="label">Next Refill</span><span class="value">${u.admin_credits_next_refill}</span></div>` : '')}
+            ${stripeBilled ? `<div class="info-row"><span class="label">Plan Renewal</span><span class="value" style="font-size:12px;">+${planMonthly.toLocaleString()}/mo from their Stripe subscription</span></div>` : ''}
+            <div class="info-row"><span class="label">${stripeBilled ? 'Extra Monthly Credits' : 'Monthly Credits'}</span><span class="value"><input type="number" id="slideMonthly" min="0" value="${monthlyBoxVal}" style="width:90px;padding:4px 8px;border:1px solid var(--card-border);border-radius:6px;font-family:inherit;font-size:13px;"> <button class="btn btn-secondary btn-sm" onclick="setMonthly(${u.id})">Save</button></span></div>
+            ${stripeBilled && monthlyBoxVal > 0 ? `<div class="info-row"><span class="label">Total / Month</span><span class="value">${(planMonthly + monthlyBoxVal).toLocaleString()}</span></div>` : ''}
+            ${extBilled ? `<div class="info-row"><span class="label">Refills</span><span class="value" style="font-size:12px;color:var(--text-tertiary);">On their monthly renewal date</span></div>` : (u.admin_credits_next_refill ? `<div class="info-row"><span class="label">Next Refill</span><span class="value">${u.admin_credits_next_refill}</span></div>` : '')}
             <div class="info-row"><span class="label">Joined</span><span class="value">${new Date(u.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span></div>
             <div class="info-row"><span class="label">Admin</span><span class="value"><input type="checkbox" ${u.is_admin?'checked':''} ${u.id==1?'disabled':''} onchange="toggleAdmin(${u.id},this.checked)" style="accent-color:var(--accent);"></span></div>
         </div>
