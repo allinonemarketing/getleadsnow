@@ -207,14 +207,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['action']) && $data['ac
 }
 
 // Set/change the recurring monthly credit allowance on an existing user.
+// Two refill engines exist and a user must only ever be on ONE:
+//   - GHL/partner-billed accounts (active plan, no Stripe sub) renew
+//     users.monthly_credits on their monthly anniversary (cron/webhook).
+//   - Everyone else uses admin_monthly_credits + admin_credits_next_refill
+//     (refilled by the worker). Writing both would double-grant every month.
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['action']) && $data['action'] === 'set_monthly_credits') {
     header('Content-Type: application/json');
     try {
         $m = max(0, (int)($data['monthly_credits'] ?? 0));
-        $pdo->prepare("UPDATE users SET admin_monthly_credits = ?,
-            admin_credits_next_refill = CASE WHEN ? > 0 THEN COALESCE(admin_credits_next_refill, DATE_ADD(CURDATE(), INTERVAL 1 MONTH)) ELSE NULL END
-            WHERE id = ?")->execute([$m, $m, (int)$data['user_id']]);
-        echo json_encode(['success' => true]);
+        $uid = (int)$data['user_id'];
+        $s = $pdo->prepare("SELECT subscription_id, subscription_status, subscription_plan FROM users WHERE id = ?");
+        $s->execute([$uid]);
+        $ur = $s->fetch(PDO::FETCH_ASSOC);
+        $extBilled = $ur && $ur['subscription_status'] === 'active'
+            && trim((string)$ur['subscription_id']) === ''
+            && !in_array((string)$ur['subscription_plan'], ['', 'none'], true);
+        if ($extBilled) {
+            $pdo->prepare("UPDATE users SET monthly_credits = ?, admin_monthly_credits = 0, admin_credits_next_refill = NULL WHERE id = ?")
+                ->execute([$m, $uid]);
+        } else {
+            $pdo->prepare("UPDATE users SET admin_monthly_credits = ?,
+                admin_credits_next_refill = CASE WHEN ? > 0 THEN COALESCE(admin_credits_next_refill, DATE_ADD(CURDATE(), INTERVAL 1 MONTH)) ELSE NULL END
+                WHERE id = ?")->execute([$m, $m, $uid]);
+        }
+        echo json_encode(['success' => true, 'engine' => $extBilled ? 'anniversary' : 'admin_refill']);
     } catch (Exception $e) { echo json_encode(['success' => false, 'error' => 'Database error']); }
     exit;
 }
@@ -881,8 +898,8 @@ async function openUser(id) {
             </select></span></div>
             <div class="info-row"><span class="label">Billing</span><span class="value" style="font-size:12px;">${u.subscription_id ? 'GetLeadsNow Stripe sub' : ((u.subscription_plan && u.subscription_plan !== 'none') ? 'Included (Partner / AIOM purchase)' : '—')}</span></div>
             <div class="info-row"><span class="label">Credits</span><span class="value" id="slideCredits">${Number(u.credits).toLocaleString()}</span></div>
-            <div class="info-row"><span class="label">Monthly Credits</span><span class="value"><input type="number" id="slideMonthly" min="0" value="${Number(u.admin_monthly_credits||0)}" style="width:90px;padding:4px 8px;border:1px solid var(--card-border);border-radius:6px;font-family:inherit;font-size:13px;"> <button class="btn btn-secondary btn-sm" onclick="setMonthly(${u.id})">Save</button></span></div>
-            ${u.admin_credits_next_refill ? `<div class="info-row"><span class="label">Next Refill</span><span class="value">${u.admin_credits_next_refill}</span></div>` : ''}
+            <div class="info-row"><span class="label">Monthly Credits</span><span class="value"><input type="number" id="slideMonthly" min="0" value="${(u.subscription_status==='active' && !u.subscription_id && u.subscription_plan && u.subscription_plan!=='none') ? Number(u.monthly_credits||0) : Number(u.admin_monthly_credits||0)}" style="width:90px;padding:4px 8px;border:1px solid var(--card-border);border-radius:6px;font-family:inherit;font-size:13px;"> <button class="btn btn-secondary btn-sm" onclick="setMonthly(${u.id})">Save</button></span></div>
+            ${(u.subscription_status==='active' && !u.subscription_id && u.subscription_plan && u.subscription_plan!=='none') ? `<div class="info-row"><span class="label">Refills</span><span class="value" style="font-size:12px;color:var(--text-tertiary);">On their monthly renewal date</span></div>` : (u.admin_credits_next_refill ? `<div class="info-row"><span class="label">Next Refill</span><span class="value">${u.admin_credits_next_refill}</span></div>` : '')}
             <div class="info-row"><span class="label">Joined</span><span class="value">${new Date(u.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span></div>
             <div class="info-row"><span class="label">Admin</span><span class="value"><input type="checkbox" ${u.is_admin?'checked':''} ${u.id==1?'disabled':''} onchange="toggleAdmin(${u.id},this.checked)" style="accent-color:var(--accent);"></span></div>
         </div>
