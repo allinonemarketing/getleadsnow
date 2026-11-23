@@ -4931,13 +4931,13 @@ header('Cache-Control: no-store, max-age=0');
         <div id="ghlGateScreen" class="ghl-screen hidden">
             <div style="max-width:460px;margin:56px auto;text-align:center;">
                 <div style="width:64px;height:64px;border-radius:16px;background:#eafaf0;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
-                    <i class="fas fa-gift" style="font-size:26px;color:#16a34a;"></i>
+                    <i class="fas fa-plug" style="font-size:26px;color:#16a34a;"></i>
                 </div>
-                <h2 style="margin:0 0 8px;font-size:22px;">Did you set up your Free CRM yet?</h2>
-                <p style="color:var(--text-secondary);font-size:14px;line-height:1.6;margin:0 0 26px;">You push leads straight into your <strong>Free CRM</strong> (normally $97/mo &mdash; free for you). If you haven&rsquo;t claimed it yet, grab it first &mdash; it takes about a minute.</p>
+                <h2 style="margin:0 0 8px;font-size:22px;">Connect Your CRM</h2>
+                <p style="color:var(--text-secondary);font-size:14px;line-height:1.6;margin:0 0 26px;">Push your leads straight into your CRM. Already have yours set up? Continue to setup. If not, grab one first &mdash; it takes about a minute.</p>
                 <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
                     <button class="btn btn-primary" onclick="app.ghlGateYes()" style="padding:13px 26px;font-size:15px;font-weight:700;"><i class="fas fa-check"></i> Yes, continue to setup</button>
-                    <button class="btn btn-secondary" onclick="app.ghlGateNo()" style="padding:13px 26px;font-size:15px;font-weight:700;"><i class="fas fa-arrow-right"></i> No, get my Free CRM</button>
+                    <button class="btn btn-secondary" onclick="app.ghlGateNo()" style="padding:13px 26px;font-size:15px;font-weight:700;"><i class="fas fa-arrow-right"></i> No, I need a CRM</button>
                 </div>
             </div>
         </div>
