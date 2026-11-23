@@ -4927,21 +4927,6 @@ header('Cache-Control: no-store, max-age=0');
             </div>
         </div>
 
-        <!-- GATE: do they have the CRM yet? -->
-        <div id="ghlGateScreen" class="ghl-screen hidden">
-            <div style="max-width:460px;margin:56px auto;text-align:center;">
-                <div style="width:64px;height:64px;border-radius:16px;background:#eafaf0;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
-                    <i class="fas fa-plug" style="font-size:26px;color:#16a34a;"></i>
-                </div>
-                <h2 style="margin:0 0 8px;font-size:22px;">Connect Your CRM</h2>
-                <p style="color:var(--text-secondary);font-size:14px;line-height:1.6;margin:0 0 26px;">Push your leads straight into your CRM. Already have yours set up? Continue to setup. If not, grab one first &mdash; it takes about a minute.</p>
-                <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-                    <button class="btn btn-primary" onclick="app.ghlGateYes()" style="padding:13px 26px;font-size:15px;font-weight:700;"><i class="fas fa-check"></i> Yes, continue to setup</button>
-                    <button class="btn btn-secondary" onclick="app.ghlGateNo()" style="padding:13px 26px;font-size:15px;font-weight:700;"><i class="fas fa-arrow-right"></i> No, I need a CRM</button>
-                </div>
-            </div>
-        </div>
-
         <!-- SETUP / PICK CONNECTION SCREEN -->
         <div id="ghlSetupScreen" class="ghl-screen">
             <div style="max-width:520px;margin:40px auto;">
@@ -7814,15 +7799,10 @@ class LeadListsApp {
         this._ghlConnections = res.connections || [];
 
         if (this._ghlConnections.length === 0) {
-            // First-timer: gate on whether they've claimed the CRM yet.
-            // Partner Program Pro accounts already have a CRM — skip the offer
-            // gate and go straight to the connection setup.
-            if (window.AIOM_PARTNER_PRO) {
-                this.showGHLScreen('ghlSetupScreen');
-                this.renderGHLConnectionsList();
-            } else {
-                this.showGHLScreen('ghlGateScreen');
-            }
+            // First-timer: straight to the connection setup (the old
+            // "did you claim the CRM yet?" gate screen was removed).
+            this.showGHLScreen('ghlSetupScreen');
+            this.renderGHLConnectionsList();
             this.updateGHLBadge(false);
         } else {
             this._ghlActiveConn = this._ghlConnections[0];
@@ -7832,23 +7812,11 @@ class LeadListsApp {
     }
 
     showGHLScreen(id) {
-        ['ghlGateScreen','ghlSetupScreen','ghlEditorScreen','ghlImportingScreen','ghlDoneScreen'].forEach(s => {
+        ['ghlSetupScreen','ghlEditorScreen','ghlImportingScreen','ghlDoneScreen'].forEach(s => {
             const el = document.getElementById(s);
             if (el) el.classList.toggle('hidden', s !== id);
         });
     }
-    ghlGateYes() {
-        // They have the CRM — continue to the connection setup.
-        this.showGHLScreen('ghlSetupScreen');
-        this.updateGHLBadge(false);
-        this.renderGHLConnectionsList();
-    }
-    ghlGateNo() {
-        // No CRM yet — send them to claim it first.
-        this.closeGHLExport();
-        (window.top || window).location.href = '/dashboard?section=freecrm';
-    }
-
     updateGHLBadge(connected) {
         const b = document.getElementById('ghlConnectionBadge');
         if (connected && this._ghlActiveConn) {
