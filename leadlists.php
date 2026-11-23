@@ -19,7 +19,7 @@ $userCredits = $uRow['credits'] ?? 0;
 $userHasShared = $uRow['shared_for_credits'] ?? 0;
 $userPlan = $uRow['subscription_plan'] ?? 'none';
 // Webhook-provisioned partner accounts already have a CRM — the export flow
-// skips the "Did you set up your Free CRM yet?" offer gate, straight to connect.
+// skips the "Did you set up your CRM yet?" offer gate, straight to connect.
 $isPartnerProAccount = in_array($uRow['account_type'] ?? '', ['partner_pro', 'partner'], true);
 
 // --- Billing helpers ---------------------------------------------------------
@@ -223,7 +223,7 @@ try {
     )");
     // Migrate existing credentials from users table
     $pdo->exec("INSERT INTO ghl_connections (user_id, name, api_key, location_id)
-        SELECT id, 'My Free CRM Account', ghl_api_key, ghl_location_id
+        SELECT id, 'My CRM Account', ghl_api_key, ghl_location_id
         FROM users WHERE ghl_api_key IS NOT NULL AND ghl_api_key != '' AND ghl_location_id IS NOT NULL AND ghl_location_id != ''");
 }
 
@@ -1885,7 +1885,7 @@ if (isset($_GET['action'])) {
                 $creds->execute([$userId]);
             }
             $gc = $creds->fetch(PDO::FETCH_ASSOC);
-            if (empty($gc['api_key'])) { echo json_encode(['success' => false, 'error' => 'Free CRM not connected']); exit; }
+            if (empty($gc['api_key'])) { echo json_encode(['success' => false, 'error' => 'CRM not connected']); exit; }
 
             $url = 'https://services.leadconnectorhq.com' . $endpoint;
             $ch = curl_init($url);
@@ -1925,7 +1925,7 @@ if (isset($_GET['action'])) {
             if ($connId) { $creds = $pdo->prepare("SELECT id, name, api_key, location_id FROM ghl_connections WHERE id = ? AND user_id = ?"); $creds->execute([$connId, $userId]); }
             else { $creds = $pdo->prepare("SELECT id, name, api_key, location_id FROM ghl_connections WHERE user_id = ? ORDER BY created_at ASC LIMIT 1"); $creds->execute([$userId]); }
             $gc = $creds->fetch(PDO::FETCH_ASSOC);
-            if (empty($gc['api_key']) || empty($gc['location_id'])) { echo json_encode(['success' => false, 'error' => 'Free CRM not connected']); exit; }
+            if (empty($gc['api_key']) || empty($gc['location_id'])) { echo json_encode(['success' => false, 'error' => 'CRM not connected']); exit; }
             $connId = $gc['id'];
             $connName = $gc['name'];
 
@@ -2014,7 +2014,7 @@ if (isset($_GET['action'])) {
             }
             $gc = $creds->fetch(PDO::FETCH_ASSOC);
             if (empty($gc['api_key']) || empty($gc['location_id'])) {
-                echo json_encode(['success' => false, 'error' => 'Free CRM not connected']);
+                echo json_encode(['success' => false, 'error' => 'CRM not connected']);
                 exit;
             }
             $connId = $gc['id'];
@@ -2104,7 +2104,7 @@ if (isset($_GET['action'])) {
             }
             $gc = $creds->fetch(PDO::FETCH_ASSOC);
             if (empty($gc['api_key']) || empty($gc['location_id'])) {
-                echo json_encode(['success' => false, 'error' => 'Free CRM not connected']);
+                echo json_encode(['success' => false, 'error' => 'CRM not connected']);
                 exit;
             }
 
@@ -4373,7 +4373,7 @@ header('Cache-Control: no-store, max-age=0');
               <details class="wfaq"><summary>What data do I get for each lead?</summary><div class="wfaq-body">Business name, phone number, website, rating, address and category &mdash; plus emails and social profiles after free enrichment.</div></details>
               <details class="wfaq"><summary>Where does the lead data come from?</summary><div class="wfaq-body">Live from Google Maps&rsquo; public business listings &mdash; fresh every search, never a recycled or resold list.</div></details>
               <details class="wfaq"><summary>How many leads can I pull at once?</summary><div class="wfaq-body">Up to 500 results per city. Select multiple cities or whole states to pull thousands in a single search.</div></details>
-              <details class="wfaq"><summary>Can I export my leads?</summary><div class="wfaq-body">Yes &mdash; use the Export menu to download a CSV, or push your leads straight into your Free CRM.</div></details>
+              <details class="wfaq"><summary>Can I export my leads?</summary><div class="wfaq-body">Yes &mdash; use the Export menu to download a CSV, or push your leads straight into your CRM.</div></details>
               <details class="wfaq"><summary>What if a search returns no leads?</summary><div class="wfaq-body">You&rsquo;re only charged for leads actually returned, so a search that finds nothing costs you no credits.</div></details>
             </div>
             <?php $welcomeFaqsHtml = ob_get_clean(); echo $welcomeFaqsHtml; ?>
@@ -4408,14 +4408,14 @@ header('Cache-Control: no-store, max-age=0');
             <button class="btn btn-sm" onclick="app.openShareModal()" style="background:var(--bg);border:1px solid var(--card-border);color:var(--text-primary);font-size:12px;padding:6px 12px;" title="Share"><i class="fas fa-share-alt"></i> Share</button>
             <button class="btn btn-primary" onclick="app.openAddLeadsModal()"><i class="fas fa-plus"></i> Add Leads</button>
             <button class="btn btn-sm admin-reenrich-btn" onclick="app.forceReenrich()" title="Re-enrich all websites in this folder"><i class="fas fa-sync-alt"></i> Re-Enrich All</button>
-            <button class="btn btn-sm" onclick="app.openFolderImportLogs()" style="background:var(--bg);border:1px solid var(--card-border);color:var(--text-primary);font-size:12px;padding:6px 12px;" title="Free CRM Import Logs"><i class="fas fa-history"></i> Import Logs</button>
+            <button class="btn btn-sm" onclick="app.openFolderImportLogs()" style="background:var(--bg);border:1px solid var(--card-border);color:var(--text-primary);font-size:12px;padding:6px 12px;" title="CRM Import Logs"><i class="fas fa-history"></i> Import Logs</button>
             <button class="btn btn-sm" onclick="document.getElementById('importCsvFile').click()" style="background:var(--bg);border:1px solid var(--card-border);color:var(--text-primary);font-size:12px;padding:6px 12px;" title="Import CSV"><i class="fas fa-upload"></i> Import CSV</button>
             <input type="file" id="importCsvFile" accept=".csv,text/csv" style="display:none;" onchange="app.handleImportCSV(this)">
             <div style="position:relative;">
                 <button class="btn btn-secondary" id="exportMenuBtn" onclick="app.toggleExportMenu()"><i class="fas fa-download"></i> Export</button>
                 <div id="exportMenu" class="hidden" style="position:absolute;top:100%;right:0;margin-top:6px;background:var(--card-solid);border:1px solid var(--card-border);border-radius:var(--radius-xs);box-shadow:var(--shadow-lg);min-width:200px;z-index:100;padding:6px;">
                     <button class="btn btn-ghost" style="width:100%;justify-content:flex-start;" onclick="app.openExportPreview('csv')"><i class="fas fa-file-csv"></i> Export CSV</button>
-                    <button class="btn btn-ghost" style="width:100%;justify-content:flex-start;text-align:left;" onclick="app.openGHLExport()"><i class="fas fa-paper-plane"></i> Export to Free CRM</button>
+                    <button class="btn btn-ghost" style="width:100%;justify-content:flex-start;text-align:left;" onclick="app.openGHLExport()"><i class="fas fa-paper-plane"></i> Export to CRM</button>
                 </div>
             </div>
         </div>
@@ -4917,7 +4917,7 @@ header('Cache-Control: no-store, max-age=0');
             <div style="display:flex;align-items:center;gap:12px;">
                 <button class="btn-icon" onclick="app.closeGHLExport()" title="Close"><i class="fas fa-arrow-left"></i></button>
                 <div>
-                    <h2 style="margin:0;font-size:18px;font-weight:700;">Export to Free CRM</h2>
+                    <h2 style="margin:0;font-size:18px;font-weight:700;">Export to CRM</h2>
                     <div id="ghlSubtitle" style="font-size:12px;color:var(--text-secondary);margin-top:2px;"></div>
                 </div>
             </div>
@@ -4927,7 +4927,7 @@ header('Cache-Control: no-store, max-age=0');
             </div>
         </div>
 
-        <!-- GATE: do they have the Free CRM yet? -->
+        <!-- GATE: do they have the CRM yet? -->
         <div id="ghlGateScreen" class="ghl-screen hidden">
             <div style="max-width:460px;margin:56px auto;text-align:center;">
                 <div style="width:64px;height:64px;border-radius:16px;background:#eafaf0;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
@@ -4949,7 +4949,7 @@ header('Cache-Control: no-store, max-age=0');
                     <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#FF6B35,#FF3B30);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
                         <i class="fas fa-plug" style="font-size:24px;color:#fff;"></i>
                     </div>
-                    <h2 style="margin:0 0 6px;font-size:22px;">Free CRM Connections</h2>
+                    <h2 style="margin:0 0 6px;font-size:22px;">CRM Connections</h2>
                     <p style="color:var(--text-secondary);font-size:13px;margin:0;">Select a connection or add a new one.</p>
                 </div>
 
@@ -4973,7 +4973,7 @@ header('Cache-Control: no-store, max-age=0');
                         <summary style="font-size:12px;color:var(--accent);cursor:pointer;font-weight:600;"><i class="fas fa-shield-alt" style="margin-right:4px;"></i>Required API Scopes & Setup Help</summary>
                         <div style="margin-top:8px;padding:12px;background:#fff;border:1px solid var(--card-border);border-radius:8px;">
                             <div style="font-size:11.5px;color:var(--text-secondary);line-height:1.75;">
-                                <strong>1.</strong> In your Free CRM: <strong>Settings → Private Integrations</strong><br>
+                                <strong>1.</strong> In your CRM: <strong>Settings → Private Integrations</strong><br>
                                 <strong>2.</strong> Click <strong>Create new integration</strong> &mdash; enter a name &amp; description<br>
                                 <strong>3.</strong> Select these scopes:
                                 <div style="display:flex;flex-wrap:wrap;gap:4px;margin:6px 0 8px;">
@@ -5068,7 +5068,7 @@ header('Cache-Control: no-store, max-age=0');
                     <div id="ghlSummaryText" style="font-size:13px;color:var(--text-secondary);"></div>
                     <button class="btn btn-sm" onclick="app.openGHLDripConfig()" style="font-size:12px;" title="Drip / Schedule"><i class="fas fa-clock"></i> Drip</button>
                     <button class="btn btn-sm" onclick="app.showGHLImportLogs()" style="font-size:12px;" title="Import History"><i class="fas fa-history"></i> Logs</button>
-                    <button class="btn btn-primary" id="ghlImportBtn" onclick="app.startGHLImport()" style="padding:10px 24px;font-size:14px;font-weight:700;white-space:nowrap;"><i class="fas fa-paper-plane"></i> Import to Free CRM</button>
+                    <button class="btn btn-primary" id="ghlImportBtn" onclick="app.startGHLImport()" style="padding:10px 24px;font-size:14px;font-weight:700;white-space:nowrap;"><i class="fas fa-paper-plane"></i> Import to CRM</button>
                 </div>
             </div>
         </div>
@@ -5079,7 +5079,7 @@ header('Cache-Control: no-store, max-age=0');
                 <div id="ghlImportSpinner" style="margin-bottom:20px;">
                     <div style="width:80px;height:80px;border-radius:50%;border:4px solid var(--card-border);border-top-color:var(--accent);animation:spin 0.8s linear infinite;margin:0 auto;"></div>
                 </div>
-                <h2 id="ghlImportTitle" style="margin:0 0 6px;font-size:20px;">Importing to your Free CRM...</h2>
+                <h2 id="ghlImportTitle" style="margin:0 0 6px;font-size:20px;">Importing to your CRM...</h2>
                 <p id="ghlImportSubtitle" style="color:var(--text-secondary);margin:0 0 24px;font-size:13px;">Please wait, this may take a few minutes for large lists.</p>
                 <div style="background:var(--bg);border-radius:12px;padding:16px;border:1px solid var(--card-border);">
                     <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;">
@@ -5228,7 +5228,7 @@ header('Cache-Control: no-store, max-age=0');
         <div style="padding:16px 20px;border-bottom:1px solid var(--card-border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
             <div style="display:flex;align-items:center;gap:10px;">
                 <i class="fas fa-history" style="color:var(--accent);font-size:18px;"></i>
-                <h3 style="margin:0;font-size:16px;">Free CRM Import History</h3>
+                <h3 style="margin:0;font-size:16px;">CRM Import History</h3>
             </div>
             <button class="btn-icon" onclick="document.getElementById('importLogsModal').classList.remove('active')"><i class="fas fa-times"></i></button>
         </div>
@@ -7814,7 +7814,7 @@ class LeadListsApp {
         this._ghlConnections = res.connections || [];
 
         if (this._ghlConnections.length === 0) {
-            // First-timer: gate on whether they've claimed the Free CRM yet.
+            // First-timer: gate on whether they've claimed the CRM yet.
             // Partner Program Pro accounts already have a CRM — skip the offer
             // gate and go straight to the connection setup.
             if (window.AIOM_PARTNER_PRO) {
@@ -7838,13 +7838,13 @@ class LeadListsApp {
         });
     }
     ghlGateYes() {
-        // They have the Free CRM — continue to the connection setup.
+        // They have the CRM — continue to the connection setup.
         this.showGHLScreen('ghlSetupScreen');
         this.updateGHLBadge(false);
         this.renderGHLConnectionsList();
     }
     ghlGateNo() {
-        // No Free CRM yet — send them to claim it first.
+        // No CRM yet — send them to claim it first.
         this.closeGHLExport();
         (window.top || window).location.href = '/dashboard?section=freecrm';
     }
@@ -7954,7 +7954,7 @@ class LeadListsApp {
         document.getElementById('ghlAddConnectionForm').classList.add('hidden');
 
         this.updateGHLBadge(true);
-        this.toast('Connected to your Free CRM!');
+        this.toast('Connected to your CRM!');
         await this.loadGHLExportData(this._ghlPreSelected);
     }
 
@@ -7993,7 +7993,7 @@ class LeadListsApp {
         this._ghlWorkflows = rawWorkflows;
 
         if (!this._ghlTags.length && tagsData && !tagsData.success) {
-            this.toast('Could not load tags — check your Free CRM connection');
+            this.toast('Could not load tags — check your CRM connection');
         }
 
         const wfSelect = document.getElementById('ghlWorkflowSelect');
@@ -8131,7 +8131,7 @@ class LeadListsApp {
                 : '<option value="">No email</option><option value="__custom">+ Add email...</option>';
             const socialsHtml = (l.socials || []).slice(0, 4).map(s => `<a href="${this.esc(s)}" target="_blank" title="${this.esc(s)}"><i class="${socialIcon(s)}"></i></a>`).join('');
 
-            const impBadge = l.ghl_contact_id ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#34C759;margin-left:4px;" title="In your Free CRM"></span>' : '';
+            const impBadge = l.ghl_contact_id ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#34C759;margin-left:4px;" title="In your CRM"></span>' : '';
 
             return `<tr style="${!this._ghlSelected.has(idx) ? 'opacity:0.4;' : ''}">
                 <td><input type="checkbox" ${checked} onchange="app.ghlToggleOne(${idx}, this.checked)" style="accent-color:var(--accent);"></td>
@@ -8337,7 +8337,7 @@ class LeadListsApp {
             import_filter: document.getElementById('ghlImportFilter')?.value || ''
         };
 
-        const summary = [`Import ${totalToImport.toLocaleString()} contacts to your Free CRM`];
+        const summary = [`Import ${totalToImport.toLocaleString()} contacts to your CRM`];
         if (tags.length) summary.push(`Tags: ${tags.join(', ')}`);
         if (wfName) summary.push(`Workflow: ${wfName}`);
         if (drip) summary.push(`Drip: ${drip.batch_size} per batch, every ${drip.interval_minutes} min`);
@@ -8617,7 +8617,7 @@ class LeadListsApp {
 
         const res = await this.api('ghlGetImportLogs', { list_id: this.currentList?.id || 0 });
         if (!res.success || !res.logs?.length) {
-            content.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-tertiary);"><i class="fas fa-inbox" style="font-size:28px;margin-bottom:10px;display:block;"></i><div style="font-size:14px;">No imports yet for this folder</div><div style="font-size:12px;margin-top:4px;">Export leads to your Free CRM to see import history here.</div></div>';
+            content.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-tertiary);"><i class="fas fa-inbox" style="font-size:28px;margin-bottom:10px;display:block;"></i><div style="font-size:14px;">No imports yet for this folder</div><div style="font-size:12px;margin-top:4px;">Export leads to your CRM to see import history here.</div></div>';
             return;
         }
 
@@ -9082,7 +9082,7 @@ document.addEventListener('click', (e) => {
     var em=document.createElementNS(SVGNS,'svg'); em.setAttribute('class','lt-mask'); document.body.appendChild(em);
     var et=mk('lt-tip'); document.body.appendChild(et);
     et.innerHTML='<div class="lt-badge">You&rsquo;ve got leads!</div><h4>Get your leads out</h4>'+
-      '<p>Click <b>Export</b> to download a <b>CSV</b>, or <b>connect your Free CRM</b> to push your leads straight into your CRM.</p>'+
+      '<p>Click <b>Export</b> to download a <b>CSV</b>, or <b>connect your CRM</b> to push your leads straight into your CRM.</p>'+
       '<div class="lt-row"><span></span><div class="lt-actions"><button class="lt-btn lt-next" data-a="ok">Got it</button></div></div>';
     function place(){
       var r=btn.getBoundingClientRect(), pad=6, W=window.innerWidth, H=window.innerHeight;

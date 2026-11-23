@@ -99,7 +99,7 @@ session_write_close();  // release the per-user session lock; these pages only r
 
   <details class="faq">
     <summary>Can I export my leads?</summary>
-    <div class="body">Yes. Use the <b>Export</b> menu to download a CSV, or push your leads straight into <b>your Free CRM</b>. You can also import your own leads from a CSV.</div>
+    <div class="body">Yes. Use the <b>Export</b> menu to download a CSV, or push your leads straight into <b>your CRM</b>. You can also import your own leads from a CSV.</div>
   </details>
 
   <details class="faq">
