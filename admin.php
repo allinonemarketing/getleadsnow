@@ -144,6 +144,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['action']) && $data['ac
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['action']) && $data['action'] === 'remove_credits') {
+    header('Content-Type: application/json');
+    try {
+        $amt = (int) $data['credits'];
+        if ($amt <= 0) { echo json_encode(['success' => false, 'error' => 'Enter a positive number of credits to remove']); exit; }
+        $pdo->beginTransaction();
+        $cur = $pdo->prepare("SELECT credits FROM users WHERE id = ? FOR UPDATE");
+        $cur->execute([$data['user_id']]);
+        $bal = $cur->fetchColumn();
+        if ($bal === false) { $pdo->rollBack(); echo json_encode(['success' => false, 'error' => 'User not found']); exit; }
+        // Never push a balance below zero — remove at most what they have.
+        $amt = min($amt, (int) $bal);
+        if ($amt > 0) {
+            $pdo->prepare("UPDATE users SET credits = credits - ? WHERE id = ?")->execute([$amt, $data['user_id']]);
+            $pdo->prepare("INSERT INTO credit_transactions (user_id, credits, amount, transaction_id, notes) VALUES (?, ?, 0, 'ADMIN_REMOVED', ?)")->execute([$data['user_id'], -$amt, $data['reason'] ?? '']);
+        }
+        $pdo->commit();
+        $cr = $pdo->prepare("SELECT credits FROM users WHERE id = ?"); $cr->execute([$data['user_id']]);
+        echo json_encode(['success' => true, 'new_credits' => (int) $cr->fetchColumn(), 'removed' => $amt]);
+    } catch (Exception $e) { if ($pdo->inTransaction()) $pdo->rollBack(); echo json_encode(['success' => false, 'error' => $e->getMessage()]); }
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['action']) && $data['action'] === 'send_email') {
     header('Content-Type: application/json');
     try {
@@ -808,14 +831,15 @@ tr{cursor:pointer;}
 
 <div class="modal-overlay" id="creditsModal">
     <div class="modal-box">
-        <h2><i class="fas fa-coins" style="color:var(--orange);margin-right:8px;"></i>Add Credits</h2>
+        <h2 id="creditsModalTitle"><i class="fas fa-coins" style="color:var(--orange);margin-right:8px;"></i>Add Credits</h2>
         <input type="hidden" id="creditsUserId">
-        <div class="form-group"><label>Credits to Add</label><input type="number" id="creditsAmount" placeholder="e.g. 10"></div>
+        <input type="hidden" id="creditsMode" value="add">
+        <div class="form-group"><label id="creditsAmountLabel">Credits to Add</label><input type="number" id="creditsAmount" placeholder="e.g. 10"></div>
         <div class="form-group"><label>Reason (optional)</label><input id="creditsReason" placeholder="e.g. Bonus for feedback"></div>
-        <div class="form-group" style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="creditsSendEmail" checked style="width:auto;"><label style="margin:0;">Send email notification</label></div>
+        <div class="form-group" id="creditsEmailRow" style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="creditsSendEmail" checked style="width:auto;"><label style="margin:0;">Send email notification</label></div>
         <div class="modal-actions">
             <button class="btn btn-secondary" onclick="document.getElementById('creditsModal').classList.remove('open')">Cancel</button>
-            <button class="btn btn-primary" onclick="addCredits()"><i class="fas fa-plus"></i> Add Credits</button>
+            <button class="btn btn-primary" id="creditsSubmitBtn" onclick="submitCredits()"><i class="fas fa-plus"></i> Add Credits</button>
         </div>
     </div>
 </div>
@@ -908,7 +932,8 @@ async function openUser(id) {
         </div>
         <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;">
             <button class="btn btn-primary btn-sm" onclick="openEmailModal('${esc(u.email)}','${esc(u.name)}')"><i class="fas fa-envelope"></i> Email</button>
-            <button class="btn btn-secondary btn-sm" onclick="openCreditsModal(${u.id})"><i class="fas fa-coins"></i> Add Credits</button>
+            <button class="btn btn-secondary btn-sm" onclick="openCreditsModal(${u.id},'add')"><i class="fas fa-coins"></i> Add Credits</button>
+            <button class="btn btn-secondary btn-sm" onclick="openCreditsModal(${u.id},'remove')"><i class="fas fa-minus-circle"></i> Remove Credits</button>
             <button class="btn btn-secondary btn-sm" onclick="loginAsUser(${u.id},'${esc(u.name)}')"><i class="fas fa-right-to-bracket"></i> Login As</button>
             <button class="btn btn-sm" style="background:#fee2e2;color:#b91c1c;" onclick="deleteUser(${u.id},'${esc(u.name)}')"><i class="fas fa-trash"></i> Delete</button>
         </div>
@@ -1078,24 +1103,38 @@ async function sendEmail() {
     else alert('Failed: ' + (data.error || 'Unknown error'));
 }
 
-function openCreditsModal(userId) {
+function openCreditsModal(userId, mode) {
+    mode = mode === 'remove' ? 'remove' : 'add';
     document.getElementById('creditsUserId').value = userId;
+    document.getElementById('creditsMode').value = mode;
     document.getElementById('creditsAmount').value = '';
     document.getElementById('creditsReason').value = '';
+    const adding = mode === 'add';
+    document.getElementById('creditsModalTitle').innerHTML = adding
+        ? '<i class="fas fa-coins" style="color:var(--orange);margin-right:8px;"></i>Add Credits'
+        : '<i class="fas fa-coins" style="color:#b91c1c;margin-right:8px;"></i>Remove Credits';
+    document.getElementById('creditsAmountLabel').textContent = adding ? 'Credits to Add' : 'Credits to Remove';
+    document.getElementById('creditsReason').placeholder = adding ? 'e.g. Bonus for feedback' : 'e.g. Added twice by mistake';
+    const btn = document.getElementById('creditsSubmitBtn');
+    btn.innerHTML = adding ? '<i class="fas fa-plus"></i> Add Credits' : '<i class="fas fa-minus"></i> Remove Credits';
+    btn.style.background = adding ? '' : '#b91c1c';
+    // No customer email on a removal — it's a correction, not a notification event.
+    document.getElementById('creditsEmailRow').style.display = adding ? 'flex' : 'none';
     document.getElementById('creditsModal').classList.add('open');
 }
 
-async function addCredits() {
+async function submitCredits() {
+    const mode = document.getElementById('creditsMode').value;
     const res = await fetch('admin.php', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
-        action:'add_credits',
+        action: mode === 'remove' ? 'remove_credits' : 'add_credits',
         user_id: document.getElementById('creditsUserId').value,
         credits: document.getElementById('creditsAmount').value,
         reason: document.getElementById('creditsReason').value,
-        send_email: document.getElementById('creditsSendEmail').checked
+        send_email: mode === 'remove' ? false : document.getElementById('creditsSendEmail').checked
     }) });
     const data = await res.json();
     if (data.success) {
-        alert('Credits added!');
+        alert(mode === 'remove' ? 'Credits removed. New balance: ' + Number(data.new_credits).toLocaleString() : 'Credits added!');
         document.getElementById('creditsModal').classList.remove('open');
         const el = document.getElementById('slideCredits');
         if (el) el.textContent = Number(data.new_credits).toLocaleString();
